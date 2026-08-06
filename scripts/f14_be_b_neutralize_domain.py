@@ -74,7 +74,7 @@ class_map = [
     ('BakeryPost', 'Post'),
 ]
 
-# Page class names are pluralized and are not covered by the model map above.
+# Page and test class names are pluralized and are not covered by the model map above.
 page_class_map = [
     ('CreateBakeryCategory', 'CreateCategory'),
     ('EditBakeryCategory', 'EditCategory'),
@@ -86,6 +86,8 @@ page_class_map = [
     ('ManageBakeryFaqs', 'ManageFaqs'),
     ('ManageBakeryGalleryItems', 'ManageGalleryItems'),
     ('ManageBakeryPosts', 'ManagePosts'),
+    ('BakeryCatalogApiTest', 'CatalogApiTest'),
+    ('BakeryCatalogFilamentTest', 'CatalogFilamentTest'),
 ]
 
 table_map = [
@@ -180,6 +182,10 @@ for active_root in active_roots:
         updated = updated.replace('bakery.catalog.product.', 'catalog.product.')
         updated = updated.replace("['bakery-catalog']", "['catalog']")
         updated = updated.replace("'bakery-catalog'", "'catalog'")
+        updated = updated.replace('bakery-', 'catalog-')
+        updated = updated.replace('bakery_', 'catalog_')
+        updated = updated.replace('bakery.', 'catalog.')
+        updated = updated.replace('bakery', 'catalog')
         updated = updated.replace('محصول بیکری', 'محصول')
         updated = updated.replace('محصولات بیکری', 'محصولات')
         updated = updated.replace('فروشگاه وینیمی', 'فروشگاه LBB')
@@ -192,8 +198,6 @@ for active_root in active_roots:
 # Rename class/resource/migration paths after contents are updated.
 path_replacements = content_replacements + [
     ('create_bakery_catalog_tables', 'create_catalog_tables'),
-    ('BakeryCatalogApiTest', 'CatalogApiTest'),
-    ('BakeryCatalogFilamentTest', 'CatalogFilamentTest'),
 ]
 for path in sorted(root.rglob('*'), key=lambda item: len(item.parts), reverse=True):
     if not path.exists():
@@ -204,6 +208,7 @@ for path in sorted(root.rglob('*'), key=lambda item: len(item.parts), reverse=Tr
     target_name = path.name
     for old, new in path_replacements:
         target_name = target_name.replace(old, new)
+    target_name = target_name.replace('bakery', 'catalog')
     if target_name == path.name:
         continue
     target = path.with_name(target_name)
