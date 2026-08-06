@@ -68,6 +68,26 @@ table_map = [
     ('bakery_posts', 'posts'),
 ]
 
+# Any migration already creating a neutral destination table belongs to the
+# deleted legacy domain. The audited catalog migration still uses bakery_*
+# names at this point, so it is preserved and becomes the single owner of the
+# neutral tables after the explicit replacements below.
+neutral_tables = [new for _, new in table_map]
+for migration in (root / 'database/migrations').glob('*.php'):
+    try:
+        source = migration.read_text()
+    except UnicodeDecodeError:
+        continue
+    creates_neutral_table = any(
+        re.search(
+            rf"Schema::create\(\s*['\"]{re.escape(table)}['\"]",
+            source,
+        )
+        for table in neutral_tables
+    )
+    if creates_neutral_table:
+        remove(migration)
+
 # Update active source contents. Imported reference material remains immutable.
 active_roots = [
     'app',
@@ -140,6 +160,7 @@ status += '''
 - Renamed active database tables from `bakery_*` to neutral table names.
 - Removed the city SEO page model, endpoint, resource and migration.
 - Removed stale generic API resources left by the deleted ToolMaster controllers.
+- Removed legacy migrations that competed for the neutral catalog table names.
 - Replaced bakery cache namespaces and Persian bakery labels in active runtime code.
 - Extended the foundation audit to reject active Bakery identity references.
 
