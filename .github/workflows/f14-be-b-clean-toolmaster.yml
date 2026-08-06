@@ -36,11 +36,11 @@ jobs:
             php -l "$file" >/dev/null
           done < <(find app bootstrap config database routes scripts tests -type f -name '*.php' -print0)
 
-      - name: Refresh Composer lock metadata
-        run: composer update --lock --no-install --no-interaction --no-progress
+      - name: Validate Composer metadata
+        run: composer validate --no-check-lock --no-check-publish --no-interaction
 
-      - name: Install PHP dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress
+      - name: Install locked PHP dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress --ignore-platform-req=ext-redis
 
       - name: Prepare test environment
         shell: bash
