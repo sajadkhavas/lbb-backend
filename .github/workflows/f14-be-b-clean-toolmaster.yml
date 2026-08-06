@@ -35,6 +35,7 @@ jobs:
         run: |
           python3 scripts/f14_be_b_cleanup.py
           python3 scripts/f14_be_b_bootstrap_patch.py
+          python3 scripts/f14_be_b_package_patch.py
 
       - name: Validate PHP syntax
         shell: bash
@@ -72,6 +73,7 @@ jobs:
           rm -f .github/workflows/f14-be-b-clean-toolmaster.yml
           rm -f scripts/f14_be_b_cleanup.py
           rm -f scripts/f14_be_b_bootstrap_patch.py
+          rm -f scripts/f14_be_b_package_patch.py
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
