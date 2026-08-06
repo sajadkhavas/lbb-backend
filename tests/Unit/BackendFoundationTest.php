@@ -8,7 +8,7 @@ class BackendFoundationTest extends TestCase
 {
     public function test_frontend_origins_are_configured_as_an_array(): void
     {
-        $origins = config('winimi.frontend_origins');
+        $origins = config('lbb.frontend_origins');
 
         $this->assertIsArray($origins);
         $this->assertNotEmpty($origins);
@@ -18,7 +18,7 @@ class BackendFoundationTest extends TestCase
 
     public function test_only_completed_commerce_contracts_are_reported_as_implemented(): void
     {
-        $contracts = config('winimi.contracts');
+        $contracts = config('lbb.contracts');
 
         $this->assertSame('implemented', $contracts['system']['status']);
         $this->assertSame('implemented', $contracts['catalog']['status']);

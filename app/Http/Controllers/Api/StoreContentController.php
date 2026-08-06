@@ -115,7 +115,7 @@ class StoreContentController extends Controller
             'category' => ['nullable', 'string', 'max:120'],
             'search' => ['nullable', 'string', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1'],
-            'perPage' => ['nullable', 'integer', 'min:1', 'max:'.config('winimi.policies.pagination.catalog_max', 48)],
+            'perPage' => ['nullable', 'integer', 'min:1', 'max:'.config('lbb.policies.pagination.catalog_max', 48)],
         ]);
         $category = trim((string) ($filters['category'] ?? ''));
         $search = trim((string) ($filters['search'] ?? ''));
@@ -130,7 +130,7 @@ class StoreContentController extends Controller
             })
             ->latest('published_at')
             ->paginate((int) ($filters['perPage'] ?? config(
-                'winimi.policies.pagination.catalog_default',
+                'lbb.policies.pagination.catalog_default',
                 12,
             )));
 

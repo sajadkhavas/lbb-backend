@@ -37,7 +37,7 @@ class CheckoutRequest extends FormRequest
                 'required',
                 'integer',
                 'min:1',
-                'max:'.max(1, (int) config('winimi.checkout.max_quantity_per_line', 20)),
+                'max:'.max(1, (int) config('lbb.checkout.max_quantity_per_line', 20)),
             ],
         ];
     }
@@ -49,7 +49,7 @@ class CheckoutRequest extends FormRequest
                 $total = collect($this->input('items', []))->sum(
                     fn (array $item): int => (int) ($item['quantity'] ?? 0),
                 );
-                $maximum = max(1, (int) config('winimi.checkout.max_total_units', 50));
+                $maximum = max(1, (int) config('lbb.checkout.max_total_units', 50));
 
                 if ($total > $maximum) {
                     $validator->errors()->add(

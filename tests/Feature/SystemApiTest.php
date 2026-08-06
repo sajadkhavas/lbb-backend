@@ -18,7 +18,7 @@ class SystemApiTest extends TestCase
             ->assertHeader('X-API-Version', '1')
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.status', 'ok')
-            ->assertJsonPath('data.service', 'winimi-bakery-backend')
+            ->assertJsonPath('data.service', 'lbb-bakery-backend')
             ->assertJsonPath('meta.requestId', 'test-request-id')
             ->assertJsonPath('meta.contractVersion', '2026-07-20-phase-16');
     }
@@ -28,7 +28,7 @@ class SystemApiTest extends TestCase
         $this->getJson('/api/system/meta')
             ->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('data.brand.nameEn', 'Winimi Bakery')
+            ->assertJsonPath('data.brand.nameEn', 'LBB')
             ->assertJsonPath('data.contractVersion', '2026-07-20-phase-16')
             ->assertJsonPath('data.roadmapVersion', '2026-07-20-phase-18')
             ->assertJsonPath('data.openApiUrl', '/api/system/openapi')

@@ -40,7 +40,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->brandName(config('winimi.brand.name', 'وینیمی بیکری'))
+            ->brandName(config('lbb.brand.name', 'LBB'))
             ->favicon(asset('favicon.ico'))
             ->colors(['primary' => Color::Emerald])
             ->font('Vazirmatn')
@@ -76,7 +76,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([Authenticate::class])
             ->navigationGroups([
-                'فروشگاه وینیمی',
+                'فروشگاه LBB',
                 'محتوا',
                 'فروش',
                 'تنظیمات',

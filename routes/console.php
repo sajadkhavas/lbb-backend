@@ -14,7 +14,7 @@ Schedule::command('notifications:dispatch --limit=100')
     ->everyMinute()
     ->withoutOverlapping()
     ->onOneServer()
-    ->name('dispatch-winimi-notification-outbox');
+    ->name('dispatch-lbb-notification-outbox');
 
 Schedule::call(function (): void {
     OtpChallenge::query()

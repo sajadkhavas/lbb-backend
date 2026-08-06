@@ -9,7 +9,7 @@ class DispatchNotificationOutbox extends Command
 {
     protected $signature = 'notifications:dispatch {--limit=50 : Maximum notifications to inspect}';
 
-    protected $description = 'Dispatch pending Winimi notification outbox records';
+    protected $description = 'Dispatch pending LBB notification outbox records';
 
     public function handle(NotificationOutboxService $outbox): int
     {

@@ -12,7 +12,7 @@ final class PaymentProviderManager
 {
     public function current(): PaymentProvider
     {
-        return $this->for((string) config('winimi.payment.provider', 'disabled'));
+        return $this->for((string) config('lbb.payment.provider', 'disabled'));
     }
 
     public function for(string $provider): PaymentProvider
@@ -29,11 +29,11 @@ final class PaymentProviderManager
 
     public function ready(): bool
     {
-        if (! config('winimi.payment.enabled', false)) {
+        if (! config('lbb.payment.enabled', false)) {
             return false;
         }
 
-        $provider = strtolower(trim((string) config('winimi.payment.provider', 'disabled')));
+        $provider = strtolower(trim((string) config('lbb.payment.provider', 'disabled')));
         if ($provider === 'disabled') {
             return false;
         }
@@ -43,7 +43,7 @@ final class PaymentProviderManager
         }
 
         if ($provider === 'zarinpal') {
-            return trim((string) config('winimi.payment.zarinpal.merchant_id')) !== '';
+            return trim((string) config('lbb.payment.zarinpal.merchant_id')) !== '';
         }
 
         return false;

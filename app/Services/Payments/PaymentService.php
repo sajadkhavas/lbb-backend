@@ -32,7 +32,7 @@ final class PaymentService
      */
     public function initiate(Customer $customer, Order $order, string $idempotencyKey): array
     {
-        if (! config('winimi.payment.enabled', false) || ! $this->providers->ready()) {
+        if (! config('lbb.payment.enabled', false) || ! $this->providers->ready()) {
             throw new PaymentUnavailable;
         }
 
@@ -102,7 +102,7 @@ final class PaymentService
                 }
 
                 $expiresAt = now()->addMinutes(
-                    max(1, (int) config('winimi.payment.attempt_ttl_minutes', 20)),
+                    max(1, (int) config('lbb.payment.attempt_ttl_minutes', 20)),
                 );
                 if ($lockedOrder->reservation_expires_at?->lt($expiresAt)) {
                     $expiresAt = $lockedOrder->reservation_expires_at;
@@ -120,8 +120,8 @@ final class PaymentService
                     'status' => PaymentAttemptStatus::Initiated,
                     'amount_toman' => $lockedOrder->grand_total_toman,
                     'amount_provider' => $lockedOrder->grand_total_toman
-                        * max(1, (int) config('winimi.payment.amount_multiplier', 10)),
-                    'currency' => (string) config('winimi.payment.currency', 'IRR'),
+                        * max(1, (int) config('lbb.payment.amount_multiplier', 10)),
+                    'currency' => (string) config('lbb.payment.currency', 'IRR'),
                     'expires_at' => $expiresAt,
                 ]);
 

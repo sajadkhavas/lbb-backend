@@ -30,20 +30,20 @@ class PaymentFlowTest extends TestCase
 
         config([
             'session.driver' => 'array',
-            'winimi.checkout.enabled' => true,
-            'winimi.checkout.reservation_minutes' => 20,
-            'winimi.checkout.max_quantity_per_line' => 20,
-            'winimi.checkout.max_total_units' => 50,
-            'winimi.checkout.packaging_fee_toman' => 10_000,
-            'winimi.checkout.delivery_methods.standard' => ['enabled' => true, 'fee_toman' => 30_000],
-            'winimi.checkout.delivery_methods.chilled' => ['enabled' => true, 'fee_toman' => 90_000],
-            'winimi.checkout.delivery_methods.pickup' => ['enabled' => true, 'fee_toman' => 0],
-            'winimi.payment.enabled' => true,
-            'winimi.payment.provider' => 'testing',
-            'winimi.payment.callback_url' => 'http://localhost:5173/payment/result',
-            'winimi.payment.amount_multiplier' => 10,
-            'winimi.payment.attempt_ttl_minutes' => 20,
-            'winimi.payment.timeout_seconds' => 5,
+            'lbb.checkout.enabled' => true,
+            'lbb.checkout.reservation_minutes' => 20,
+            'lbb.checkout.max_quantity_per_line' => 20,
+            'lbb.checkout.max_total_units' => 50,
+            'lbb.checkout.packaging_fee_toman' => 10_000,
+            'lbb.checkout.delivery_methods.standard' => ['enabled' => true, 'fee_toman' => 30_000],
+            'lbb.checkout.delivery_methods.chilled' => ['enabled' => true, 'fee_toman' => 90_000],
+            'lbb.checkout.delivery_methods.pickup' => ['enabled' => true, 'fee_toman' => 0],
+            'lbb.payment.enabled' => true,
+            'lbb.payment.provider' => 'testing',
+            'lbb.payment.callback_url' => 'http://localhost:5173/payment/result',
+            'lbb.payment.amount_multiplier' => 10,
+            'lbb.payment.attempt_ttl_minutes' => 20,
+            'lbb.payment.timeout_seconds' => 5,
         ]);
 
         $this->customer = Customer::query()->create([
@@ -219,8 +219,8 @@ class PaymentFlowTest extends TestCase
             ->json('data.order.id');
 
         config([
-            'winimi.payment.enabled' => false,
-            'winimi.payment.provider' => 'disabled',
+            'lbb.payment.enabled' => false,
+            'lbb.payment.provider' => 'disabled',
         ]);
 
         $this->initiate($orderId, 'payment-attempt-key-0006')
@@ -233,11 +233,11 @@ class PaymentFlowTest extends TestCase
     public function test_zarinpal_adapter_uses_server_amount_and_verifies_the_recorded_authority(): void
     {
         config([
-            'winimi.payment.provider' => 'zarinpal',
-            'winimi.payment.zarinpal.merchant_id' => '00000000-0000-0000-0000-000000000000',
-            'winimi.payment.zarinpal.request_url' => 'https://gateway.test/request',
-            'winimi.payment.zarinpal.verify_url' => 'https://gateway.test/verify',
-            'winimi.payment.zarinpal.start_pay_url' => 'https://gateway.test/start',
+            'lbb.payment.provider' => 'zarinpal',
+            'lbb.payment.zarinpal.merchant_id' => '00000000-0000-0000-0000-000000000000',
+            'lbb.payment.zarinpal.request_url' => 'https://gateway.test/request',
+            'lbb.payment.zarinpal.verify_url' => 'https://gateway.test/verify',
+            'lbb.payment.zarinpal.start_pay_url' => 'https://gateway.test/start',
         ]);
 
         Http::fake([

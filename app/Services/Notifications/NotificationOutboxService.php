@@ -31,7 +31,7 @@ final class NotificationOutboxService
                 ...$payload,
             ],
             'status' => NotificationStatus::Pending,
-            'provider' => strtolower(trim((string) config('winimi.notifications.sms_provider', 'disabled'))),
+            'provider' => strtolower(trim((string) config('lbb.notifications.sms_provider', 'disabled'))),
             'available_at' => now(),
         ]);
     }
@@ -83,7 +83,7 @@ final class NotificationOutboxService
             $locked->forceFill([
                 'status' => NotificationStatus::Processing,
                 'attempts' => $locked->attempts + 1,
-                'provider' => strtolower(trim((string) config('winimi.notifications.sms_provider', 'disabled'))),
+                'provider' => strtolower(trim((string) config('lbb.notifications.sms_provider', 'disabled'))),
             ])->save();
 
             return $locked->fresh();
@@ -144,7 +144,7 @@ final class NotificationOutboxService
                 return;
             }
 
-            $maximum = max(1, (int) config('winimi.notifications.max_attempts', 5));
+            $maximum = max(1, (int) config('lbb.notifications.max_attempts', 5));
             $terminal = $locked->attempts >= $maximum;
             $locked->forceFill([
                 'status' => $terminal ? NotificationStatus::Failed : NotificationStatus::Pending,
@@ -152,7 +152,7 @@ final class NotificationOutboxService
                 'available_at' => $terminal
                     ? null
                     : now()->addSeconds(
-                        max(30, (int) config('winimi.notifications.retry_seconds', 60)) * $locked->attempts,
+                        max(30, (int) config('lbb.notifications.retry_seconds', 60)) * $locked->attempts,
                     ),
                 'failed_at' => $terminal ? now() : null,
             ])->save();

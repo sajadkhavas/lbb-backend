@@ -11,7 +11,7 @@ use App\Models\BakeryProductVariant;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\Order;
-use Database\Seeders\WinimiStagingSeeder;
+use Database\Seeders\LBBStagingSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
@@ -57,7 +57,7 @@ class BackendContractFreezeTest extends TestCase
             ->assertNotFound()
             ->assertJsonPath('code', 'resource_not_found');
 
-        config(['winimi.legacy.enabled' => false]);
+        config(['lbb.legacy.enabled' => false]);
         $this->getJson('/api/v1/products')
             ->assertNotFound()
             ->assertJsonPath('code', 'legacy_api_disabled');
@@ -167,7 +167,7 @@ class BackendContractFreezeTest extends TestCase
 
     public function test_staging_seeder_is_idempotent_and_keeps_external_integrations_disabled(): void
     {
-        $seeder = app(WinimiStagingSeeder::class);
+        $seeder = app(LBBStagingSeeder::class);
         $seeder->run();
         $seeder->run();
 

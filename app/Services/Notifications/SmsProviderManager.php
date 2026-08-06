@@ -12,7 +12,7 @@ final class SmsProviderManager
 {
     public function current(): SmsProvider
     {
-        return match (strtolower(trim((string) config('winimi.notifications.sms_provider', 'disabled')))) {
+        return match (strtolower(trim((string) config('lbb.notifications.sms_provider', 'disabled')))) {
             'disabled' => app(DisabledSmsProvider::class),
             'testing' => app(TestingSmsProvider::class),
             'kavenegar' => app(KavenegarSmsProvider::class),
@@ -22,11 +22,11 @@ final class SmsProviderManager
 
     public function ready(): bool
     {
-        $provider = strtolower(trim((string) config('winimi.notifications.sms_provider', 'disabled')));
+        $provider = strtolower(trim((string) config('lbb.notifications.sms_provider', 'disabled')));
 
         return match ($provider) {
             'testing' => ! app()->environment('production'),
-            'kavenegar' => trim((string) config('winimi.notifications.kavenegar.api_key')) !== '',
+            'kavenegar' => trim((string) config('lbb.notifications.kavenegar.api_key')) !== '',
             default => false,
         };
     }

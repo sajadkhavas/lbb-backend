@@ -1,7 +1,7 @@
 {
-    "name": "winimi/bakery-backend",
+    "name": "lbb/apparel-backend",
     "type": "project",
-    "description": "Winimi Bakery Laravel 12 headless commerce backend with Filament administration",
+    "description": "LBB Laravel 12 headless apparel commerce backend with Filament administration",
     "license": "MIT",
     "require": {
         "php": "^8.2",
@@ -75,43 +75,24 @@
         "test": [
             "@php artisan test"
         ],
-        "audit:catalog": [
-            "@php scripts/audit-bakery-catalog.php"
-        ],
-        "audit:auth": [
-            "@php scripts/audit-customer-auth.php"
-        ],
-        "audit:orders": [
-            "@php scripts/audit-orders-checkout.php"
-        ],
-        "audit:payments": [
-            "@php scripts/audit-payments.php"
-        ],
-        "audit:operations": [
-            "@php scripts/audit-store-operations.php"
-        ],
-        "audit:launch": [
-            "@php scripts/audit-full-launch-roadmap.php"
-        ],
         "format:check": [
-            "@php vendor/bin/pint --test app/Enums app/Support/ApiResponse.php app/Support/IranianMobile.php app/Exceptions/OtpCooldown.php app/Exceptions/OtpDeliveryUnavailable.php app/Exceptions/IdempotencyConflict.php app/Exceptions/InventoryUnavailable.php app/Exceptions/PaymentUnavailable.php app/Exceptions/PaymentProviderException.php app/Exceptions/NotificationDeliveryUnavailable.php app/Contracts/Payments app/Contracts/Notifications app/Services/Auth app/Services/Orders app/Services/Payments app/Services/Store app/Services/Notifications app/Console/Commands/ReleaseExpiredInventoryReservations.php app/Console/Commands/DispatchNotificationOutbox.php app/Http/Middleware/AttachApiContext.php app/Http/Middleware/MarkLegacyApi.php app/Http/Middleware/EnsureActiveCustomer.php app/Http/Controllers/Api/SystemController.php app/Http/Controllers/Api/CatalogController.php app/Http/Controllers/Api/OtpAuthController.php app/Http/Controllers/Api/AccountController.php app/Http/Controllers/Api/CheckoutController.php app/Http/Controllers/Api/AccountOrderController.php app/Http/Controllers/Api/AccountAddressController.php app/Http/Controllers/Api/DeliveryController.php app/Http/Controllers/Api/PaymentController.php app/Http/Controllers/Api/StoreContentController.php app/Http/Controllers/Api/ReviewController.php app/Http/Controllers/Api/InquiryController.php app/Http/Requests/CheckoutRequest.php app/Http/Requests/VerifyPaymentRequest.php app/Http/Requests/CustomerAddressRequest.php app/Http/Requests/SubmitReviewRequest.php app/Http/Requests/InquiryRequest.php app/Models/Product.php app/Models/BakeryCategory.php app/Models/BakeryProduct.php app/Models/BakeryProductVariant.php app/Models/Customer.php app/Models/OtpChallenge.php app/Models/Order.php app/Models/OrderItem.php app/Models/InventoryReservation.php app/Models/OrderStatusHistory.php app/Models/PaymentAttempt.php app/Models/CustomerAddress.php app/Models/DeliveryZone.php app/Models/StoreSetting.php app/Models/BakeryContentPage.php app/Models/BakeryFaq.php app/Models/BakeryGalleryItem.php app/Models/BakeryCityPage.php app/Models/BakeryPost.php app/Models/ProductReview.php app/Models/Inquiry.php app/Models/NotificationTemplate.php app/Models/NotificationOutbox.php app/Models/OrderInternalNote.php app/Http/Resources/ProductResource.php app/Http/Resources/BakeryCategoryResource.php app/Http/Resources/BakeryProductResource.php app/Http/Resources/BakeryVariantResource.php app/Http/Resources/CustomerResource.php app/Http/Resources/OrderResource.php app/Http/Resources/OrderItemResource.php app/Http/Resources/PaymentAttemptResource.php app/Http/Resources/CustomerAddressResource.php app/Filament/Resources/BakeryCategoryResource.php app/Filament/Resources/BakeryCategoryResource app/Filament/Resources/BakeryProductResource.php app/Filament/Resources/BakeryProductResource app/Filament/Resources/CustomerResource.php app/Filament/Resources/CustomerResource app/Filament/Resources/OrderResource.php app/Filament/Resources/OrderResource app/Filament/Resources/PaymentAttemptResource.php app/Filament/Resources/PaymentAttemptResource app/Filament/Resources/DeliveryZoneResource.php app/Filament/Resources/DeliveryZoneResource app/Filament/Resources/StoreSettingResource.php app/Filament/Resources/StoreSettingResource app/Filament/Resources/BakeryContentPageResource.php app/Filament/Resources/BakeryContentPageResource app/Filament/Resources/BakeryFaqResource.php app/Filament/Resources/BakeryFaqResource app/Filament/Resources/BakeryGalleryItemResource.php app/Filament/Resources/BakeryGalleryItemResource app/Filament/Resources/BakeryCityPageResource.php app/Filament/Resources/BakeryCityPageResource app/Filament/Resources/BakeryPostResource.php app/Filament/Resources/BakeryPostResource app/Filament/Resources/ProductReviewResource.php app/Filament/Resources/ProductReviewResource app/Filament/Resources/InquiryResource.php app/Filament/Resources/InquiryResource app/Filament/Resources/NotificationTemplateResource.php app/Filament/Resources/NotificationTemplateResource app/Filament/Resources/NotificationOutboxResource.php app/Filament/Resources/NotificationOutboxResource app/Filament/Resources/CustomerAddressResource.php app/Filament/Resources/CustomerAddressResource app/Providers/AppServiceProvider.php app/Providers/Filament/AdminPanelProvider.php bootstrap/app.php config/auth.php config/cors.php config/sanctum.php config/winimi.php routes/api.php routes/console.php database/migrations/2024_01_01_000000_create_personal_access_tokens_table.php database/migrations/2026_06_11_152702_create_jobs_table.php database/migrations/2026_06_11_154204_create_failed_jobs_table.php database/migrations/2026_07_19_120000_create_bakery_catalog_tables.php database/migrations/2026_07_19_163000_create_customer_auth_tables.php database/migrations/2026_07_19_172000_create_checkout_order_tables.php database/migrations/2026_07_19_190000_create_payment_attempts_table.php database/migrations/2026_07_20_000000_create_store_operations_tables.php tests scripts/audit-backend-foundation.php scripts/audit-bakery-catalog.php scripts/audit-customer-auth.php scripts/audit-orders-checkout.php scripts/audit-payments.php scripts/audit-store-operations.php scripts/audit-full-launch-roadmap.php"
+            "@php vendor/bin/pint --test"
         ],
         "check": [
-            "@php scripts/audit-backend-foundation.php",
-            "@audit:catalog",
-            "@audit:auth",
-            "@audit:orders",
-            "@audit:payments",
-            "@audit:operations",
-            "@audit:launch",
+            "@audit:foundation",
             "@format:check",
-            "@php artisan route:list --except-vendor",
-            "@php artisan test"
+            "@php artisan route:list --except-vendor"
+        ],
+        "audit:foundation": [
+            "@php scripts/audit-lbb-foundation.php"
         ]
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [
+                "z3d0x/filament-fabricator",
+                "pboivin/filament-peek"
+            ]
         }
     },
     "config": {

@@ -16,9 +16,9 @@ final class KavenegarSmsProvider implements SmsProvider
 
     public function send(string $destination, string $message, ?string $providerTemplate = null): ?string
     {
-        $apiKey = trim((string) config('winimi.notifications.kavenegar.api_key'));
-        $baseUrl = rtrim((string) config('winimi.notifications.kavenegar.base_url'), '/');
-        $sender = trim((string) config('winimi.notifications.kavenegar.sender'));
+        $apiKey = trim((string) config('lbb.notifications.kavenegar.api_key'));
+        $baseUrl = rtrim((string) config('lbb.notifications.kavenegar.base_url'), '/');
+        $sender = trim((string) config('lbb.notifications.kavenegar.sender'));
 
         if ($apiKey === '') {
             throw new NotificationDeliveryUnavailable;
@@ -34,7 +34,7 @@ final class KavenegarSmsProvider implements SmsProvider
 
         try {
             $response = Http::acceptJson()
-                ->timeout(max(1, (int) config('winimi.notifications.timeout_seconds', 8)))
+                ->timeout(max(1, (int) config('lbb.notifications.timeout_seconds', 8)))
                 ->retry(2, 250, throw: false)
                 ->get("{$baseUrl}/{$apiKey}/sms/send.json", $payload)
                 ->throw()

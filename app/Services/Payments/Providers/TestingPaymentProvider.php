@@ -24,7 +24,7 @@ final class TestingPaymentProvider implements PaymentProvider
         }
 
         $authority = 'TEST-'.Str::upper($attempt->public_id);
-        $callbackUrl = (string) config('winimi.payment.callback_url');
+        $callbackUrl = (string) config('lbb.payment.callback_url');
         $redirectUrl = $callbackUrl.(str_contains($callbackUrl, '?') ? '&' : '?').http_build_query([
             'Status' => 'OK',
             'Authority' => $authority,

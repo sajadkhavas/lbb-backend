@@ -50,16 +50,16 @@ final class ApiResponse
     {
         return array_filter([
             'requestId' => self::requestId(),
-            'apiVersion' => (string) config('winimi.api.version', '1'),
-            'contractVersion' => (string) config('winimi.api.contract_version', 'unknown'),
+            'apiVersion' => (string) config('lbb.api.version', '1'),
+            'contractVersion' => (string) config('lbb.api.contract_version', 'unknown'),
             ...$meta,
         ], static fn (mixed $value): bool => $value !== null);
     }
 
     private static function requestId(): ?string
     {
-        return app()->bound('winimi.request_id')
-            ? (string) app('winimi.request_id')
+        return app()->bound('lbb.request_id')
+            ? (string) app('lbb.request_id')
             : null;
     }
 }

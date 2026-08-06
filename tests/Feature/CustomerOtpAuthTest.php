@@ -18,11 +18,11 @@ class CustomerOtpAuthTest extends TestCase
         parent::setUp();
 
         config([
-            'winimi.otp.provider' => 'testing',
-            'winimi.otp.expose_test_code' => true,
-            'winimi.otp.retry_after_seconds' => 0,
-            'winimi.otp.expires_seconds' => 120,
-            'winimi.otp.max_attempts' => 5,
+            'lbb.otp.provider' => 'testing',
+            'lbb.otp.expose_test_code' => true,
+            'lbb.otp.retry_after_seconds' => 0,
+            'lbb.otp.expires_seconds' => 120,
+            'lbb.otp.max_attempts' => 5,
             'session.driver' => 'array',
         ]);
     }
@@ -131,7 +131,7 @@ class CustomerOtpAuthTest extends TestCase
 
     public function test_challenge_is_locked_after_maximum_failed_attempts(): void
     {
-        config(['winimi.otp.max_attempts' => 2]);
+        config(['lbb.otp.max_attempts' => 2]);
         $challenge = $this->requestChallenge('09123456782');
         $wrongCode = $this->wrongCode($challenge['code']);
 
@@ -155,7 +155,7 @@ class CustomerOtpAuthTest extends TestCase
 
     public function test_disabled_provider_returns_service_unavailable_and_removes_challenge(): void
     {
-        config(['winimi.otp.provider' => 'disabled']);
+        config(['lbb.otp.provider' => 'disabled']);
 
         $this->stateful()->postJson('/api/auth/otp/request', [
             'mobile' => '09123456783',
@@ -166,7 +166,7 @@ class CustomerOtpAuthTest extends TestCase
 
     public function test_resend_cooldown_returns_retry_after_without_creating_another_challenge(): void
     {
-        config(['winimi.otp.retry_after_seconds' => 60]);
+        config(['lbb.otp.retry_after_seconds' => 60]);
         $this->requestChallenge('09123456784');
 
         $response = $this->stateful()->postJson('/api/auth/otp/request', [
@@ -216,7 +216,7 @@ class CustomerOtpAuthTest extends TestCase
         return $this->withHeaders([
             'Origin' => 'http://localhost:5173',
             'Referer' => 'http://localhost:5173/',
-            'User-Agent' => 'Winimi-Test-Client/1.0',
+            'User-Agent' => 'LBB-Test-Client/1.0',
         ]);
     }
 }

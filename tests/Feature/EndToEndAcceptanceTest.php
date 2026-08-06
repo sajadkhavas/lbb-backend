@@ -7,7 +7,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Models\BakeryProductVariant;
 use App\Models\Order;
-use Database\Seeders\WinimiStagingSeeder;
+use Database\Seeders\LBBStagingSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -22,16 +22,16 @@ class EndToEndAcceptanceTest extends TestCase
         config([
             'session.driver' => 'array',
             'sanctum.stateful' => ['localhost:5173', '127.0.0.1:4173'],
-            'winimi.otp.provider' => 'testing',
-            'winimi.otp.expose_test_code' => true,
-            'winimi.otp.retry_after_seconds' => 0,
-            'winimi.checkout.enabled' => true,
-            'winimi.payment.enabled' => true,
-            'winimi.payment.provider' => 'testing',
-            'winimi.payment.callback_url' => 'http://127.0.0.1:4173/payment/callback',
+            'lbb.otp.provider' => 'testing',
+            'lbb.otp.expose_test_code' => true,
+            'lbb.otp.retry_after_seconds' => 0,
+            'lbb.checkout.enabled' => true,
+            'lbb.payment.enabled' => true,
+            'lbb.payment.provider' => 'testing',
+            'lbb.payment.callback_url' => 'http://127.0.0.1:4173/payment/callback',
         ]);
 
-        $this->seed(WinimiStagingSeeder::class);
+        $this->seed(LBBStagingSeeder::class);
     }
 
     public function test_public_contract_catalog_content_and_external_activation_boundary_are_acceptance_ready(): void
@@ -44,7 +44,7 @@ class EndToEndAcceptanceTest extends TestCase
             ->assertJsonPath('data.launch.internal_gates.end_to_end_verified.status', 'ready')
             ->assertJsonPath('data.launch.internal_gates.production_deployed.status', 'not-started');
 
-        $this->assertCount(3, config('winimi.launch.external_only'));
+        $this->assertCount(3, config('lbb.launch.external_only'));
 
         $this->stateful()->getJson('/api/catalog/products?sort=featured&perPage=12')
             ->assertOk()
@@ -64,7 +64,7 @@ class EndToEndAcceptanceTest extends TestCase
 
         $this->stateful()->getJson('/api/store/posts/staging-welcome')
             ->assertOk()
-            ->assertJsonPath('data.post.author', 'Winimi QA');
+            ->assertJsonPath('data.post.author', 'LBB QA');
 
         $this->stateful()->getJson('/api/store/faqs?category=staging')
             ->assertOk()
@@ -253,7 +253,7 @@ class EndToEndAcceptanceTest extends TestCase
         return $this->withHeaders([
             'Origin' => 'http://localhost:5173',
             'Referer' => 'http://localhost:5173/',
-            'User-Agent' => 'Winimi-Phase18-Acceptance/1.0',
+            'User-Agent' => 'LBB-Phase18-Acceptance/1.0',
         ]);
     }
 }

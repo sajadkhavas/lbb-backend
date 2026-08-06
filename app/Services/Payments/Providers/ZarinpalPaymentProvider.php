@@ -26,7 +26,7 @@ final class ZarinpalPaymentProvider implements PaymentProvider
         $payload = [
             'merchant_id' => $merchantId,
             'amount' => $attempt->amount_provider,
-            'callback_url' => (string) config('winimi.payment.callback_url'),
+            'callback_url' => (string) config('lbb.payment.callback_url'),
             'description' => "پرداخت سفارش {$order->order_number} وینیمی بیکری",
         ];
 
@@ -34,7 +34,7 @@ final class ZarinpalPaymentProvider implements PaymentProvider
             $response = Http::asJson()
                 ->acceptJson()
                 ->timeout($this->timeout())
-                ->post((string) config('winimi.payment.zarinpal.request_url'), $payload);
+                ->post((string) config('lbb.payment.zarinpal.request_url'), $payload);
         } catch (ConnectionException $exception) {
             throw new PaymentProviderException('ارتباط با زرین‌پال هنگام ایجاد پرداخت برقرار نشد.', previous: $exception);
         }
@@ -52,12 +52,12 @@ final class ZarinpalPaymentProvider implements PaymentProvider
 
         return new PaymentInitiationResult(
             authority: $authority,
-            redirectUrl: rtrim((string) config('winimi.payment.zarinpal.start_pay_url'), '/').'/'.$authority,
+            redirectUrl: rtrim((string) config('lbb.payment.zarinpal.start_pay_url'), '/').'/'.$authority,
             gatewayCode: $code,
             requestPayload: [
                 'merchant_id' => '[REDACTED]',
                 'amount' => $attempt->amount_provider,
-                'callback_url' => (string) config('winimi.payment.callback_url'),
+                'callback_url' => (string) config('lbb.payment.callback_url'),
                 'description' => $payload['description'],
             ],
             responsePayload: $this->sanitize($body),
@@ -89,7 +89,7 @@ final class ZarinpalPaymentProvider implements PaymentProvider
             $response = Http::asJson()
                 ->acceptJson()
                 ->timeout($this->timeout())
-                ->post((string) config('winimi.payment.zarinpal.verify_url'), $payload);
+                ->post((string) config('lbb.payment.zarinpal.verify_url'), $payload);
         } catch (ConnectionException $exception) {
             throw new PaymentProviderException('ارتباط با زرین‌پال هنگام تأیید پرداخت برقرار نشد.', previous: $exception);
         }
@@ -117,7 +117,7 @@ final class ZarinpalPaymentProvider implements PaymentProvider
 
     private function merchantId(): string
     {
-        $merchantId = trim((string) config('winimi.payment.zarinpal.merchant_id'));
+        $merchantId = trim((string) config('lbb.payment.zarinpal.merchant_id'));
         if ($merchantId === '') {
             throw new PaymentUnavailable('Merchant ID زرین‌پال هنوز تنظیم نشده است.');
         }
@@ -127,7 +127,7 @@ final class ZarinpalPaymentProvider implements PaymentProvider
 
     private function timeout(): int
     {
-        return max(2, (int) config('winimi.payment.timeout_seconds', 10));
+        return max(2, (int) config('lbb.payment.timeout_seconds', 10));
     }
 
     private function sanitize(array $payload): array

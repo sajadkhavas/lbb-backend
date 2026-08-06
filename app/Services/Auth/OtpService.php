@@ -20,8 +20,8 @@ final class OtpService
     {
         $mobile = IranianMobile::normalize($rawMobile);
         $mobileHash = IranianMobile::hash($mobile);
-        $retryAfter = (int) config('winimi.otp.retry_after_seconds', 60);
-        $expiresIn = (int) config('winimi.otp.expires_seconds', 120);
+        $retryAfter = (int) config('lbb.otp.retry_after_seconds', 60);
+        $expiresIn = (int) config('lbb.otp.expires_seconds', 120);
 
         $latest = OtpChallenge::query()
             ->where('mobile_hash', $mobileHash)
@@ -32,7 +32,7 @@ final class OtpService
             throw new OtpCooldown(now()->diffInSeconds($latest->resend_available_at));
         }
 
-        $length = (int) config('winimi.otp.length', 6);
+        $length = (int) config('lbb.otp.length', 6);
         $code = str_pad((string) random_int(0, (10 ** $length) - 1), $length, '0', STR_PAD_LEFT);
 
         $challenge = DB::transaction(function () use (
@@ -53,7 +53,7 @@ final class OtpService
                 'mobile_payload' => $mobile,
                 'code_hash' => Hash::make($code),
                 'purpose' => 'login',
-                'max_attempts' => (int) config('winimi.otp.max_attempts', 5),
+                'max_attempts' => (int) config('lbb.otp.max_attempts', 5),
                 'expires_at' => now()->addSeconds($expiresIn),
                 'resend_available_at' => now()->addSeconds($retryAfter),
                 'request_ip_hash' => $this->fingerprint($request->ip()),
@@ -151,7 +151,7 @@ final class OtpService
             '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
         ]);
 
-        if (! preg_match('/^\d{'.(int) config('winimi.otp.length', 6).'}$/', $digits)) {
+        if (! preg_match('/^\d{'.(int) config('lbb.otp.length', 6).'}$/', $digits)) {
             throw ValidationException::withMessages(['code' => ['کد ورود معتبر نیست.']]);
         }
 
@@ -165,7 +165,7 @@ final class OtpService
 
     private function mayExposeTestCode(): bool
     {
-        return (bool) config('winimi.otp.expose_test_code')
+        return (bool) config('lbb.otp.expose_test_code')
             && app()->environment(['local', 'testing']);
     }
 }

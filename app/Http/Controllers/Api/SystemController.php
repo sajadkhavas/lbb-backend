@@ -16,7 +16,7 @@ class SystemController extends Controller
     {
         return ApiResponse::success([
             'status' => 'ok',
-            'service' => 'winimi-bakery-backend',
+            'service' => 'lbb-backend',
             'time' => now()->toIso8601String(),
         ]);
     }
@@ -49,19 +49,18 @@ class SystemController extends Controller
     public function meta(): JsonResponse
     {
         return ApiResponse::success([
-            'service' => 'winimi-bakery-backend',
+            'service' => 'lbb-backend',
             'brand' => [
-                'name' => config('winimi.brand.name'),
-                'nameEn' => config('winimi.brand.name_en'),
+                'name' => config('lbb.brand.name'),
+                'nameEn' => config('lbb.brand.name_en'),
             ],
-            'apiVersion' => (string) config('winimi.api.version'),
-            'contractVersion' => (string) config('winimi.api.contract_version'),
-            'roadmapVersion' => (string) config('winimi.launch.roadmap_version'),
+            'apiVersion' => (string) config('lbb.api.version'),
+            'contractVersion' => (string) config('lbb.api.contract_version'),
             'framework' => [
                 'name' => 'Laravel',
                 'version' => app()->version(),
             ],
-            'legacyApiEnabled' => (bool) config('winimi.legacy.enabled'),
+            'backendComplete' => (bool) config('lbb.launch.backend_complete', false),
             'openApiUrl' => '/api/system/openapi',
         ]);
     }
@@ -69,14 +68,14 @@ class SystemController extends Controller
     public function contracts(): JsonResponse
     {
         return ApiResponse::success([
-            'contractVersion' => (string) config('winimi.api.contract_version'),
-            'contracts' => config('winimi.contracts', []),
-            'launch' => config('winimi.launch', []),
-            'policies' => config('winimi.policies', []),
+            'contractVersion' => (string) config('lbb.api.contract_version'),
+            'contracts' => config('lbb.contracts', []),
+            'launch' => config('lbb.launch', []),
+            'policies' => config('lbb.policies', []),
             'notes' => [
-                'مسیرهای /api/v1 متعلق به دامنه قدیمی ToolMaster هستند و در production به‌صورت پیش‌فرض غیرفعال‌اند.',
-                'قرارداد بک‌اند در فاز ۱۶ منجمد شده و آماده اتصال فرانت است.',
-                'پس از استقرار، فقط کد درگاه، کد اینماد و اطلاعات پنل پیامکی به‌عنوان ورودی خارجی باقی می‌مانند.',
+                'قرارداد کاتالوگ پوشاک هنوز در حال مهاجرت است.',
+                'خرید، پرداخت و پیامک تا پایان ممیزی و انجماد قرارداد LBB غیرفعال می‌مانند.',
+                'این پاسخ به معنی آمادگی انتشار production نیست.',
             ],
         ]);
     }
@@ -84,7 +83,7 @@ class SystemController extends Controller
     /** @throws JsonException */
     public function openapi(): JsonResponse
     {
-        $path = base_path('docs/openapi.json');
+        $path = (string) config('lbb.api.openapi_path', base_path('docs/openapi.json'));
         $document = json_decode(File::get($path), true, flags: JSON_THROW_ON_ERROR);
         $etag = '"'.hash_file('sha256', $path).'"';
 

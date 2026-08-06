@@ -24,7 +24,7 @@ class ReviewController extends Controller
     {
         $filters = $request->validate([
             'page' => ['nullable', 'integer', 'min:1'],
-            'perPage' => ['nullable', 'integer', 'min:1', 'max:'.config('winimi.policies.pagination.account_max', 30)],
+            'perPage' => ['nullable', 'integer', 'min:1', 'max:'.config('lbb.policies.pagination.account_max', 30)],
         ]);
         $product = BakeryProduct::query()->where('slug', $slug)->where('is_active', true)->firstOrFail();
         $reviews = ProductReview::query()
@@ -33,7 +33,7 @@ class ReviewController extends Controller
             ->with('customer:id,full_name')
             ->latest('published_at')
             ->paginate((int) ($filters['perPage'] ?? config(
-                'winimi.policies.pagination.account_default',
+                'lbb.policies.pagination.account_default',
                 10,
             )));
         $summary = ProductReview::query()

@@ -21,7 +21,7 @@ class CheckoutController extends Controller
         CheckoutService $checkout,
         PaymentProviderManager $payments,
     ): JsonResponse {
-        if (! config('winimi.checkout.enabled', false)) {
+        if (! config('lbb.checkout.enabled', false)) {
             return ApiResponse::error('ثبت سفارش در حال حاضر فعال نیست.', 503);
         }
 

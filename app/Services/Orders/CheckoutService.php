@@ -184,7 +184,7 @@ final class CheckoutService
         $preparationMinDays = max($productPreparationDays, $quote['preparation_min_days']);
         $preparationMaxDays = max($preparationMinDays, $quote['preparation_max_days']);
         $reservationExpiresAt = now()->addMinutes(
-            max(1, (int) config('winimi.checkout.reservation_minutes', 20)),
+            max(1, (int) config('lbb.checkout.reservation_minutes', 20)),
         );
 
         $order = Order::query()->create([

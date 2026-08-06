@@ -19,7 +19,7 @@ class BakeryCatalogFilamentTest extends TestCase
         ]);
 
         $admin = User::create([
-            'name' => 'Winimi Admin',
+            'name' => 'LBB Admin',
             'email' => 'admin@example.test',
             'password' => 'catalog-test-password',
         ]);

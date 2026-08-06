@@ -2,7 +2,7 @@
 
 ## Source lock
 
-- Source: `sajadkhavas/winimi-bakery-backend`
+- Source: `sajadkhavas/lbb-bakery-backend`
 - Commit: `40ae2ccb4e10775bbff0b724f2994d5ec90f7c1b`
 - Imported into: `sajadkhavas/lbb-backend`
 - Working branch: `phase/f14-be-a-backend-foundation`
@@ -18,7 +18,7 @@
 
 ## Mandatory next stages
 
-1. Remove Winimi/Bakery identity and food-specific behavior.
+1. Remove LBB/Bakery identity and food-specific behavior.
 2. Remove the legacy ToolMaster compatibility API.
 3. Introduce apparel categories, collections, colors, sizes and variants.
 4. Rebuild Filament resources for LBB apparel operations.

@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Providers;
+
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Telescope\IncomingEntry;
@@ -10,19 +12,20 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
 {
     public function register(): void
     {
-        Telescope::night(); // تم تاریک
+        Telescope::night();
 
         $this->hideSensitiveRequestDetails();
 
-        Telescope::filter(function (IncomingEntry $entry) {
+        Telescope::filter(function (IncomingEntry $entry): bool {
             if ($this->app->environment('local')) {
                 return true;
             }
-            return $entry->isReportableException() ||
-                   $entry->isFailedRequest() ||
-                   $entry->isFailedJob() ||
-                   $entry->isScheduledTask() ||
-                   $entry->hasMonitoredTag();
+
+            return $entry->isReportableException()
+                || $entry->isFailedRequest()
+                || $entry->isFailedJob()
+                || $entry->isScheduledTask()
+                || $entry->hasMonitoredTag();
         });
     }
 
@@ -31,20 +34,25 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
         if ($this->app->environment('local')) {
             return;
         }
-        Telescope::hideRequestParameters(['_token', 'password', 'password_confirmation']);
+
+        Telescope::hideRequestParameters([
+            '_token',
+            'password',
+            'password_confirmation',
+            'otp',
+            'code',
+        ]);
+
         Telescope::hideRequestHeaders([
-            'cookie', 'x-csrf-token', 'x-xsrf-token', 'authorization',
+            'cookie',
+            'x-csrf-token',
+            'x-xsrf-token',
+            'authorization',
         ]);
     }
 
     protected function gate(): void
     {
-        Gate::define('viewTelescope', function (User $user) {
-            // فقط super-admin یا ایمیل مشخص
-            return $user->hasRole('super_admin') ||
-                   in_array($user->email, [
-                       'admin@toolmaster.com',
-                   ]);
-        });
+        Gate::define('viewTelescope', static fn (User $user): bool => $user->hasRole('super_admin'));
     }
 }

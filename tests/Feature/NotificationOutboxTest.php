@@ -20,7 +20,7 @@ class NotificationOutboxTest extends TestCase
 
     public function test_disabled_provider_keeps_encrypted_notifications_pending_until_activation(): void
     {
-        config(['winimi.notifications.sms_provider' => 'disabled']);
+        config(['lbb.notifications.sms_provider' => 'disabled']);
         $order = $this->createOrder();
         $notification = app(NotificationOutboxService::class)->queueOrder($order, 'order.ready');
         $rawDestination = DB::table('notification_outbox')
@@ -38,7 +38,7 @@ class NotificationOutboxTest extends TestCase
 
     public function test_testing_provider_dispatches_from_outbox_without_external_credentials(): void
     {
-        config(['winimi.notifications.sms_provider' => 'testing']);
+        config(['lbb.notifications.sms_provider' => 'testing']);
         $order = $this->createOrder();
         app(NotificationOutboxService::class)->queueOrder($order, 'order.dispatched', [
             'tracking_code' => 'TEST-TRACK',

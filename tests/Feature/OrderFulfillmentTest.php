@@ -36,9 +36,9 @@ class OrderFulfillmentTest extends TestCase
         parent::setUp();
 
         config([
-            'winimi.notifications.sms_provider' => 'disabled',
-            'winimi.notifications.max_attempts' => 5,
-            'winimi.notifications.retry_seconds' => 60,
+            'lbb.notifications.sms_provider' => 'disabled',
+            'lbb.notifications.max_attempts' => 5,
+            'lbb.notifications.retry_seconds' => 60,
         ]);
 
         $this->adminId = User::query()->create([

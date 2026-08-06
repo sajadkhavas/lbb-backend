@@ -17,14 +17,14 @@ class AccountOrderController extends Controller
     {
         $filters = $request->validate([
             'page' => ['nullable', 'integer', 'min:1'],
-            'perPage' => ['nullable', 'integer', 'min:1', 'max:'.config('winimi.policies.pagination.account_max', 30)],
+            'perPage' => ['nullable', 'integer', 'min:1', 'max:'.config('lbb.policies.pagination.account_max', 30)],
         ]);
         $orders = Order::query()
             ->ownedBy($request->user('customer'))
             ->with(['items', 'paymentAttempts', 'deliveryZone'])
             ->latest('placed_at')
             ->paginate((int) ($filters['perPage'] ?? config(
-                'winimi.policies.pagination.account_default',
+                'lbb.policies.pagination.account_default',
                 10,
             )));
 

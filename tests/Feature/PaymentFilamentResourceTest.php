@@ -26,7 +26,7 @@ class PaymentFilamentResourceTest extends TestCase
         ]);
 
         $admin = User::create([
-            'name' => 'Winimi Admin',
+            'name' => 'LBB Admin',
             'email' => 'payment-admin@example.test',
             'password' => 'payment-test-password',
         ]);

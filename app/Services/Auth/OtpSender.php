@@ -10,7 +10,7 @@ final class OtpSender
 {
     public function send(string $mobile, string $code): void
     {
-        match ((string) config('winimi.otp.provider', 'disabled')) {
+        match ((string) config('lbb.otp.provider', 'disabled')) {
             'testing' => $this->sendForTesting(),
             'kavenegar' => $this->sendWithKavenegar($mobile, $code),
             default => throw new OtpDeliveryUnavailable,
@@ -26,9 +26,9 @@ final class OtpSender
 
     private function sendWithKavenegar(string $mobile, string $code): void
     {
-        $apiKey = trim((string) config('winimi.otp.kavenegar.api_key'));
-        $template = trim((string) config('winimi.otp.kavenegar.template'));
-        $baseUrl = rtrim((string) config('winimi.otp.kavenegar.base_url'), '/');
+        $apiKey = trim((string) config('lbb.otp.kavenegar.api_key'));
+        $template = trim((string) config('lbb.otp.kavenegar.template'));
+        $baseUrl = rtrim((string) config('lbb.otp.kavenegar.base_url'), '/');
 
         if ($apiKey === '' || $template === '') {
             throw new OtpDeliveryUnavailable;

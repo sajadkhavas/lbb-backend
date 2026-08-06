@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use Database\Seeders\WinimiStagingSeeder;
+use Database\Seeders\LBBStagingSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use RuntimeException;
 use Tests\TestCase;
@@ -13,7 +13,7 @@ class ManagedContentFixtureTest extends TestCase
 
     public function test_required_managed_content_pages_are_published_for_acceptance(): void
     {
-        $this->seed(WinimiStagingSeeder::class);
+        $this->seed(LBBStagingSeeder::class);
 
         $pages = [
             'about' => 'درباره وینیمی',
@@ -40,9 +40,9 @@ class ManagedContentFixtureTest extends TestCase
 
         try {
             $this->expectException(RuntimeException::class);
-            $this->expectExceptionMessage('Winimi staging data must never be seeded in production.');
+            $this->expectExceptionMessage('LBB staging data must never be seeded in production.');
 
-            (new WinimiStagingSeeder)->run();
+            (new LBBStagingSeeder)->run();
         } finally {
             app()->detectEnvironment(static fn (): string => $originalEnvironment);
         }

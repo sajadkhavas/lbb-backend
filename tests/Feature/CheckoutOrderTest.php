@@ -28,14 +28,14 @@ class CheckoutOrderTest extends TestCase
         parent::setUp();
 
         config([
-            'winimi.checkout.enabled' => true,
-            'winimi.checkout.reservation_minutes' => 20,
-            'winimi.checkout.max_quantity_per_line' => 20,
-            'winimi.checkout.max_total_units' => 50,
-            'winimi.checkout.packaging_fee_toman' => 10_000,
-            'winimi.checkout.delivery_methods.standard' => ['enabled' => true, 'fee_toman' => 30_000],
-            'winimi.checkout.delivery_methods.chilled' => ['enabled' => true, 'fee_toman' => 90_000],
-            'winimi.checkout.delivery_methods.pickup' => ['enabled' => true, 'fee_toman' => 0],
+            'lbb.checkout.enabled' => true,
+            'lbb.checkout.reservation_minutes' => 20,
+            'lbb.checkout.max_quantity_per_line' => 20,
+            'lbb.checkout.max_total_units' => 50,
+            'lbb.checkout.packaging_fee_toman' => 10_000,
+            'lbb.checkout.delivery_methods.standard' => ['enabled' => true, 'fee_toman' => 30_000],
+            'lbb.checkout.delivery_methods.chilled' => ['enabled' => true, 'fee_toman' => 90_000],
+            'lbb.checkout.delivery_methods.pickup' => ['enabled' => true, 'fee_toman' => 0],
             'session.driver' => 'array',
         ]);
 
@@ -227,12 +227,12 @@ class CheckoutOrderTest extends TestCase
 
     public function test_checkout_is_disabled_by_default_and_requires_a_valid_idempotency_key(): void
     {
-        config(['winimi.checkout.enabled' => false]);
+        config(['lbb.checkout.enabled' => false]);
 
         $this->checkout('checkout-key-000010', 1)
             ->assertServiceUnavailable();
 
-        config(['winimi.checkout.enabled' => true]);
+        config(['lbb.checkout.enabled' => true]);
 
         $this->actingAs($this->customer, 'customer')
             ->postJson('/api/checkout', $this->payload(1), [

@@ -24,7 +24,7 @@ class OrderFilamentResourceTest extends TestCase
         ]);
 
         $admin = User::create([
-            'name' => 'Winimi Admin',
+            'name' => 'LBB Admin',
             'email' => 'orders-admin@example.test',
             'password' => 'order-test-password',
         ]);

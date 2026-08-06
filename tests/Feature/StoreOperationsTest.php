@@ -39,14 +39,14 @@ class StoreOperationsTest extends TestCase
 
         config([
             'session.driver' => 'array',
-            'winimi.checkout.enabled' => true,
-            'winimi.checkout.reservation_minutes' => 20,
-            'winimi.checkout.max_quantity_per_line' => 20,
-            'winimi.checkout.max_total_units' => 50,
-            'winimi.checkout.packaging_fee_toman' => 0,
-            'winimi.checkout.delivery_methods.standard' => ['enabled' => false, 'fee_toman' => 0],
-            'winimi.checkout.delivery_methods.chilled' => ['enabled' => false, 'fee_toman' => 0],
-            'winimi.checkout.delivery_methods.pickup' => ['enabled' => false, 'fee_toman' => 0],
+            'lbb.checkout.enabled' => true,
+            'lbb.checkout.reservation_minutes' => 20,
+            'lbb.checkout.max_quantity_per_line' => 20,
+            'lbb.checkout.max_total_units' => 50,
+            'lbb.checkout.packaging_fee_toman' => 0,
+            'lbb.checkout.delivery_methods.standard' => ['enabled' => false, 'fee_toman' => 0],
+            'lbb.checkout.delivery_methods.chilled' => ['enabled' => false, 'fee_toman' => 0],
+            'lbb.checkout.delivery_methods.pickup' => ['enabled' => false, 'fee_toman' => 0],
         ]);
 
         $this->customer = Customer::query()->create([

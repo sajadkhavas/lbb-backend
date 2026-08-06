@@ -5,7 +5,6 @@ use App\Http\Middleware\CheckIpBlacklist;
 use App\Http\Middleware\CheckMaintenanceMode;
 use App\Http\Middleware\EnsureActiveCustomer;
 use App\Http\Middleware\HandleRedirects;
-use App\Http\Middleware\MarkLegacyApi;
 use App\Support\ApiExceptionRenderer;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -30,7 +29,6 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->alias([
             'api.context' => AttachApiContext::class,
-            'api.legacy' => MarkLegacyApi::class,
             'customer.active' => EnsureActiveCustomer::class,
         ]);
     })

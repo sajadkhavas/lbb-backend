@@ -112,7 +112,7 @@ final class DeliveryConfigurationService
                 ];
             }
 
-            $fallback = config("winimi.checkout.delivery_methods.{$method->value}", []);
+            $fallback = config("lbb.checkout.delivery_methods.{$method->value}", []);
 
             return [
                 'method' => $method->value,
@@ -153,7 +153,7 @@ final class DeliveryConfigurationService
      */
     private function fallbackQuote(DeliveryMethod $method, int $subtotalToman): array
     {
-        $delivery = config("winimi.checkout.delivery_methods.{$method->value}", []);
+        $delivery = config("lbb.checkout.delivery_methods.{$method->value}", []);
         if (! ($delivery['enabled'] ?? false)) {
             throw ValidationException::withMessages([
                 'deliveryMethod' => ['روش تحویل انتخاب‌شده فعال نیست.'],
@@ -163,7 +163,7 @@ final class DeliveryConfigurationService
         return [
             'zone' => null,
             'fee_toman' => (int) ($delivery['fee_toman'] ?? 0),
-            'packaging_fee_toman' => (int) config('winimi.checkout.packaging_fee_toman', 0),
+            'packaging_fee_toman' => (int) config('lbb.checkout.packaging_fee_toman', 0),
             'preparation_min_days' => 0,
             'preparation_max_days' => 0,
         ];

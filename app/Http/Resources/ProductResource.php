@@ -35,7 +35,7 @@ class ProductResource extends JsonResource
             'rfqCount' => $this->rfq_count,
             'legacyDomain' => true,
             'seo' => [
-                'title' => $this->meta_title ?: "{$this->name} | ".config('winimi.brand.name'),
+                'title' => $this->meta_title ?: "{$this->name} | ".config('lbb.brand.name'),
                 'description' => $this->meta_description ?: $this->excerpt ?: $this->description,
                 'keywords' => $this->meta_keywords,
                 'schema' => $this->getProductSchemaAttribute(),

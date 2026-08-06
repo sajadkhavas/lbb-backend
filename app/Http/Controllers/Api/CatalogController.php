@@ -27,7 +27,7 @@ class CatalogController extends Controller
             'inStock' => ['nullable', 'boolean'],
             'sort' => ['nullable', 'in:featured,newest,name,price-asc,price-desc'],
             'page' => ['nullable', 'integer', 'min:1'],
-            'perPage' => ['nullable', 'integer', 'min:1', 'max:'.config('winimi.policies.pagination.catalog_max', 48)],
+            'perPage' => ['nullable', 'integer', 'min:1', 'max:'.config('lbb.policies.pagination.catalog_max', 48)],
         ]);
 
         $featured = $request->has('featured')
@@ -80,7 +80,7 @@ class CatalogController extends Controller
         $this->applySort($query, $filters['sort'] ?? 'featured');
 
         $paginator = $query->paginate((int) ($filters['perPage'] ?? config(
-            'winimi.policies.pagination.catalog_default',
+            'lbb.policies.pagination.catalog_default',
             12,
         )));
         $items = BakeryProductResource::collection($paginator->getCollection())->resolve($request);

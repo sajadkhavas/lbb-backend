@@ -89,7 +89,7 @@ app/Support/ApiResponse.php
 composer.json
 config/app.php
 config/mail.php
-config/winimi.php
+config/lbb.php
 database/migrations/2026_07_19_120000_create_bakery_catalog_tables.php
 database/migrations/2026_07_19_172000_create_checkout_order_tables.php
 database/migrations/2026_07_20_000000_create_store_operations_tables.php
@@ -98,19 +98,19 @@ database/seeders/AdminUserSeeder.php
 database/seeders/DatabaseSeeder.php
 database/seeders/SettingsSeeder.php
 database/seeders/SiteSettingsSeeder.php
-database/seeders/WinimiStagingSeeder.php
+database/seeders/LBBStagingSeeder.php
 deploy/backend.production.env.example
 deploy/bin/deploy-backend.sh
 deploy/bin/deploy-production-backend.sh
 deploy/bin/preflight-backend-server.sh
 deploy/bin/rollback-backend.sh
 deploy/bin/smoke-backend-production.sh
-deploy/nginx/winimi-api.conf.example
-deploy/systemd/winimi-backend-backup.service
-deploy/systemd/winimi-backend-backup.timer
-deploy/systemd/winimi-backend-queue.service
-deploy/systemd/winimi-backend-scheduler.service
-deploy/systemd/winimi-backend-scheduler.timer
+deploy/nginx/lbb-api.conf.example
+deploy/systemd/lbb-backend-backup.service
+deploy/systemd/lbb-backend-backup.timer
+deploy/systemd/lbb-backend-queue.service
+deploy/systemd/lbb-backend-scheduler.service
+deploy/systemd/lbb-backend-scheduler.timer
 docs/API_CONTRACT.md
 docs/API_ERRORS_AND_PAGINATION.md
 docs/BACKEND_AUDIT.md
@@ -401,7 +401,7 @@ WebhookResource.php
 ## Food-specific field references
 
 ```text
-.github/workflows/f14-be-b-inventory.yml:38:            git grep -Il -E 'Winimi|WINIMI|winimi|Bakery|BAKERY|bakery|ToolMaster|TOOLMASTER|toolmaster|requires_cooling|ingredients|allergens|chilled' -- ':!docs/reference/**' ':!docs/F14_BE_B_LEGACY_INVENTORY.md' | sort || true
+.github/workflows/f14-be-b-inventory.yml:38:            git grep -Il -E 'LBB|WINIMI|lbb|Bakery|BAKERY|bakery|ToolMaster|TOOLMASTER|toolmaster|requires_cooling|ingredients|allergens|chilled' -- ':!docs/reference/**' ':!docs/F14_BE_B_LEGACY_INVENTORY.md' | sort || true
 .github/workflows/f14-be-b-inventory.yml:68:            git grep -n -E 'requires_cooling|ingredients|allergens|shelf_life|storage_instructions|weight_grams|preparation_time_days|chilled' -- ':!docs/reference/**' || true
 app/Enums/DeliveryMethod.php:8:    case Chilled = 'chilled';
 app/Filament/Resources/BakeryProductResource.php:78:                                    Forms\Components\Toggle::make('requires_cooling')
@@ -470,7 +470,7 @@ app/Services/Orders/CheckoutService.php:169:                'weight_grams' => $v
 app/Services/Orders/CheckoutService.php:170:                'requires_cooling' => (bool) $product->requires_cooling,
 app/Services/Orders/CheckoutService.php:199:            'requires_cooling' => $requiresCooling,
 app/Services/Orders/CheckoutService.php:206:            'preparation_time_days' => $preparationMinDays,
-config/winimi.php:57:            'chilled' => [
+config/lbb.php:57:            'chilled' => [
 database/migrations/2026_07_19_120000_create_bakery_catalog_tables.php:37:            $table->json('ingredients')->nullable();
 database/migrations/2026_07_19_120000_create_bakery_catalog_tables.php:38:            $table->json('allergens')->nullable();
 database/migrations/2026_07_19_120000_create_bakery_catalog_tables.php:39:            $table->string('shelf_life', 220)->nullable();
@@ -486,17 +486,17 @@ database/migrations/2026_07_20_000000_create_store_operations_tables.php:37:    
 database/migrations/2026_07_20_000000_create_store_operations_tables.php:40:            $table->unsignedBigInteger('chilled_fee_toman')->default(0);
 database/migrations/2026_07_20_000000_create_store_operations_tables.php:215:            $table->unsignedSmallInteger('preparation_max_days')->default(0)->after('preparation_time_days');
 database/migrations/2026_07_20_120000_optimize_backend_contract_indexes.php:17:                ['requires_cooling', 'is_active'],
-database/seeders/WinimiStagingSeeder.php:49:                    'slug' => 'staging-chilled-cake',
-database/seeders/WinimiStagingSeeder.php:84:                        'ingredients' => json_encode(['داده تست'], JSON_UNESCAPED_UNICODE),
-database/seeders/WinimiStagingSeeder.php:85:                        'allergens' => json_encode([], JSON_UNESCAPED_UNICODE),
-database/seeders/WinimiStagingSeeder.php:86:                        'preparation_time_days' => 1,
-database/seeders/WinimiStagingSeeder.php:87:                        'requires_cooling' => $product['cooling'],
-database/seeders/WinimiStagingSeeder.php:119:                ['name' => 'تهران تست', 'province' => 'تهران', 'city' => 'تهران', 'standard' => true, 'chilled' => true, 'pickup' => true, 'priority' => 10],
-database/seeders/WinimiStagingSeeder.php:120:                ['name' => 'کرج تست', 'province' => 'البرز', 'city' => 'کرج', 'standard' => true, 'chilled' => true, 'pickup' => false, 'priority' => 20],
-database/seeders/WinimiStagingSeeder.php:121:                ['name' => 'اندیشه تست', 'province' => 'تهران', 'city' => 'اندیشه', 'standard' => true, 'chilled' => true, 'pickup' => false, 'priority' => 20],
-database/seeders/WinimiStagingSeeder.php:122:                ['name' => 'ارسال خشک سراسری تست', 'province' => null, 'city' => null, 'standard' => true, 'chilled' => false, 'pickup' => false, 'priority' => 900],
-database/seeders/WinimiStagingSeeder.php:133:                        'chilled_enabled' => $zone['chilled'],
-database/seeders/WinimiStagingSeeder.php:136:                        'chilled_fee_toman' => 85000,
+database/seeders/LBBStagingSeeder.php:49:                    'slug' => 'staging-chilled-cake',
+database/seeders/LBBStagingSeeder.php:84:                        'ingredients' => json_encode(['داده تست'], JSON_UNESCAPED_UNICODE),
+database/seeders/LBBStagingSeeder.php:85:                        'allergens' => json_encode([], JSON_UNESCAPED_UNICODE),
+database/seeders/LBBStagingSeeder.php:86:                        'preparation_time_days' => 1,
+database/seeders/LBBStagingSeeder.php:87:                        'requires_cooling' => $product['cooling'],
+database/seeders/LBBStagingSeeder.php:119:                ['name' => 'تهران تست', 'province' => 'تهران', 'city' => 'تهران', 'standard' => true, 'chilled' => true, 'pickup' => true, 'priority' => 10],
+database/seeders/LBBStagingSeeder.php:120:                ['name' => 'کرج تست', 'province' => 'البرز', 'city' => 'کرج', 'standard' => true, 'chilled' => true, 'pickup' => false, 'priority' => 20],
+database/seeders/LBBStagingSeeder.php:121:                ['name' => 'اندیشه تست', 'province' => 'تهران', 'city' => 'اندیشه', 'standard' => true, 'chilled' => true, 'pickup' => false, 'priority' => 20],
+database/seeders/LBBStagingSeeder.php:122:                ['name' => 'ارسال خشک سراسری تست', 'province' => null, 'city' => null, 'standard' => true, 'chilled' => false, 'pickup' => false, 'priority' => 900],
+database/seeders/LBBStagingSeeder.php:133:                        'chilled_enabled' => $zone['chilled'],
+database/seeders/LBBStagingSeeder.php:136:                        'chilled_fee_toman' => 85000,
 docs/CATALOG_API.md:70:- Ingredients, allergens, shelf life and storage instructions are returned only when `content_verified` is true.
 docs/FULL_LAUNCH_ROADMAP.md:46:- Tehran, Karaj and Andisheh chilled-delivery rules
 docs/FULL_LAUNCH_ROADMAP.md:96:- chilled rejection outside allowed zones
@@ -505,7 +505,7 @@ docs/ORDERS_CHECKOUT.md:119:A cart containing any cooling-required product canno
 docs/QUERY_INDEX_REVIEW.md:15:- `bakery_products.requires_cooling`
 docs/STORE_OPERATIONS.md:27:- standard, chilled and pickup availability
 docs/openapi.json:106:      "CheckoutInput": {"type": "object", "required": ["deliveryMethod", "items"], "properties": {"addressId": {"type": ["string", "null"], "minLength": 26, "maxLength": 26}, "customer": {"type": ["object", "null"], "additionalProperties": true}, "deliveryMethod": {"type": "string", "enum": ["standard", "chilled", "pickup"]}, "items": {"type": "array", "minItems": 1, "maxItems": 50, "items": {"type": "object", "required": ["variantId", "quantity"], "properties": {"variantId": {"type": "string", "minLength": 26, "maxLength": 26}, "quantity": {"type": "integer", "minimum": 1, "maximum": 20}}}}}}
-scripts/audit-backend-freeze.php:154:$requireText('database/seeders/WinimiStagingSeeder.php', 'staging-chilled-cake', 'chilled staging product');
+scripts/audit-backend-freeze.php:154:$requireText('database/seeders/LBBStagingSeeder.php', 'staging-chilled-cake', 'chilled staging product');
 scripts/audit-orders-checkout.php:93:    'test_cooling_products_require_chilled_delivery_or_pickup',
 scripts/audit-phase-18-acceptance.php:50:$require('acceptance', 'phase18-chilled-rejected', 'chilled-zone rejection');
 Binary file src/assets/slider-1.png matches
@@ -526,7 +526,7 @@ tests/Feature/BakeryCatalogApiTest.php:124:            'storage_instructions' =>
 tests/Feature/BakeryCatalogApiTest.php:126:            'requires_cooling' => true,
 tests/Feature/BakeryCatalogApiTest.php:146:            ->assertJsonPath('data.ingredients.0', 'پنیر خامه‌ای')
 tests/Feature/BakeryCatalogApiTest.php:147:            ->assertJsonPath('data.allergens.0', 'لبنیات')
-tests/Feature/CheckoutOrderTest.php:37:            'winimi.checkout.delivery_methods.chilled' => ['enabled' => true, 'fee_toman' => 90_000],
+tests/Feature/CheckoutOrderTest.php:37:            'lbb.checkout.delivery_methods.chilled' => ['enabled' => true, 'fee_toman' => 90_000],
 tests/Feature/CheckoutOrderTest.php:60:            'preparation_time_days' => 2,
 tests/Feature/CheckoutOrderTest.php:61:            'requires_cooling' => false,
 tests/Feature/CheckoutOrderTest.php:151:    public function test_cooling_products_require_chilled_delivery_or_pickup(): void
@@ -553,12 +553,12 @@ tests/Feature/OrderFulfillmentTest.php:206:            'preparation_time_days' =
 tests/Feature/OrderFulfillmentTest.php:226:            'requires_cooling' => false,
 tests/Feature/PaymentFilamentResourceTest.php:48:            'requires_cooling' => false,
 tests/Feature/PaymentFilamentResourceTest.php:55:            'preparation_time_days' => 1,
-tests/Feature/PaymentFlowTest.php:39:            'winimi.checkout.delivery_methods.chilled' => ['enabled' => true, 'fee_toman' => 90_000],
+tests/Feature/PaymentFlowTest.php:39:            'lbb.checkout.delivery_methods.chilled' => ['enabled' => true, 'fee_toman' => 90_000],
 tests/Feature/PaymentFlowTest.php:67:            'preparation_time_days' => 2,
 tests/Feature/PaymentFlowTest.php:68:            'requires_cooling' => false,
 tests/Feature/StoreOperationsFilamentTest.php:73:            'requires_cooling' => false,
 tests/Feature/StoreOperationsFilamentTest.php:80:            'preparation_time_days' => 1,
-tests/Feature/StoreOperationsTest.php:48:            'winimi.checkout.delivery_methods.chilled' => ['enabled' => false, 'fee_toman' => 0],
+tests/Feature/StoreOperationsTest.php:48:            'lbb.checkout.delivery_methods.chilled' => ['enabled' => false, 'fee_toman' => 0],
 tests/Feature/StoreOperationsTest.php:70:            'preparation_time_days' => 2,
 tests/Feature/StoreOperationsTest.php:71:            'requires_cooling' => false,
 tests/Feature/StoreOperationsTest.php:157:            'preparation_time_days' => 2,
@@ -588,7 +588,7 @@ app/Http/Controllers/Api/V1/SeoController.php:2:namespace App\Http\Controllers\A
 app/Http/Controllers/Api/V1/SettingsController.php:3:namespace App\Http\Controllers\Api\V1;
 app/Http/Controllers/Api/V1/SliderController.php:3:namespace App\Http\Controllers\Api\V1;
 bootstrap/app.php:33:            'api.legacy' => MarkLegacyApi::class,
-config/winimi.php:153:        'enabled' => $boolean('LEGACY_TOOLMASTER_API_ENABLED', $legacyDefault),
+config/lbb.php:153:        'enabled' => $boolean('LEGACY_TOOLMASTER_API_ENABLED', $legacyDefault),
 deploy/backend.production.env.example:37:LEGACY_TOOLMASTER_API_ENABLED=false
 deploy/bin/preflight-backend-server.sh:62:    require_env LEGACY_TOOLMASTER_API_ENABLED false
 docs/LARAVEL_BACKEND_COMPLETE.md:707:namespace App\Http\Controllers\Api\V1;
