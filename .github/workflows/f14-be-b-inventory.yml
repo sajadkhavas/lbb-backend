@@ -1,0 +1,88 @@
+name: F14-BE-B Legacy Inventory
+
+on:
+  push:
+    branches:
+      - phase/f14-be-b-domain-cleanup
+    paths:
+      - .github/workflows/f14-be-b-inventory.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: phase/f14-be-b-domain-cleanup
+          fetch-depth: 0
+
+      - name: Build legacy inventory
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p docs
+
+          {
+            echo '# F14-BE-B Legacy Inventory'
+            echo
+            echo 'Generated from branch `phase/f14-be-b-domain-cleanup` before destructive cleanup.'
+            echo
+            echo '## Identity and domain references'
+            echo
+            echo '```text'
+            git grep -Il -E 'Winimi|WINIMI|winimi|Bakery|BAKERY|bakery|ToolMaster|TOOLMASTER|toolmaster|requires_cooling|ingredients|allergens|chilled' -- ':!docs/reference/**' ':!docs/F14_BE_B_LEGACY_INVENTORY.md' | sort || true
+            echo '```'
+            echo
+            echo '## Models'
+            echo
+            echo '```text'
+            find app/Models -maxdepth 1 -type f -printf '%f\n' | sort
+            echo '```'
+            echo
+            echo '## API controllers'
+            echo
+            echo '```text'
+            find app/Http/Controllers/Api -type f -printf '%P\n' | sort
+            echo '```'
+            echo
+            echo '## Filament resources'
+            echo
+            echo '```text'
+            find app/Filament/Resources -maxdepth 1 -type f -printf '%f\n' | sort
+            echo '```'
+            echo
+            echo '## Migrations'
+            echo
+            echo '```text'
+            find database/migrations -maxdepth 1 -type f -printf '%f\n' | sort
+            echo '```'
+            echo
+            echo '## Food-specific field references'
+            echo
+            echo '```text'
+            git grep -n -E 'requires_cooling|ingredients|allergens|shelf_life|storage_instructions|weight_grams|preparation_time_days|chilled' -- ':!docs/reference/**' || true
+            echo '```'
+            echo
+            echo '## Legacy API references'
+            echo
+            echo '```text'
+            git grep -n -E 'api\.legacy|LEGACY_TOOLMASTER|Legacy ToolMaster|Controllers\\Api\\V1' -- ':!docs/reference/**' || true
+            echo '```'
+          } > docs/F14_BE_B_LEGACY_INVENTORY.md
+
+          rm -f .github/workflows/f14-be-b-inventory.yml
+
+      - name: Commit inventory
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'F14-BE-B: inventory inherited backend domain'
+          git push origin HEAD:phase/f14-be-b-domain-cleanup
