@@ -14,6 +14,16 @@ def remove(path: Path) -> None:
         path.unlink()
 
 
+# These API resources belonged only to the deleted ToolMaster controllers/models.
+for legacy_resource in [
+    'app/Http/Resources/BlogPostResource.php',
+    'app/Http/Resources/BrandResource.php',
+    'app/Http/Resources/CategoryResource.php',
+    'app/Http/Resources/ProductResource.php',
+    'app/Http/Resources/SubcategoryResource.php',
+]:
+    remove(root / legacy_resource)
+
 # City landing pages were a Winimi-specific SEO domain and have no verified LBB requirement.
 for path in sorted(root.rglob('*'), key=lambda item: len(item.parts), reverse=True):
     normalized = str(path).replace('\\', '/')
@@ -39,6 +49,7 @@ if controller_path.exists():
 
 class_map = [
     ('BakeryProductVariant', 'ProductVariant'),
+    ('BakeryVariantResource', 'ProductVariantResource'),
     ('BakeryGalleryItem', 'GalleryItem'),
     ('BakeryContentPage', 'ContentPage'),
     ('BakeryCategory', 'Category'),
@@ -128,6 +139,7 @@ status += '''
 - Renamed active catalog/content models, resources, policies, factories and tests from bakery-specific names to neutral commerce names.
 - Renamed active database tables from `bakery_*` to neutral table names.
 - Removed the city SEO page model, endpoint, resource and migration.
+- Removed stale generic API resources left by the deleted ToolMaster controllers.
 - Replaced bakery cache namespaces and Persian bakery labels in active runtime code.
 - Extended the foundation audit to reject active Bakery identity references.
 
