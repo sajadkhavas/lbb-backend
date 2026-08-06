@@ -7,6 +7,7 @@ on:
     paths:
       - .github/workflows/f14-be-b-neutralize-domain.yml
       - scripts/f14_be_b_neutralize_domain.py
+      - scripts/f14_be_b2_complete.py
   workflow_dispatch:
 
 permissions:
@@ -21,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
-      MIGRATION_ATTEMPT: 5
+      MIGRATION_ATTEMPT: 6
       DB_CONNECTION: sqlite
       DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
       CACHE_STORE: array
@@ -32,6 +33,7 @@ jobs:
       PAYMENT_ENABLED: false
       SMS_PROVIDER: disabled
       ORDER_SMS_PROVIDER: disabled
+      SANCTUM_STATEFUL_DOMAINS: localhost,localhost:5173,127.0.0.1,127.0.0.1:4173
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,6 +42,9 @@ jobs:
 
       - name: Neutralize inherited commerce names
         run: python3 scripts/f14_be_b_neutralize_domain.py
+
+      - name: Complete B2 food-domain cleanup
+        run: python3 scripts/f14_be_b2_complete.py
 
       - name: Validate PHP syntax
         shell: bash
@@ -74,16 +79,17 @@ jobs:
       - name: Run backend tests
         run: php artisan test
 
-      - name: Commit neutral commerce baseline
+      - name: Commit completed B2 baseline
         shell: bash
         run: |
           set -Eeuo pipefail
           rm -f .github/workflows/f14-be-b-neutralize-domain.yml
           rm -f .github/workflows/f14-be-b-test-diagnostics.yml
           rm -f scripts/f14_be_b_neutralize_domain.py
+          rm -f scripts/f14_be_b2_complete.py
           rm -f database/database.sqlite
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
-          git commit -m 'F14-BE-B: neutralize inherited bakery domain names'
+          git commit -m 'feat(f14-be-b): complete neutral commerce baseline'
           git push origin HEAD:phase/f14-be-b-domain-cleanup
