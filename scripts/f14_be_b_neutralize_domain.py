@@ -14,6 +14,22 @@ def remove(path: Path) -> None:
         path.unlink()
 
 
+def remove_schema_callback_block(source: str, table: str, require: str | None = None) -> str:
+    pattern = re.compile(
+        rf"\n?[ \t]*Schema::(?:create|table)\(\s*['\"]{re.escape(table)}['\"]\s*,\s*"
+        rf"function\s*\([^)]*\)\s*\{{.*?\n[ \t]*\}}\);\n?",
+        flags=re.S,
+    )
+
+    def replace(match: re.Match[str]) -> str:
+        block = match.group(0)
+        if require is not None and require not in block:
+            return block
+        return "\n"
+
+    return pattern.sub(replace, source)
+
+
 # These API resources belonged only to the deleted ToolMaster controllers/models.
 for legacy_resource in [
     'app/Http/Resources/BlogPostResource.php',
@@ -88,6 +104,34 @@ for migration in (root / 'database/migrations').glob('*.php'):
     if creates_neutral_table:
         remove(migration)
 
+# Two inherited content phases can both own message_templates. Keep the newest
+# migration as the canonical owner and remove only the duplicate callback block
+# from older migrations, preserving their other content tables.
+message_template_migrations: list[tuple[Path, str]] = []
+for migration in sorted((root / 'database/migrations').glob('*.php')):
+    source = migration.read_text()
+    if (
+        re.search(r"Schema::create\(\s*['\"]message_templates['\"]", source)
+        or 'message_templates_stage_channel_unique' in source
+    ):
+        message_template_migrations.append((migration, source))
+
+if len(message_template_migrations) > 1:
+    canonical_path, _ = message_template_migrations[-1]
+    for migration, source in message_template_migrations[:-1]:
+        updated = remove_schema_callback_block(source, 'message_templates')
+        updated = remove_schema_callback_block(
+            updated,
+            'message_templates',
+            require='message_templates_stage_channel_unique',
+        )
+        if updated == source:
+            raise RuntimeError(
+                f'Could not remove duplicate message_templates schema from {migration}; '
+                f'canonical owner is {canonical_path}'
+            )
+        migration.write_text(updated)
+
 # Update active source contents. Imported reference material remains immutable.
 active_roots = [
     'app',
@@ -161,6 +205,7 @@ status += '''
 - Removed the city SEO page model, endpoint, resource and migration.
 - Removed stale generic API resources left by the deleted ToolMaster controllers.
 - Removed legacy migrations that competed for the neutral catalog table names.
+- Assigned duplicated `message_templates` schema ownership to the newest migration.
 - Replaced bakery cache namespaces and Persian bakery labels in active runtime code.
 - Extended the foundation audit to reject active Bakery identity references.
 
