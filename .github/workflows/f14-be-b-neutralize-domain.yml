@@ -1,0 +1,85 @@
+name: F14-BE-B Neutralize Commerce Domain
+
+on:
+  push:
+    branches:
+      - phase/f14-be-b-domain-cleanup
+    paths:
+      - .github/workflows/f14-be-b-neutralize-domain.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: f14-be-b-neutralize-domain
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: array
+      CHECKOUT_ENABLED: false
+      PAYMENT_ENABLED: false
+      SMS_PROVIDER: disabled
+      ORDER_SMS_PROVIDER: disabled
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: phase/f14-be-b-domain-cleanup
+          fetch-depth: 0
+
+      - name: Neutralize inherited commerce names
+        run: python3 scripts/f14_be_b_neutralize_domain.py
+
+      - name: Validate PHP syntax
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          while IFS= read -r -d '' file; do
+            php -l "$file" >/dev/null
+          done < <(find app bootstrap config database routes scripts tests -type f -name '*.php' -print0)
+
+      - name: Install locked dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress --ignore-platform-req=ext-redis
+
+      - name: Prepare isolated application
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cp .env.example .env
+          mkdir -p database storage/framework/sessions storage/framework/cache storage/framework/views
+          : > database/database.sqlite
+          php artisan key:generate --force
+          php artisan optimize:clear
+          composer dump-autoload --no-interaction
+
+      - name: Validate schema and runtime
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          php artisan migrate:fresh --force
+          php scripts/audit-lbb-foundation.php
+          php artisan route:list --except-vendor
+
+      - name: Run backend tests
+        run: php artisan test
+
+      - name: Commit neutral commerce baseline
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -f .github/workflows/f14-be-b-neutralize-domain.yml
+          rm -f scripts/f14_be_b_neutralize_domain.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'F14-BE-B: neutralize inherited bakery domain names'
+          git push origin HEAD:phase/f14-be-b-domain-cleanup
