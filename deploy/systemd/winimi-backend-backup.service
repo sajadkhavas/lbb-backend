@@ -1,0 +1,28 @@
+[Unit]
+Description=Winimi Bakery encrypted database and media backup
+Documentation=https://github.com/sajadkhavas/winimi-bakery-backend/blob/main/docs/BACKUP_RESTORE.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=winimi
+Group=www-data
+WorkingDirectory=/var/www/winimi/backend/current
+ExecStart=/bin/bash -Eeuo pipefail -c '/usr/bin/php artisan backup:run && /usr/bin/php artisan backup:clean && /usr/bin/php artisan backup:list'
+SyslogIdentifier=winimi-backend-backup
+UMask=0077
+
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/winimi/backend/shared/storage /var/www/winimi/backups /var/www/winimi/backend/current/bootstrap/cache
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+LockPersonality=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
