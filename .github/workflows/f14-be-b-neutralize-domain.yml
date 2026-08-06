@@ -7,7 +7,9 @@ on:
     paths:
       - .github/workflows/f14-be-b-neutralize-domain.yml
       - scripts/f14_be_b_neutralize_domain.py
+      - scripts/f14_be_b2_prepare.py
       - scripts/f14_be_b2_complete.py
+      - scripts/f14_be_b2_contract_fix.py
   workflow_dispatch:
 
 permissions:
@@ -22,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
-      MIGRATION_ATTEMPT: 6
+      MIGRATION_ATTEMPT: 7
       DB_CONNECTION: sqlite
       DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
       CACHE_STORE: array
@@ -43,8 +45,14 @@ jobs:
       - name: Neutralize inherited commerce names
         run: python3 scripts/f14_be_b_neutralize_domain.py
 
-      - name: Complete B2 food-domain cleanup
+      - name: Prepare deterministic B2 transform
+        run: python3 scripts/f14_be_b2_prepare.py
+
+      - name: Remove food-domain behavior
         run: python3 scripts/f14_be_b2_complete.py
+
+      - name: Align B2 contracts and release gates
+        run: python3 scripts/f14_be_b2_contract_fix.py
 
       - name: Validate PHP syntax
         shell: bash
@@ -86,7 +94,9 @@ jobs:
           rm -f .github/workflows/f14-be-b-neutralize-domain.yml
           rm -f .github/workflows/f14-be-b-test-diagnostics.yml
           rm -f scripts/f14_be_b_neutralize_domain.py
+          rm -f scripts/f14_be_b2_prepare.py
           rm -f scripts/f14_be_b2_complete.py
+          rm -f scripts/f14_be_b2_contract_fix.py
           rm -f database/database.sqlite
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
