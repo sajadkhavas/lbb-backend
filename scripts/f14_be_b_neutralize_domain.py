@@ -74,6 +74,20 @@ class_map = [
     ('BakeryPost', 'Post'),
 ]
 
+# Page class names are pluralized and are not covered by the model map above.
+page_class_map = [
+    ('CreateBakeryCategory', 'CreateCategory'),
+    ('EditBakeryCategory', 'EditCategory'),
+    ('ListBakeryCategories', 'ListCategories'),
+    ('CreateBakeryProduct', 'CreateProduct'),
+    ('EditBakeryProduct', 'EditProduct'),
+    ('ListBakeryProducts', 'ListProducts'),
+    ('ManageBakeryContentPages', 'ManageContentPages'),
+    ('ManageBakeryFaqs', 'ManageFaqs'),
+    ('ManageBakeryGalleryItems', 'ManageGalleryItems'),
+    ('ManageBakeryPosts', 'ManagePosts'),
+]
+
 table_map = [
     ('bakery_product_variants', 'product_variants'),
     ('bakery_gallery_items', 'gallery_items'),
@@ -82,6 +96,12 @@ table_map = [
     ('bakery_products', 'products'),
     ('bakery_faqs', 'faqs'),
     ('bakery_posts', 'posts'),
+]
+
+index_map = [
+    ('bakery_products_listing_index', 'products_listing_index'),
+    ('bakery_variant_product_name_unique', 'variant_product_name_unique'),
+    ('bakery_variants_listing_index', 'variants_listing_index'),
 ]
 
 # Any migration already creating a neutral destination table belongs to the
@@ -142,32 +162,39 @@ active_roots = [
     'tests',
 ]
 
+content_replacements = class_map + page_class_map + table_map + index_map
 for active_root in active_roots:
     base = root / active_root
     if not base.exists():
         continue
     for path in base.rglob('*'):
-        if not path.is_file():
+        if not path.is_file() or path.name == 'database.sqlite':
             continue
         try:
             text = path.read_text()
         except UnicodeDecodeError:
             continue
         updated = text
-        for old, new in class_map:
-            updated = updated.replace(old, new)
-        for old, new in table_map:
+        for old, new in content_replacements:
             updated = updated.replace(old, new)
         updated = updated.replace('bakery.catalog.product.', 'catalog.product.')
         updated = updated.replace("['bakery-catalog']", "['catalog']")
         updated = updated.replace("'bakery-catalog'", "'catalog'")
         updated = updated.replace('محصول بیکری', 'محصول')
+        updated = updated.replace('محصولات بیکری', 'محصولات')
+        updated = updated.replace('فروشگاه وینیمی', 'فروشگاه LBB')
+        updated = updated.replace('پیشنهاد وینیمی', 'پیشنهاد LBB')
+        updated = updated.replace('وینیمی', 'LBB')
         updated = updated.replace('بیکری', 'فروشگاه')
         if updated != text:
             path.write_text(updated)
 
 # Rename class/resource/migration paths after contents are updated.
-path_replacements = class_map + table_map
+path_replacements = content_replacements + [
+    ('create_bakery_catalog_tables', 'create_catalog_tables'),
+    ('BakeryCatalogApiTest', 'CatalogApiTest'),
+    ('BakeryCatalogFilamentTest', 'CatalogFilamentTest'),
+]
 for path in sorted(root.rglob('*'), key=lambda item: len(item.parts), reverse=True):
     if not path.exists():
         continue
@@ -184,13 +211,21 @@ for path in sorted(root.rglob('*'), key=lambda item: len(item.parts), reverse=Tr
         raise RuntimeError(f'Cannot rename {path} to existing path {target}')
     path.rename(target)
 
-# Strengthen the active-domain audit for the neutralized baseline.
+# Generated SQLite state must never be committed or scanned as source identity.
+remove(root / 'database/database.sqlite')
+
+# Strengthen the active-domain audit for the neutralized baseline, while
+# excluding generated binary state from source scans.
 audit_path = root / 'scripts/audit-lbb-foundation.php'
 if audit_path.exists():
     audit = audit_path.read_text()
     audit = audit.replace(
         "    'win'.'imi',\n];",
         "    'win'.'imi',\n    'Bak'.'ery',\n    'BAK'.'ERY',\n    'bak'.'ery',\n];",
+    )
+    audit = audit.replace(
+        "        if (! $file->isFile()) {\n            continue;\n        }",
+        "        if (! $file->isFile() || $file->getFilename() === 'database.sqlite') {\n            continue;\n        }",
     )
     audit_path.write_text(audit)
 
@@ -206,7 +241,9 @@ status += '''
 - Removed stale generic API resources left by the deleted ToolMaster controllers.
 - Removed legacy migrations that competed for the neutral catalog table names.
 - Assigned duplicated `message_templates` schema ownership to the newest migration.
-- Replaced bakery cache namespaces and Persian bakery labels in active runtime code.
+- Replaced bakery cache namespaces, index names and inherited storefront labels in active runtime code.
+- Renamed nested Filament page classes and test files that used plural Bakery names.
+- Excluded generated SQLite state from identity auditing and commits.
 - Extended the foundation audit to reject active Bakery identity references.
 
 ## Remaining in B2.2
