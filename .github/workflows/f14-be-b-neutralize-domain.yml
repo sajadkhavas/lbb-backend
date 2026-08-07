@@ -25,14 +25,14 @@ permissions:
 
 concurrency:
   group: f14-be-b-neutralize-domain
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   migrate:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
-      MIGRATION_ATTEMPT: 24
+      MIGRATION_ATTEMPT: 25
       DB_CONNECTION: sqlite
       DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
       CACHE_STORE: array
