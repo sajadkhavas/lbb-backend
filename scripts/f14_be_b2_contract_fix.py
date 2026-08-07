@@ -1,6 +1,415 @@
-import base64
-import zlib
+from __future__ import annotations
 
-PAYLOAD = 'eNrlPNty48aV7/yKtnYqIDcEdbHH9tCrmdJtypN4JJWk8e7WiIVqAk0SEQjAaEASPZmHpJzLQ75iX5xM7a7L6+xD9kso52f2nL6AuJKgRtlK1Y7LMyDQffrc+lz6HGAUBVNiWaMkTiJmWcSdhkEUE+r7QUxjN/B5q6XuRaw1wtEhjSeeO9RDT+Fnq3V2cnJBdsWPttEzOq1Wy2EjmEOdNk7oEx5HHWI+xX/7LQJ/IgZr+qQtpm4KsJ0eTrBidhu3mW8HjuuPd40kHpmfpiBvIjdmC5hdgqMX4I8Dn0n4MY3GLAakMgtkHvRCGjE/7k2vHDdqyx989yJKWJewW5fHVnAlfnayk8TqEkH8qxfBum7Y7pCfEuPSN2BqDdoRCz1q5xAPPEdd+exGXUXsq8SNGDwYBoEHyD+nHmdNKXNHBOSmcRVU8HZHTlLP0wXSm0IW1OWMnCV+7E7ZURQFUXtkTF3OgZJ0Chm5HuuTN7jcW6OTApCClJgBTwAvhcAyYRbQAY1zkCECf9eXQm0tRY/dhsyOYapYVCMLcyWCgCjA+yDSmNYJUMkFxgo5dOpFyJNhVnxwGbPITwUn4ExBi/4/ijIJHQqy6BI7gJVhXsR6wC+/rbiUY5Dcs10y8uiY78LIc/JLnPCyWi0UyF2y1VQj1KKVSqGe1atFSkqVHvwDOQj8OKI2aKkDpLjxrEf2d4jtBZxxEk8YKFECAzxAezplkc3IkHLmuT4jN248CZKYhMBm5iNogBdPaCzm0RCNEMyjMfWCccJIEIkHI9cHcENqX8EkMooY+xpGeyiSmTRVvNfSemzYgT9yx5vecNgLJyFYJGNna+djc+tTc+tjc7T9kTlk5nC75v4OEIlqLlhTAiXN9oZ+JtjADbL7lFy+7v3js0sfn1wOuvLC8Gji25OK5xsSkmEYFaBepzI2+IzHbFq4K5+Ac0rkeAP8kCfUijkKxcWwIAEByGEejeg180wJ1KShmxk9WFwaiv+rllVidr9mjhlKaZpKhKYTTKnrL8NGzTbVYqbWkRqcFOCVOAWxCb+jFaxQ0rbrFktA60C1bREAPBD77YTHAewHE7YJB7BmEIc16weRwyL+QOtyFl3DqkhTAHscSLoGyifMvoKdWINASGcI+KFQCKPgGoxFZIodayroJtqhaQirFKbCTnCvF6w3HJfToQdaNpyZ4IZo4tXhDRyGIC4IWSRDtwfC3wHNBB7OTNyoiHnErl12w03XRyvtMm6C4rkjpTAmMHYY3K4ii0+52Zw0Zf0saf2a7APB7CIScJNrBPRm1eYHiTCHiVuFg/ona9Kydgrmx2w8U7uLugAU/YFjon/yzNJKiooK+sBpgExiSeEIA4bMIAi/UQCO5cI/Y1zTqRwHCuckNrLacsAtBLOacQgmAt9ijQFUpbYoM2VpX2aldkoMzjFdMRyWn8Agee85WJr9I3N/xxgU1UHyxFKmsgwuZ8uqgB6UYFYpSY1eDKrVDPy/5Ejge7MqhqjNKzh2Q2eWDUEK2krgbMV62i9osCWMmU+nEFgNqTNmwGSH3QcI7CRL25j3QChVdfDL8lIkQ63OIrZwAptvgn3xwXv2foE7ad3woktkSqVBym1VAVc+uIioz13UZIiAlOdG0RC9lXoQj6kwC0gLA1BpTkCxRPAM++Vr5vc0sOO6wKxH9lTslYEBoVY5+NLLVizRweDwAmagggFQzsVCCOcawgSMKTlGisMEU2lUek4ypoIIU0G0bvdaMs/FfbIJIScPPLZ5IOHxzX2JzpleSUV6EUjun57BdasFesV4CBxG0i4VgEsN4LNWK4Hw+YXnJVOgL2bFEZ8Vn58nIWb7l8+pTR3GLw/3Vw55DimGHHQxiYIbNPSwru1R4EyRAIIKCYgRtX7rjRAZaHUsI/pH3B3DKgmwfTfd6P0Fq9+YJuoN6ZOjqQvZILUn8EBsdlyY/Oz85PitAesXwAKiNiTwqGEI+EslKSF6O4nwUIB8sb9foQDwAzQG/ElW4mgW0lWSoefaZAQeQ4CfwBSPQQ4H6UgsRrxJ994jEZFwQKFgb/R6Fjhgrn3no3jicvOpmNPOjcc/MmpvGxi2434qgehALrVbtz9L4Np4wuGPOw3g5icXfi58iQx5866kOUlpttBTgHrKwCmy1o7La4msX2k5odq16fn3JlABKhBYH7U1oKQIcjklFQ71PnTkwRTIqYrTGhBSA3M5PcrFZAnBW3uheyDoKY4HU0CHOu5QE/S96hlpAKFDNIzDLR3nNuDgBzl6VbjRA7TF/E5pPP75yU9ykyCz6ul4QHM5xaAJgGw0z3vZ8KIEriw3HSJ1CeAhj/UwnyMARnhNPZUMZ6Qc8xekNlC2VNhIeeCxC6h6HpjvtjKaHfMpw/SkPfJJm0YRnSlz2tEnb0/VjddGcGUMOp8tQAKuXkCdst2VWimmistutVn+MmOV17WPhkTfWODHqwl3R6SdaivKpG2IGKnTyXgQQY4chEa1nW4fHGqJoyzW1vR2hT+0Ts+OLi7+Ff55cXxBfinvvTo+Oj/YOz06hKsXByeHR50Mv94SBhlE9aoxSrWsz68NsVEwIDyXexSuDlkMkU8xkJUGpCjbKQ1Lku0SSR15hHEOyFk+LIXrKYo4rFv9KKMZ5Fkq+D4YPy8AE1Ol4tl5Ti0pA0AeIr+E8TZcUc8rGosMYxf6XQLzTDPY9UdB28gGIy4nck+Mgojo5JBkLE+vwmD0NTwmTk1zAOvj0twBZXoCyknGGYm9ruPhrNK0CsfLeic/IxAAjPr981cHB0fn54CZ/P1878UXr86OJIS3OmTDwwO2iKbydltpQCGqiqNZUVfxFBh2e21QozyEheOMooAgTUmQVgAgdpXDxK7CQLffH7O4LcB3urAwVpHE8XZfbquLz89O/tmCi6Ozs5OzImCRICBa6RKvU18FWvmM+InnKdP7YW+7t1U242DCs7NRWYzBa0PbngKU1baqagGXcyRysQqSy3GZTQCyKfOzzRTxShgfrIJyvb2pzi+4sNX54oZSoKwLldzrStnmjBV4MHtC2mn6QR6xW5sJE1o0nVWA5XFJZpL5FIT8EuJ8OoY4Pqfiy1S1EDE01dXD/X4f5OIzAQVtCKx+6gTtJkyRGlgJ4jDC07xjsIh5Gv5e2CWhCc/9KMiYemlpa9inEBJ2XDhUnKmNs7ghrwfaqrxtQbIscvZzobYE0nNM+0E5I1mPmQSQ0sWYsmNwCVkeqBfDigz1xXNZ/2ZpRUaMSvN2AW7zORM566ZcA+zVBdxelq3jc0id5TSVpst7+PcBaFGaQ+dgpgm0HqYz6EISimhZE0a9eGLpww5LMo9bQIHv0MixpsAr1FpU1uvAdYrZqhQ7SPdnHKOR7O6XsIG818a/mGfsK3B/sfniUB4/4epmpG66TtFEgJcU7D+BXVL54HPwGwx8Vg5ytwx31ey90xemDt1g+nbNBKROdjTwxLZBkQ1p2leNRtbpjATAg0o2m8Gia9dmOAXssqmc8sq5KKyeIv6F05wdBQjFkLa2QJj3y1X6hfAW2sVuQ6yNWsMdS5dMLVUJtUCT3Snsbn3uLazU2jqH6xlrqlKB98MIVL+H+/BIkA5RUTOhNWZbE2AqqHkVeQinyqk2I0ZqzoGuJXTlyX8DyaVxQMY2oJXjlj690ac2FsXkGyyqJeNEWUO4h/AW1d/3k+DiaEACzmzA7InJmrAKJz/dRudL911D1ty6S6rDa0IunPZ081WVdYHlysIPw15Z6n0YWLpq+8DQMnXLbnUxdl31LFRpHwbf6vOwbrbm1QiirHD2SvVIbUPWgJEvL/Zqa4kZZNdHtLBIvqy4tuIfYKtR+8Muya2Rrwo2MKOJf+UHN76FmWQEfg68XwTcZJHOr8BeynMZkYOvYTSdQFbbTdH3U0PJcRA/B0KcdvOwppFwRYFSSEmaKgsQsUa40t8oxNBBei6mfuW7sa6ACTLFNmoWWOPc5VF1JeC1ouu0Sh9E7tiFsBoU0pIJN8T0jkXhDqgGJjF1klczST5RLwI2somg0hbJ9xd8T4DXgLJHntlxoChH0zBePfAcs0U9qJtiZQdgvKnnBTcsg1UdEKz8tkVi18lD4LJyyHPF606DfQYhZRqxuIsYpRCa1HE5NZ4FPmcikjoGC37kKzEZeK9159ogrb4PlnK2UdEqt4BuUlt3hYqGs1q4MhxZBTfXppEFpXvWGqNYz85CR1pjiNVNZ6tAN6K7HlnVvtYYyRUdanWw3xPLtMetMZ6VzVq1MDNh071xLPWzNedpXXPZSvjN8c40meWgFoqmDXAWjeFFy4iWqC4Y6yz3kPrUaV/ngRK35wKh+5xAYQ/JkZ9M+eWh6gV8yUBbVZvI4ukJqqcs8xQfnUrdKD58CSGFxy8PsH8uiGblB7Ll8JSOWfmZ2t21D/YcB0KV8moCzdLdU3nqXHf/Sxq51FePD9WR7uU5Y7gjL7/Y3wfSwP+N5Z1Sd8wioBAxBwy8PGOgInyiYa1sqNmLYlBp/7MG4UtZ5HUhDMIqIbLU4+oSCTjcRTSLLle1w1hpO4yl6kmWKqXVOeJMXWXZSUF6BpI9GjCfYiDdXuGpZdGkS6rqK8t3eU0X27JSSx1AEZN9TvnP2ayasBxYVRVZCgzitxy8bO2kBti6ZzL3P4b5vzg6edADjr+TFHrdVGmJ9m53iTIa/b6NFehy55w4qZfNc+KMHs+3B01ib5G6cuuKsRALB+BpRQMrF6YgG5jfp5igdCfV5mfgo9EH7D558qRGCK98GIzZrOhD+BtlvqqTEzurMcFgD5/4LucLtcXLUJsqDqzjhIolv2arjwA0Zfk42NIvYK1G6WFPJJYdMazWyRA9MLbFp02GqJ7cAtIs2ZmQaqPFJzRktamhikfAI+nQpN//KsEuI7CIkKbCzXaxVx52nCxz3f16/v38W/j/O/j7OzJ/N/9h/q70hoWXjNWrMfq1AKShOAy8rAhJWbo7M01CWeGMIJalWL99Dbt+Z0AoJ4/CQDZPlxqF1L7CN3bl1Srq9JtRghWWqzrZ9A2hE+iGOhX9YClfNu5+M/+P+X/f/f7uG1Jg0ZsU1bcbFSBSXm2kvFIUmCtmqmGL3voNiNTMg5Pji7O9g4tVs9ULLxjnuCNX9e/lZZCOnTLHpY1GLhNpdtBIxuCV725kXtSJYkuYAykSTU9+6KDQcZKPaRsJX3NSy14LoJHoDZAy7IH5t3e/FRIHuVe1DvKrpEJI5z9/tUpQERsnHo2sMHLBZkDwT6W3297CP+SndXzRr03ZV9ZXCRW1STHvcbVEdBr5HsIdVHdGrecFt+9TK5Nn29vqbLuZ41IGFes9cImWeXvteRLn+0yNA6AfJu7cayKuyu8zG79ycD907zNrQvlLMN26tWC1kwtuMOHSDhKUMhBO0nG5OO607CiA1EsffcFAG8xDbWUWoUWLxEtPaxtbT7Z3xO7Z2s42wj0KRBfM0gk7uQlUZuHoSvN5+UqPmtKgbY5Ats7iGLB7PW1u/hNNzd3vCLicb++++fFP5RcBbTd00bZn3LYaS+Y/3P1KGKk/F6dNg6Gr18gyqDBMtEv7+v3J+bu736G3u/ttcZyt7c2SMYp9VvqqhDH/N7Ch389/ID/+CSb8BrypjDBqiQXbF4vCm/KBxvbOhx89/viTT59sVYQby43cyoAkU8RwhKKI05aHlrUAbvnJdKgcH3ZsmPs7ZpU4XIdNwwA8uT2DgFBxXGVCEHabApiJT0paInpoLNij8qVPvIDkYUJ3Hn+MYWoRSKnHO/PyXeZwrN/fu6EuHgKpY7Fu9VuGmdm587N+H7Id6jrF1xXU4RwGuZNA8jF/YNfvn7r2VRIWsUyGwmSWPGfdAiOW9bJbJfTtK3EWtmIcmix0SlZx8eLAMXbnWI1QdGM2tQRUOaa0M1lI5XGvhZ+OsBw64ytHTult/cBUc9eyJOmspiYFX5d0LCrJ8oOb7JaoOtjBTeqP93hbWuzuYsmS6w8TGXVs5HJMZXgY33yjbTgORY8EmxTCsIpm+5wNfnf3DdD+ZzL/n7/+Yf498OTf4ed/GZXhm7LGxykL0bYB3/44/57Mv/vrH34Ei1c1s5p7O0Z1KtDEKDc1zFnjXLDLQOpfwCQL3L9FXcA77+Z/ufvm7tdk/kdwSw2pk4b7YLXdVpb5MGO6KxKGQaecj6+bgr+HmungdqPiKAN0TFrhrIatOkt46OMDXT/m8iTf0ukfuLzUhcTifCvtCFE9m6J3dpa+51UXbHFRGwCfSMOwXSwZ9PviCD/rQuV482mUiBPuuvtLTgAfd0mmhJL1wiIb6Kxdkiq9kdasaGh0l7yidi8Qy15S6yx/dySNWXVrubQiIDQdoVZ3l+unK4OZjFVSsCvjyPS0oMasN463cu3s2IY+SjxycnGqmtrZbQjKDpZ5RtI+FPlyu35nSJ6+c6wGiRfz8CHOJbaHZrlXeF8/X2bUbDmJw70kniwKjGLwRj7SkIX4niNeQlAf4sBShtG99DfWnpEfSUG+iWz8RA6o7x94gU29SYBHa2Txo/94+5MPRfP3zie9Lfhvu/8R3hks8Ch+/uB9aT8RDTKSgkkch/3NzSI6NTz4HLGXXzFaEFOgfh3omjLUly9RB6XE0d2YI/c2/4aXarCTysNdHguFkIpkqa+Eie/8Fb8X1Wnhe2lxABEyfoFL7pGNJlUgzYT6rpV0RO7LSOnd+s+ppEOqvwsCjwd9/RUyibr6Il2G4BWfIUs/erLgY8pZ9UWyPnkjgONXyMA8gSXGjzJZQ5arnMCE3UXNv/W/Mrn4gw=='
+import json
+import re
+from pathlib import Path
 
-exec(compile(zlib.decompress(base64.b64decode(PAYLOAD)).decode('utf-8'), 'f14_be_b2_contract_fix.py', 'exec'))
+ROOT = Path('.')
+CONTRACT_VERSION = '2026-08-07-f14-be-b2'
+
+
+def write(path: str, content: str) -> None:
+    target = ROOT / path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content.rstrip() + '\n', encoding='utf-8')
+
+
+config = r'''<?php
+
+$frontendOrigins = array_values(array_filter(array_map(
+    static fn (string $origin): string => rtrim(trim($origin), '/'),
+    explode(',', (string) env('FRONTEND_URLS', env('FRONTEND_URL', 'http://localhost:3000'))),
+)));
+
+$boolean = static fn (string $key, bool $default = false): bool => filter_var(
+    env($key, $default),
+    FILTER_VALIDATE_BOOL,
+);
+
+$zarinpalSandbox = $boolean('ZARINPAL_SANDBOX', true);
+
+return [
+    'brand' => [
+        'name' => env('LBB_BRAND_NAME', 'LBB'),
+        'name_en' => env('LBB_BRAND_NAME_EN', 'LBB'),
+    ],
+    'api' => [
+        'version' => '1',
+        'contract_version' => '2026-08-07-f14-be-b2',
+        'request_id_header' => 'X-Request-ID',
+        'openapi_path' => base_path('docs/openapi.json'),
+    ],
+    'frontend_origins' => $frontendOrigins,
+    'stateful_domains' => env('SANCTUM_STATEFUL_DOMAINS', 'lbb.ir,www.lbb.ir'),
+    'otp' => [
+        'provider' => env('SMS_PROVIDER', 'disabled'),
+        'length' => (int) env('OTP_LENGTH', 6),
+        'expires_seconds' => (int) env('OTP_EXPIRES_SECONDS', 120),
+        'retry_after_seconds' => (int) env('OTP_RETRY_AFTER_SECONDS', 60),
+        'max_attempts' => (int) env('OTP_MAX_ATTEMPTS', 5),
+        'expose_test_code' => $boolean('OTP_EXPOSE_TEST_CODE'),
+        'kavenegar' => [
+            'api_key' => env('KAVENEGAR_API_KEY'),
+            'template' => env('KAVENEGAR_TEMPLATE'),
+            'base_url' => env('KAVENEGAR_BASE_URL', 'https://api.kavenegar.com/v1'),
+        ],
+    ],
+    'checkout' => [
+        'enabled' => $boolean('CHECKOUT_ENABLED'),
+        'reservation_minutes' => (int) env('INVENTORY_RESERVATION_MINUTES', 20),
+        'max_quantity_per_line' => (int) env('CHECKOUT_MAX_QUANTITY_PER_LINE', 20),
+        'max_total_units' => (int) env('CHECKOUT_MAX_TOTAL_UNITS', 50),
+        'packaging_fee_toman' => 0,
+        'delivery_methods' => [
+            'standard' => [
+                'enabled' => $boolean('DELIVERY_STANDARD_ENABLED'),
+                'fee_toman' => (int) env('DELIVERY_STANDARD_FEE_TOMAN', 0),
+            ],
+            'pickup' => [
+                'enabled' => $boolean('DELIVERY_PICKUP_ENABLED'),
+                'fee_toman' => (int) env('DELIVERY_PICKUP_FEE_TOMAN', 0),
+            ],
+        ],
+    ],
+    'payment' => [
+        'enabled' => $boolean('PAYMENT_ENABLED'),
+        'provider' => env('PAYMENT_PROVIDER', 'disabled'),
+        'callback_url' => env('PAYMENT_CALLBACK_URL', 'http://localhost:3000/payment/result'),
+        'currency' => env('PAYMENT_CURRENCY', 'IRR'),
+        'amount_multiplier' => (int) env('PAYMENT_AMOUNT_MULTIPLIER', 10),
+        'attempt_ttl_minutes' => (int) env('PAYMENT_ATTEMPT_TTL_MINUTES', 20),
+        'timeout_seconds' => (int) env('PAYMENT_TIMEOUT_SECONDS', 10),
+        'zarinpal' => [
+            'merchant_id' => env('ZARINPAL_MERCHANT_ID'),
+            'sandbox' => $zarinpalSandbox,
+            'request_url' => env('ZARINPAL_REQUEST_URL', $zarinpalSandbox
+                ? 'https://sandbox.zarinpal.com/pg/v4/payment/request.json'
+                : 'https://api.zarinpal.com/pg/v4/payment/request.json'),
+            'verify_url' => env('ZARINPAL_VERIFY_URL', $zarinpalSandbox
+                ? 'https://sandbox.zarinpal.com/pg/v4/payment/verify.json'
+                : 'https://api.zarinpal.com/pg/v4/payment/verify.json'),
+            'start_pay_url' => env('ZARINPAL_START_PAY_URL', $zarinpalSandbox
+                ? 'https://sandbox.zarinpal.com/pg/StartPay'
+                : 'https://www.zarinpal.com/pg/StartPay'),
+        ],
+    ],
+    'notifications' => [
+        'sms_provider' => env('ORDER_SMS_PROVIDER', 'disabled'),
+        'max_attempts' => (int) env('NOTIFICATION_MAX_ATTEMPTS', 5),
+        'retry_seconds' => (int) env('NOTIFICATION_RETRY_SECONDS', 60),
+        'timeout_seconds' => (int) env('NOTIFICATION_TIMEOUT_SECONDS', 8),
+        'kavenegar' => [
+            'api_key' => env('KAVENEGAR_API_KEY'),
+            'sender' => env('KAVENEGAR_ORDER_SENDER'),
+            'base_url' => env('KAVENEGAR_BASE_URL', 'https://api.kavenegar.com/v1'),
+        ],
+    ],
+    'policies' => [
+        'pagination' => [
+            'shape' => ['page', 'perPage', 'total', 'totalPages', 'from', 'to', 'hasMore'],
+            'catalog_default' => 12,
+            'catalog_max' => 48,
+            'account_default' => 10,
+            'account_max' => 30,
+        ],
+        'cache' => [
+            'store' => env('CACHE_STORE', 'database'),
+            'prefix' => env('CACHE_PREFIX', 'lbb'),
+        ],
+        'storage' => [
+            'application_disk' => env('FILESYSTEM_DISK', 'local'),
+            'media_disk' => env('MEDIA_DISK', 'public'),
+        ],
+        'backup' => [
+            'disk' => env('BACKUP_DISK', 'local'),
+            'retention_days' => (int) env('BACKUP_RETENTION_DAYS', 14),
+        ],
+    ],
+    'contracts' => [
+        'system' => ['status' => 'implemented'],
+        'domain_cleanup' => [
+            'status' => 'ready',
+            'source' => 'neutral-commerce-baseline',
+        ],
+        'catalog' => [
+            'status' => 'neutral-baseline-ready',
+            'source' => 'generic-commerce-only',
+        ],
+        'apparel_domain' => [
+            'status' => 'not-started',
+            'target_phase' => 'F14-BE-C',
+        ],
+        'authentication' => ['status' => 'imported-pending-lbb-verification'],
+        'orders' => ['status' => 'imported-pending-lbb-verification'],
+        'payments' => ['status' => 'disabled-pending-lbb-verification'],
+        'store_operations' => ['status' => 'neutral-baseline-ready'],
+        'backend_freeze' => ['status' => 'not-ready'],
+    ],
+    'launch' => [
+        'strategy' => 'fail-closed-until-apparel-contract-freeze',
+        'backend_complete' => false,
+        'frontend_integrated' => false,
+        'production_deployed' => false,
+    ],
+];
+'''
+write('config/lbb.php', config)
+
+readiness = r'''<?php
+
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Throwable;
+
+class BackendReadiness extends Command
+{
+    protected $signature = 'backend:readiness {--json : Emit machine-readable JSON}';
+
+    protected $description = 'Validate the current LBB backend contract and fail closed until apparel freeze';
+
+    public function handle(): int
+    {
+        $checks = [
+            'contract_version' => $this->check(
+                config('lbb.api.contract_version') === '2026-08-07-f14-be-b2',
+                (string) config('lbb.api.contract_version'),
+            ),
+            'domain_cleanup' => $this->check(
+                config('lbb.contracts.domain_cleanup.status') === 'ready',
+                (string) config('lbb.contracts.domain_cleanup.status'),
+            ),
+            'openapi' => $this->openApiCheck(),
+            'database' => $this->databaseCheck(),
+            'apparel_domain' => $this->check(
+                config('lbb.contracts.apparel_domain.status') === 'ready',
+                (string) config('lbb.contracts.apparel_domain.status'),
+            ),
+            'backend_freeze' => $this->check(
+                config('lbb.contracts.backend_freeze.status') === 'ready',
+                (string) config('lbb.contracts.backend_freeze.status'),
+            ),
+        ];
+
+        $ready = collect($checks)->every(fn (array $check): bool => $check['ok']);
+        $payload = [
+            'ready' => $ready,
+            'contractVersion' => config('lbb.api.contract_version'),
+            'checks' => $checks,
+        ];
+
+        if ($this->option('json')) {
+            $this->line((string) json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        } else {
+            $this->table(
+                ['Check', 'Status', 'Detail'],
+                collect($checks)->map(fn (array $check, string $name): array => [
+                    $name,
+                    $check['ok'] ? 'ready' : 'failed',
+                    $check['detail'],
+                ])->values()->all(),
+            );
+        }
+
+        return $ready ? self::SUCCESS : self::FAILURE;
+    }
+
+    private function openApiCheck(): array
+    {
+        try {
+            $path = (string) config('lbb.api.openapi_path');
+            $document = json_decode(File::get($path), true, flags: JSON_THROW_ON_ERROR);
+            $valid = ($document['openapi'] ?? null) === '3.1.0'
+                && ($document['info']['version'] ?? null) === config('lbb.api.contract_version')
+                && isset($document['paths']['/api/system/openapi'])
+                && ! isset($document['paths']['/api/catalog/products']);
+
+            return $this->check($valid, $path);
+        } catch (Throwable $exception) {
+            return $this->check(false, $exception->getMessage());
+        }
+    }
+
+    private function databaseCheck(): array
+    {
+        try {
+            DB::connection()->getPdo();
+
+            return $this->check(true, DB::connection()->getDriverName());
+        } catch (Throwable $exception) {
+            return $this->check(false, $exception->getMessage());
+        }
+    }
+
+    private function check(bool $ok, string $detail): array
+    {
+        return ['ok' => $ok, 'detail' => $detail];
+    }
+}
+'''
+write('app/Console/Commands/BackendReadiness.php', readiness)
+
+openapi = {
+    'openapi': '3.1.0',
+    'info': {
+        'title': 'LBB Backend API',
+        'version': CONTRACT_VERSION,
+        'description': 'F14-BE-B2 neutral commerce baseline. Apparel contracts are intentionally not frozen.',
+    },
+    'paths': {
+        '/api/system/health': {'get': {'responses': {'200': {'description': 'Healthy'}}}},
+        '/api/system/ready': {'get': {'responses': {'200': {'description': 'Runtime readiness'}}}},
+        '/api/system/meta': {'get': {'responses': {'200': {'description': 'API metadata'}}}},
+        '/api/system/contracts': {'get': {'responses': {'200': {'description': 'Current contract gates'}}}},
+        '/api/system/openapi': {'get': {'responses': {'200': {'description': 'OpenAPI document'}}}},
+    },
+}
+write('docs/openapi.json', json.dumps(openapi, ensure_ascii=False, indent=2))
+
+system_test = r'''<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+class SystemApiTest extends TestCase
+{
+    public function test_health_endpoint_returns_b2_metadata(): void
+    {
+        $this->getJson('/api/system/health', ['X-Request-ID' => 'test-request-id'])
+            ->assertOk()
+            ->assertHeader('X-Request-ID', 'test-request-id')
+            ->assertHeader('X-API-Version', '1')
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.status', 'ok')
+            ->assertJsonPath('data.service', 'lbb-backend')
+            ->assertJsonPath('meta.contractVersion', '2026-08-07-f14-be-b2');
+    }
+
+    public function test_meta_reports_neutral_baseline_without_claiming_backend_completion(): void
+    {
+        $this->getJson('/api/system/meta')
+            ->assertOk()
+            ->assertJsonPath('data.brand.nameEn', 'LBB')
+            ->assertJsonPath('data.contractVersion', '2026-08-07-f14-be-b2')
+            ->assertJsonPath('data.backendComplete', false)
+            ->assertJsonPath('data.openApiUrl', '/api/system/openapi');
+    }
+
+    public function test_contract_endpoint_is_fail_closed_until_apparel_domain_is_built(): void
+    {
+        $this->getJson('/api/system/contracts')
+            ->assertOk()
+            ->assertJsonPath('data.contracts.system.status', 'implemented')
+            ->assertJsonPath('data.contracts.domain_cleanup.status', 'ready')
+            ->assertJsonPath('data.contracts.catalog.status', 'neutral-baseline-ready')
+            ->assertJsonPath('data.contracts.apparel_domain.status', 'not-started')
+            ->assertJsonPath('data.contracts.apparel_domain.target_phase', 'F14-BE-C')
+            ->assertJsonPath('data.contracts.backend_freeze.status', 'not-ready')
+            ->assertJsonPath('data.launch.backend_complete', false)
+            ->assertJsonPath('data.launch.production_deployed', false);
+    }
+
+    public function test_unknown_api_routes_use_standard_json_error(): void
+    {
+        $this->getJson('/api/does-not-exist')
+            ->assertNotFound()
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('code', 'resource_not_found')
+            ->assertJsonPath('meta.contractVersion', '2026-08-07-f14-be-b2');
+    }
+}
+'''
+write('tests/Feature/SystemApiTest.php', system_test)
+
+foundation_test = r'''<?php
+
+namespace Tests\Unit;
+
+use Tests\TestCase;
+
+class BackendFoundationTest extends TestCase
+{
+    public function test_frontend_origins_are_configured_as_an_array(): void
+    {
+        $origins = config('lbb.frontend_origins');
+
+        $this->assertIsArray($origins);
+        $this->assertNotEmpty($origins);
+        $this->assertSame($origins, config('cors.allowed_origins'));
+        $this->assertTrue((bool) config('cors.supports_credentials'));
+    }
+
+    public function test_b2_contract_reports_only_the_neutral_baseline_as_ready(): void
+    {
+        $contracts = config('lbb.contracts');
+
+        $this->assertSame('implemented', $contracts['system']['status']);
+        $this->assertSame('ready', $contracts['domain_cleanup']['status']);
+        $this->assertSame('neutral-baseline-ready', $contracts['catalog']['status']);
+        $this->assertSame('not-started', $contracts['apparel_domain']['status']);
+        $this->assertSame('F14-BE-C', $contracts['apparel_domain']['target_phase']);
+        $this->assertSame('imported-pending-lbb-verification', $contracts['authentication']['status']);
+        $this->assertSame('imported-pending-lbb-verification', $contracts['orders']['status']);
+        $this->assertSame('disabled-pending-lbb-verification', $contracts['payments']['status']);
+        $this->assertSame('not-ready', $contracts['backend_freeze']['status']);
+        $this->assertFalse((bool) config('lbb.launch.backend_complete'));
+    }
+}
+'''
+write('tests/Unit/BackendFoundationTest.php', foundation_test)
+
+freeze_test = r'''<?php
+
+namespace Tests\Feature;
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
+use Tests\TestCase;
+
+class BackendContractFreezeTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_b2_openapi_is_system_only_and_backend_freeze_remains_closed(): void
+    {
+        $document = $this->getJson('/api/system/openapi')
+            ->assertOk()
+            ->json();
+
+        $this->assertSame('3.1.0', $document['openapi']);
+        $this->assertSame('2026-08-07-f14-be-b2', $document['info']['version']);
+        $this->assertArrayHasKey('/api/system/openapi', $document['paths']);
+        $this->assertArrayNotHasKey('/api/catalog/products', $document['paths']);
+
+        $this->getJson('/api/system/contracts')
+            ->assertOk()
+            ->assertJsonPath('data.contracts.domain_cleanup.status', 'ready')
+            ->assertJsonPath('data.contracts.apparel_domain.status', 'not-started')
+            ->assertJsonPath('data.contracts.backend_freeze.status', 'not-ready');
+
+        $this->assertSame(1, Artisan::call('backend:readiness', ['--json' => true]));
+    }
+}
+'''
+write('tests/Feature/BackendContractFreezeTest.php', freeze_test)
+
+otp_path = ROOT / 'tests/Feature/CustomerOtpAuthTest.php'
+if otp_path.exists():
+    otp = otp_path.read_text(encoding='utf-8')
+    otp = re.sub(
+        r"    public function test_authentication_orders_and_payments_contracts_are_implemented_with_external_activation_disabled\(\): void\n    \{.*?\n    \}\n\n    private function requestChallenge",
+        """    public function test_imported_customer_contracts_remain_fail_closed_during_b2(): void\n    {\n        $this->getJson('/api/system/contracts')\n            ->assertOk()\n            ->assertJsonPath('data.contracts.authentication.status', 'imported-pending-lbb-verification')\n            ->assertJsonPath('data.contracts.orders.status', 'imported-pending-lbb-verification')\n            ->assertJsonPath('data.contracts.payments.status', 'disabled-pending-lbb-verification')\n            ->assertJsonPath('data.contracts.backend_freeze.status', 'not-ready');\n    }\n\n    private function requestChallenge""",
+        otp,
+        flags=re.S,
+    )
+    otp_path.write_text(otp, encoding='utf-8')
+
+status_path = ROOT / 'docs/F14_BE_B_CLEANUP_STATUS.md'
+status = status_path.read_text(encoding='utf-8') if status_path.exists() else '# F14-BE-B Cleanup Status\n'
+status += '''\n\n## B2 contract state\n\n- Domain cleanup gate: ready.\n- Generic catalog baseline: neutral-baseline-ready.\n- Apparel domain: not-started; owned by F14-BE-C.\n- Backend freeze: not-ready and fail-closed by design.\n- Production readiness is not claimed by this phase.\n'''
+status_path.write_text(status, encoding='utf-8')
+
+print('f14_be_b2_contract_fix=complete')
