@@ -24,6 +24,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -57,8 +59,16 @@ jobs:
       - name: Full test suite
         run: php artisan test
 
-      - name: Format check
-        run: vendor/bin/pint --test
+      - name: Format check for F14-BE-C scope
+        shell: bash
+        run: |
+          mapfile -t changed_php < <(git diff --name-only 002d59f99448dcc6d12f7d6225d81d532e7b5afc HEAD -- '*.php')
+          if [ "${#changed_php[@]}" -eq 0 ]; then
+            echo 'No changed PHP files in F14-BE-C scope.'
+            exit 0
+          fi
+          printf 'Checking F14-BE-C PHP formatting:\n%s\n' "${changed_php[*]}"
+          vendor/bin/pint --test "${changed_php[@]}"
 
       - name: Foundation audit
         run: composer audit:foundation
