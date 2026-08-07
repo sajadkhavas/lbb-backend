@@ -1,0 +1,107 @@
+name: F14 BE-D Public Commerce API
+
+on:
+  push:
+    branches:
+      - phase/f14-be-d-public-commerce-api
+  pull_request:
+    branches:
+      - integration/backend-wave1-reviewed
+
+permissions:
+  contents: read
+
+jobs:
+  public-commerce-api:
+    runs-on: ubuntu-latest
+    env:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: database/database.sqlite
+      CACHE_STORE: array
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: array
+      SANCTUM_STATEFUL_DOMAINS: localhost:5173,localhost,127.0.0.1
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo_sqlite, sqlite3, fileinfo
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare Laravel
+        run: |
+          cp .env.example .env
+          touch database/database.sqlite
+          php artisan key:generate
+
+      - name: Composer validation
+        run: composer validate --strict --no-check-lock
+
+      - name: PHP syntax
+        run: find app database tests routes -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Fresh migration
+        run: php artisan migrate:fresh --force
+
+      - name: Laravel boot and routes
+        run: |
+          php artisan about
+          php artisan route:list --except-vendor
+          php artisan route:list --path=api/v1
+
+      - name: Full test suite
+        run: php artisan test
+
+      - name: Public catalog contract tests
+        run: php artisan test tests/Feature/PublicCommerceApiTest.php
+
+      - name: Publication, evidence and query sanity
+        run: |
+          php artisan test tests/Feature/PublicCommerceApiTest.php --filter=public
+          php artisan test tests/Feature/PublicCommerceApiTest.php --filter=evidence
+          php artisan test tests/Feature/PublicCommerceApiTest.php --filter=query_count
+
+      - name: Format check for F14-BE-D scope
+        shell: bash
+        run: |
+          mapfile -t changed_php < <(git diff --name-only 025066720c2790f143612b21e19c78cbbca2dd73 HEAD -- '*.php')
+          if [ "${#changed_php[@]}" -eq 0 ]; then
+            echo 'No changed PHP files in F14-BE-D scope.'
+            exit 0
+          fi
+          vendor/bin/pint --test "${changed_php[@]}"
+
+      - name: Foundation audit
+        run: composer audit:foundation
+
+      - name: Regression and secret scan
+        shell: bash
+        run: |
+          if git grep -nEi 'Bakery|Winimi' -- app config database routes ':!database/migrations/*bakery*'; then
+            echo 'Bakery/Winimi regression detected in runtime domain files.'
+            exit 1
+          fi
+          if git grep -nE 'BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|AKIA[0-9A-Z]{16}|sk_live_[0-9A-Za-z]+' -- ':!composer.lock'; then
+            echo 'Potential secret detected.'
+            exit 1
+          fi
+
+      - name: Scope guard
+        shell: bash
+        run: |
+          if git diff --name-only 025066720c2790f143612b21e19c78cbbca2dd73 HEAD | grep -E '^frontend/|^../lbb/'; then
+            echo 'Frontend scope leakage detected.'
+            exit 1
+          fi
+          if git diff --name-only 025066720c2790f143612b21e19c78cbbca2dd73 HEAD | grep -E 'checkout|payment|order.*(controller|service)|wishlist|cart' -i; then
+            echo 'Potential BE-E scope leakage detected. Review the diff.'
+            exit 1
+          fi

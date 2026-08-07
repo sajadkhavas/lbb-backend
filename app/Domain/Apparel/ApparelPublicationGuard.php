@@ -72,6 +72,10 @@ class ApparelPublicationGuard
             $requiredFacts[] = ProductFact::CollectionMembership;
         }
 
+        if ($product->size_guide_id !== null) {
+            $requiredFacts[] = ProductFact::SizeGuide;
+        }
+
         $verifiedFacts = $product->evidences()
             ->where('state', EvidenceState::Verified->value)
             ->pluck('fact_key')

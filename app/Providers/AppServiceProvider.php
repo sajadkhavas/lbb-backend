@@ -5,8 +5,8 @@ namespace App\Providers;
 use App\Support\IranianMobile;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Throwable;
@@ -21,10 +21,21 @@ class AppServiceProvider extends ServiceProvider
             return method_exists($user, 'hasRole') && $user->hasRole('super_admin') ? true : null;
         });
 
-
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }
+
+        RateLimiter::for('public-catalog', static function (Request $request): array {
+            return [
+                Limit::perMinute(120)->by('public-catalog-ip:'.($request->ip() ?? 'unknown')),
+            ];
+        });
+
+        RateLimiter::for('public-search', static function (Request $request): array {
+            return [
+                Limit::perMinute(60)->by('public-search-ip:'.($request->ip() ?? 'unknown')),
+            ];
+        });
 
         RateLimiter::for('otp-request', function (Request $request): array {
             try {
