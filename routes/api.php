@@ -1,8 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\AuthenticatedSupporterController;
 use App\Http\Controllers\Api\CatalogController;
-use App\Http\Controllers\Api\OrderStatusController;
 use App\Http\Controllers\Api\V1\PublicCatalogController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,9 +34,4 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::get('/search', [PublicCatalogController::class, 'search'])
         ->middleware('throttle:public-search')
         ->name('search');
-});
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/orders/{order}', [OrderStatusController::class, 'show']);
-    Route::post('/orders/{order}/support', [AuthenticatedSupporterController::class, 'storeForOrder']);
 });
