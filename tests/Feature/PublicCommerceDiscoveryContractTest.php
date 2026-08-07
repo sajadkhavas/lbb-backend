@@ -64,7 +64,13 @@ class PublicCommerceDiscoveryContractTest extends TestCase
             ->where('product_id', $fixture['product']->id)
             ->firstOrFail();
 
-        $asset->addMedia(UploadedFile::fake()->create('front.jpg', 12, 'image/jpeg'))
+        $imageBytes = base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WlX6gAAAABJRU5ErkJggg==',
+            true,
+        );
+        $this->assertIsString($imageBytes);
+
+        $asset->addMedia(UploadedFile::fake()->createWithContent('front.png', $imageBytes))
             ->withCustomProperties([
                 'width' => 800,
                 'height' => 1000,
