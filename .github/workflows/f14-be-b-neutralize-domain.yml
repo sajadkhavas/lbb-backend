@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
-      MIGRATION_ATTEMPT: 7
+      MIGRATION_ATTEMPT: 8
       DB_CONNECTION: sqlite
       DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
       CACHE_STORE: array
@@ -47,6 +47,49 @@ jobs:
 
       - name: Prepare deterministic B2 transform
         run: python3 scripts/f14_be_b2_prepare.py
+
+      - name: Make B2 replacement helper idempotent
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import base64
+          import re
+          import zlib
+          from pathlib import Path
+
+          path = Path('scripts/f14_be_b2_complete.py')
+          wrapper = path.read_text(encoding='utf-8')
+          match = re.search(r'PAYLOAD = "([A-Za-z0-9+/=]+)"', wrapper)
+          if not match:
+              raise RuntimeError('B2 payload not found')
+
+          source = zlib.decompress(base64.b64decode(match.group(1))).decode('utf-8')
+          pattern = re.compile(
+              r"(?P<indent>[ \t]+)if old not in text:\n"
+              r"(?P=indent)[ \t]+raise RuntimeError\(f'expected text missing in \{path\}: \{old!r\}'\)"
+          )
+          found = pattern.search(source)
+          if not found:
+              raise RuntimeError('B2 replace helper guard not found')
+
+          indent = found.group('indent')
+          replacement = (
+              f"{indent}if old not in text:\n"
+              f"{indent}    if new in text:\n"
+              f"{indent}        return\n"
+              f"{indent}    raise RuntimeError(f'expected text missing in {{path}}: {{old!r}}')"
+          )
+          source = pattern.sub(replacement, source, count=1)
+          payload = base64.b64encode(zlib.compress(source.encode('utf-8'), 9)).decode('ascii')
+          path.write_text(
+              "import base64\nimport zlib\n\n"
+              f"PAYLOAD = \"{payload}\"\n\n"
+              "exec(compile(zlib.decompress(base64.b64decode(PAYLOAD)).decode('utf-8'), 'f14_be_b2_complete.py', 'exec'))\n",
+              encoding='utf-8',
+          )
+          print('b2_replace_helper=idempotent')
+          PY
 
       - name: Remove food-domain behavior
         run: python3 scripts/f14_be_b2_complete.py
