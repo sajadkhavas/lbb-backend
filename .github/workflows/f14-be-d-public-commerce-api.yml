@@ -74,9 +74,16 @@ jobs:
           PY
             exit "$status"
           fi
+          python3 - <<'PY'
+          from pathlib import Path
+          text = Path('/tmp/f14-be-d-full-tests.txt').read_text(errors='replace').splitlines()
+          summary = next((line.strip() for line in reversed(text) if line.strip().startswith('Tests:')), 'Tests: summary unavailable')
+          summary = summary.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          print(f'::notice title=Full test suite result::{summary}')
+          PY
 
       - name: Public catalog contract tests
-        run: php artisan test tests/Feature/PublicCommerceApiTest.php
+        run: php artisan test tests/Feature/PublicCommerceApiTest.php tests/Feature/PublicCommerceDiscoveryContractTest.php
 
       - name: Publication, evidence and query sanity
         run: |
