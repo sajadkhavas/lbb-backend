@@ -66,7 +66,7 @@ class Product extends Model implements HasMedia
         static::saving(function (self $product): void {
             if (
                 $product->exists
-                && $product->getOriginal('publication_status') === PublicationStatus::Published->value
+                && $product->getRawOriginal('publication_status') === PublicationStatus::Published->value
                 && $product->publication_status === PublicationStatus::Published
                 && $product->hasVerifiedFactMutation()
             ) {

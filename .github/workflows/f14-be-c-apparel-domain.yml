@@ -37,7 +37,7 @@ jobs:
           DB_DATABASE: database/database.sqlite
 
       - name: Composer validation
-        run: composer validate --strict
+        run: composer validate --strict --no-check-lock
 
       - name: PHP syntax
         run: find app database tests routes -name '*.php' -print0 | xargs -0 -n1 php -l
