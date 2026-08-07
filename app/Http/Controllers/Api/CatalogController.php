@@ -23,7 +23,6 @@ class CatalogController extends Controller
             'category' => ['nullable', 'string', 'max:140'],
             'search' => ['nullable', 'string', 'max:100'],
             'featured' => ['nullable', 'boolean'],
-            'requiresCooling' => ['nullable', 'boolean'],
             'inStock' => ['nullable', 'boolean'],
             'sort' => ['nullable', 'in:featured,newest,name,price-asc,price-desc'],
             'page' => ['nullable', 'integer', 'min:1'],
@@ -33,9 +32,6 @@ class CatalogController extends Controller
         $featured = $request->has('featured')
             ? $request->boolean('featured')
             : false;
-        $requiresCooling = $request->has('requiresCooling')
-            ? $request->boolean('requiresCooling')
-            : null;
         $inStock = $request->has('inStock')
             ? $request->boolean('inStock')
             : false;
@@ -64,10 +60,6 @@ class CatalogController extends Controller
             $query->featured();
         }
 
-        if ($requiresCooling !== null) {
-            $query->where('requires_cooling', $requiresCooling);
-        }
-
         if ($inStock) {
             $query->whereHas('activeVariants', function (Builder $variant): void {
                 $variant->whereRaw(
@@ -91,7 +83,6 @@ class CatalogController extends Controller
                 'category' => $filters['category'] ?? null,
                 'search' => $filters['search'] ?? null,
                 'featured' => $featured,
-                'requiresCooling' => $requiresCooling,
                 'inStock' => $inStock,
                 'sort' => $filters['sort'] ?? 'featured',
             ],
