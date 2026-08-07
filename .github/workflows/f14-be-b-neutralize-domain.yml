@@ -13,6 +13,7 @@ on:
       - scripts/f14_be_b2_post_cleanup.py
       - scripts/f14_be_b2_checkout_repair.py
       - scripts/f14_be_b2_catalog_resource_repair.py
+      - scripts/f14_be_b2_migration_repair.py
       - scripts/f14_be_b2_contract_fix.py
   workflow_dispatch:
 
@@ -28,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
-      MIGRATION_ATTEMPT: 20
+      MIGRATION_ATTEMPT: 21
       DB_CONNECTION: sqlite
       DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
       CACHE_STORE: array
@@ -66,6 +67,9 @@ jobs:
 
       - name: Repair neutral catalog API resources
         run: python3 scripts/f14_be_b2_catalog_resource_repair.py
+
+      - name: Repair neutral operations migration
+        run: python3 scripts/f14_be_b2_migration_repair.py
 
       - name: Align B2 contracts and release gates
         run: python3 scripts/f14_be_b2_contract_fix.py
@@ -116,6 +120,7 @@ jobs:
           rm -f scripts/f14_be_b2_post_cleanup.py
           rm -f scripts/f14_be_b2_checkout_repair.py
           rm -f scripts/f14_be_b2_catalog_resource_repair.py
+          rm -f scripts/f14_be_b2_migration_repair.py
           rm -f scripts/f14_be_b2_contract_fix.py
           rm -f database/database.sqlite
           git config user.name 'github-actions[bot]'
