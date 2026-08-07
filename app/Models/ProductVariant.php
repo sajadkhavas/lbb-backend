@@ -2,17 +2,23 @@
 
 namespace App\Models;
 
+use App\Enums\PublicationStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 class ProductVariant extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'product_id',
+        'color_id',
+        'size_id',
         'name',
         'sku',
         'regular_price_toman',
@@ -40,10 +46,12 @@ class ProductVariant extends Model
         static::creating(function (self $variant): void {
             $variant->public_id ??= (string) Str::ulid();
             self::validatePrices($variant);
+            self::validatePublishedIdentity($variant);
         });
 
         static::updating(function (self $variant): void {
             self::validatePrices($variant);
+            self::validatePublishedIdentity($variant);
         });
 
         static::saved(function (self $variant): void {
@@ -67,6 +75,21 @@ class ProductVariant extends Model
         return $this->belongsTo(Product::class, 'product_id');
     }
 
+    public function color(): BelongsTo
+    {
+        return $this->belongsTo(Color::class);
+    }
+
+    public function size(): BelongsTo
+    {
+        return $this->belongsTo(Size::class);
+    }
+
+    public function mediaAssets(): HasMany
+    {
+        return $this->hasMany(ProductMediaAsset::class, 'variant_id');
+    }
+
     public function inventoryReservations(): HasMany
     {
         return $this->hasMany(InventoryReservation::class, 'variant_id');
@@ -77,11 +100,35 @@ class ProductVariant extends Model
         return $query->where('is_active', true);
     }
 
+    public function scopeSellable(Builder $query): Builder
+    {
+        return $query
+            ->where('is_active', true)
+            ->whereNotNull('color_id')
+            ->whereNotNull('size_id')
+            ->whereNotNull('sku')
+            ->where('sku', '<>', '')
+            ->whereHas('color', fn (Builder $color): Builder => $color->active())
+            ->whereHas('size', fn (Builder $size): Builder => $size->active());
+    }
+
     public function getCurrentPriceTomanAttribute(): int
     {
         return $this->hasValidSalePrice()
             ? (int) $this->sale_price_toman
             : (int) $this->regular_price_toman;
+    }
+
+    public function getPreviousPriceTomanAttribute(): ?int
+    {
+        return $this->hasValidSalePrice()
+            ? (int) $this->regular_price_toman
+            : null;
+    }
+
+    public function getStockOnHandAttribute(): int
+    {
+        return (int) $this->stock_quantity;
     }
 
     public function getReservedQuantityAttribute(): int
@@ -95,18 +142,41 @@ class ProductVariant extends Model
 
     public function getAvailableStockQuantityAttribute(): int
     {
-        return max(0, (int) $this->stock_quantity - $this->reserved_quantity);
+        return max(0, $this->stock_on_hand - $this->reserved_quantity);
+    }
+
+    public function getAvailableQuantityAttribute(): int
+    {
+        return $this->available_stock_quantity;
     }
 
     public function getAvailableAttribute(): bool
     {
-        return $this->is_active && $this->available_stock_quantity > 0;
+        return $this->is_sellable && $this->available_quantity > 0;
+    }
+
+    public function getIsSellableAttribute(): bool
+    {
+        if (! $this->is_active || $this->color_id === null || $this->size_id === null || blank($this->sku)) {
+            return false;
+        }
+
+        if ($this->relationLoaded('color') && $this->color?->is_active !== true) {
+            return false;
+        }
+
+        if ($this->relationLoaded('size') && $this->size?->is_active !== true) {
+            return false;
+        }
+
+        return Color::query()->whereKey($this->color_id)->active()->exists()
+            && Size::query()->whereKey($this->size_id)->active()->exists();
     }
 
     public function getLowStockAttribute(): bool
     {
-        return $this->available_stock_quantity > 0
-            && $this->available_stock_quantity <= $this->low_stock_threshold;
+        return $this->available_quantity > 0
+            && $this->available_quantity <= $this->low_stock_threshold;
     }
 
     public function hasValidSalePrice(): bool
@@ -127,6 +197,32 @@ class ProductVariant extends Model
             && $variant->sale_price_toman >= $variant->regular_price_toman
         ) {
             throw new InvalidArgumentException('قیمت فروش باید کمتر از قیمت عادی باشد.');
+        }
+    }
+
+    private static function validatePublishedIdentity(self $variant): void
+    {
+        if (! $variant->is_active) {
+            return;
+        }
+
+        $product = $variant->relationLoaded('product')
+            ? $variant->product
+            : Product::query()->find($variant->product_id);
+
+        if ($product?->publication_status !== PublicationStatus::Published) {
+            return;
+        }
+
+        if ($variant->color_id === null || $variant->size_id === null || blank($variant->sku)) {
+            throw new \DomainException('Published apparel variants require color, size, and SKU.');
+        }
+
+        if (
+            ! Color::query()->whereKey($variant->color_id)->active()->exists()
+            || ! Size::query()->whereKey($variant->size_id)->active()->exists()
+        ) {
+            throw new \DomainException('Published apparel variants require active color and size entities.');
         }
     }
 }

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Domain\Apparel\ApparelPublicationGuard;
+use App\Enums\PublicationStatus;
 use Illuminate\Cache\TaggableStore;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
@@ -23,11 +26,18 @@ class Product extends Model implements HasMedia
 
     protected $fillable = [
         'category_id',
+        'size_guide_id',
         'name',
         'slug',
         'product_code',
         'short_description',
         'description',
+        'material',
+        'fabric_composition',
+        'fit',
+        'care_instructions',
+        'publication_status',
+        'published_at',
         'content_verified',
         'media_verified',
         'is_active',
@@ -38,6 +48,8 @@ class Product extends Model implements HasMedia
     ];
 
     protected $casts = [
+        'publication_status' => PublicationStatus::class,
+        'published_at' => 'datetime',
         'content_verified' => 'boolean',
         'media_verified' => 'boolean',
         'is_active' => 'boolean',
@@ -49,6 +61,27 @@ class Product extends Model implements HasMedia
     {
         static::creating(function (self $product): void {
             $product->public_id ??= (string) Str::ulid();
+        });
+
+        static::saving(function (self $product): void {
+            if (
+                $product->exists
+                && $product->getOriginal('publication_status') === PublicationStatus::Published->value
+                && $product->publication_status === PublicationStatus::Published
+                && $product->hasVerifiedFactMutation()
+            ) {
+                throw new \DomainException(
+                    'Set a published product back to draft before changing evidence-tracked apparel facts.',
+                );
+            }
+
+            if (
+                $product->publication_status === PublicationStatus::Published
+                && $product->isDirty('publication_status')
+            ) {
+                app(ApparelPublicationGuard::class)->assertPublishable($product);
+                $product->published_at ??= now();
+            }
         });
 
         static::saved(function (self $product): void {
@@ -79,6 +112,8 @@ class Product extends Model implements HasMedia
                 'name',
                 'product_code',
                 'category_id',
+                'size_guide_id',
+                'publication_status',
                 'content_verified',
                 'media_verified',
                 'is_active',
@@ -91,6 +126,8 @@ class Product extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
+        // Kept for backward compatibility with the neutral catalog API.
+        // Apparel-specific color/variant associations live on ProductMediaAsset.
         $this->addMediaCollection('catalog-main')
             ->singleFile()
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
@@ -102,6 +139,11 @@ class Product extends Model implements HasMedia
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    public function sizeGuide(): BelongsTo
+    {
+        return $this->belongsTo(SizeGuide::class);
     }
 
     public function variants(): HasMany
@@ -117,11 +159,53 @@ class Product extends Model implements HasMedia
         return $this->variants()->where('is_active', true);
     }
 
+    public function apparelVariants(): HasMany
+    {
+        return $this->variants()
+            ->whereNotNull('color_id')
+            ->whereNotNull('size_id');
+    }
+
+    public function collections(): BelongsToMany
+    {
+        return $this->belongsToMany(Collection::class)
+            ->withPivot('sort_order')
+            ->withTimestamps()
+            ->orderByPivot('sort_order');
+    }
+
+    public function drops(): BelongsToMany
+    {
+        return $this->belongsToMany(Drop::class)
+            ->withPivot('sort_order')
+            ->withTimestamps()
+            ->orderByPivot('sort_order');
+    }
+
+    public function evidences(): HasMany
+    {
+        return $this->hasMany(ProductEvidence::class);
+    }
+
+    public function mediaAssets(): HasMany
+    {
+        return $this->hasMany(ProductMediaAsset::class)
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
     public function scopeActive(Builder $query): Builder
     {
+        // Legacy neutral-catalog compatibility. BE-D owns the public API cutover
+        // to publication_status once the SSR/public contract is frozen.
         return $query->where('is_active', true)
             ->whereHas('category', fn (Builder $category): Builder => $category->active())
             ->whereHas('activeVariants');
+    }
+
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('publication_status', PublicationStatus::Published->value);
     }
 
     public function scopeFeatured(Builder $query): Builder
@@ -134,6 +218,19 @@ class Product extends Model implements HasMedia
         return $query->orderByDesc('is_featured')
             ->orderBy('sort_order')
             ->orderBy('name');
+    }
+
+    private function hasVerifiedFactMutation(): bool
+    {
+        return $this->isDirty([
+            'name',
+            'short_description',
+            'description',
+            'material',
+            'fabric_composition',
+            'fit',
+            'care_instructions',
+        ]);
     }
 
     private static function flushCatalogCache(string $slug): void

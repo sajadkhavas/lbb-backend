@@ -5,13 +5,13 @@ namespace App\Models;
 use App\Enums\PublicationStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
 
-class Category extends Model
+class Collection extends Model
 {
     use HasSlug, SoftDeletes;
 
@@ -19,24 +19,23 @@ class Category extends Model
         'name',
         'slug',
         'description',
-        'image_path',
+        'publication_status',
+        'is_featured',
+        'sort_order',
         'meta_title',
         'meta_description',
-        'publication_status',
-        'is_active',
-        'sort_order',
     ];
 
     protected $casts = [
         'publication_status' => PublicationStatus::class,
-        'is_active' => 'boolean',
+        'is_featured' => 'boolean',
         'sort_order' => 'integer',
     ];
 
     protected static function booted(): void
     {
-        static::creating(function (self $category): void {
-            $category->public_id ??= (string) Str::ulid();
+        static::creating(function (self $collection): void {
+            $collection->public_id ??= (string) Str::ulid();
         });
     }
 
@@ -52,14 +51,12 @@ class Category extends Model
             ->saveSlugsTo('slug');
     }
 
-    public function products(): HasMany
+    public function products(): BelongsToMany
     {
-        return $this->hasMany(Product::class, 'category_id');
-    }
-
-    public function scopeActive(Builder $query): Builder
-    {
-        return $query->where('is_active', true);
+        return $this->belongsToMany(Product::class)
+            ->withPivot('sort_order')
+            ->withTimestamps()
+            ->orderByPivot('sort_order');
     }
 
     public function scopePublished(Builder $query): Builder
@@ -69,6 +66,6 @@ class Category extends Model
 
     public function scopeOrdered(Builder $query): Builder
     {
-        return $query->orderBy('sort_order')->orderBy('name');
+        return $query->orderByDesc('is_featured')->orderBy('sort_order')->orderBy('name');
     }
 }
