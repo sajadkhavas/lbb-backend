@@ -11,6 +11,13 @@ use Illuminate\Support\Str;
 
 class ProductEvidence extends Model
 {
+    /**
+     * "Evidence" is treated as an uncountable noun by Laravel's table-name
+     * inflector. The apparel schema intentionally uses the explicit plural
+     * table name `product_evidences`, so keep the mapping deterministic.
+     */
+    protected $table = 'product_evidences';
+
     protected $fillable = [
         'product_id',
         'fact_key',
