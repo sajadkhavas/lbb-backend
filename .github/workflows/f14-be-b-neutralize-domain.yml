@@ -17,6 +17,7 @@ on:
       - scripts/f14_be_b2_checkout_migration_repair.py
       - scripts/f14_be_b2_migration_repair.py
       - scripts/f14_be_b2_contract_fix.py
+      - scripts/f14_be_b2_release_gate_repair.py
   workflow_dispatch:
 
 permissions:
@@ -31,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
-      MIGRATION_ATTEMPT: 23
+      MIGRATION_ATTEMPT: 24
       DB_CONNECTION: sqlite
       DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
       CACHE_STORE: array
@@ -81,6 +82,9 @@ jobs:
 
       - name: Align B2 contracts and release gates
         run: python3 scripts/f14_be_b2_contract_fix.py
+
+      - name: Repair B2 release-gate behavior and tests
+        run: python3 scripts/f14_be_b2_release_gate_repair.py
 
       - name: Validate PHP syntax
         shell: bash
@@ -132,6 +136,7 @@ jobs:
           rm -f scripts/f14_be_b2_checkout_migration_repair.py
           rm -f scripts/f14_be_b2_migration_repair.py
           rm -f scripts/f14_be_b2_contract_fix.py
+          rm -f scripts/f14_be_b2_release_gate_repair.py
           rm -f database/database.sqlite
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
