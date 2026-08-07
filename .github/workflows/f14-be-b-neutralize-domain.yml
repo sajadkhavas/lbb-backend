@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
-      MIGRATION_ATTEMPT: 10
+      MIGRATION_ATTEMPT: 11
       DB_CONNECTION: sqlite
       DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
       CACHE_STORE: array
@@ -69,18 +69,17 @@ jobs:
           if count != 1:
               raise RuntimeError('B2 replace helper definition not found')
 
-          compatibility_wrapper = '''
-def replace(path, old, new, *args, **kwargs):
-    try:
-        return _strict_replace(path, old, new, *args, **kwargs)
-    except RuntimeError:
-        target = root / path
-        text = target.read_text()
-        if new in text:
-            return None
-        raise
-
-'''
+          compatibility_wrapper = (
+              "def replace(path, old, new, *args, **kwargs):\n"
+              "    try:\n"
+              "        return _strict_replace(path, old, new, *args, **kwargs)\n"
+              "    except RuntimeError:\n"
+              "        target = root / path\n"
+              "        text = target.read_text()\n"
+              "        if new in text:\n"
+              "            return None\n"
+              "        raise\n\n"
+          )
           source = compatibility_wrapper + source
           payload = base64.b64encode(zlib.compress(source.encode('utf-8'), 9)).decode('ascii')
           path.write_text(
