@@ -141,26 +141,26 @@ final class PublicCatalogQuery
 
         return $query->with([
             'category',
-            'collections' => fn (Builder $collections): Builder => $collections->published(),
-            'drops' => fn (Builder $drops): Builder => $drops->published(),
+            'collections' => fn ($collections) => $collections->published(),
+            'drops' => fn ($drops) => $drops->published(),
             'evidences',
-            'mediaAssets' => fn (Builder $media): Builder => $media
+            'mediaAssets' => fn ($media) => $media
                 ->where('verification_state', EvidenceState::Verified->value)
                 ->with(['media', 'color', 'variant']),
-            'sizeGuide' => fn (Builder $guide): Builder => $guide
+            'sizeGuide' => fn ($guide) => $guide
                 ->active()
                 ->with([
-                    'measurements' => fn (Builder $measurements): Builder => $measurements
+                    'measurements' => fn ($measurements) => $measurements
                         ->with([
-                            'size' => fn (Builder $size): Builder => $size->active(),
-                            'definition' => fn (Builder $definition): Builder => $definition->active(),
+                            'size' => fn ($size) => $size->active(),
+                            'definition' => fn ($definition) => $definition->active(),
                         ]),
                 ]),
-            'activeVariants' => fn (Builder $variants): Builder => $variants
+            'activeVariants' => fn ($variants) => $variants
                 ->sellable()
                 ->with(['color', 'size'])
                 ->withSum([
-                    'inventoryReservations as active_reserved_quantity' => fn (Builder $reservations): Builder => $reservations->active(),
+                    'inventoryReservations as active_reserved_quantity' => fn ($reservations) => $reservations->active(),
                 ], 'quantity'),
         ]);
     }
