@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
-      MIGRATION_ATTEMPT: 13
+      MIGRATION_ATTEMPT: 14
       DB_CONNECTION: sqlite
       DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
       CACHE_STORE: array
@@ -78,6 +78,9 @@ jobs:
               "            text = handle.read()\n"
               "        if new in text:\n"
               "            return None\n"
+              "        print('B2_REPLACE_PATH=' + str(path))\n"
+              "        print('B2_REPLACE_OLD=' + repr(old))\n"
+              "        print('B2_REPLACE_NEW=' + repr(new))\n"
               "        raise\n\n"
           )
           future_block = re.match(r'(?:(?:from __future__ import [^\n]+)\n)+', source)
@@ -94,7 +97,7 @@ jobs:
               "exec(compile(zlib.decompress(base64.b64decode(PAYLOAD)).decode('utf-8'), 'f14_be_b2_complete.py', 'exec'))\n",
               encoding='utf-8',
           )
-          print('b2_replace_helper=idempotent-wrapper')
+          print('b2_replace_helper=idempotent-wrapper-diagnostic')
           PY
 
       - name: Remove food-domain behavior
