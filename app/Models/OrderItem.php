@@ -18,8 +18,6 @@ class OrderItem extends Model
         'variant_name',
         'product_code',
         'sku',
-        'weight_grams',
-        'requires_cooling',
         'unit_price_toman',
         'quantity',
         'line_total_toman',
@@ -35,8 +33,6 @@ class OrderItem extends Model
     protected function casts(): array
     {
         return [
-            'weight_grams' => 'integer',
-            'requires_cooling' => 'boolean',
             'unit_price_toman' => 'integer',
             'quantity' => 'integer',
             'line_total_toman' => 'integer',
