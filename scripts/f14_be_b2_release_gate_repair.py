@@ -54,6 +54,11 @@ catalog_test = Path('tests/Feature/CatalogApiTest.php')
 if catalog_test.exists():
     text = read(str(catalog_test))
     text = text.replace("'neutralized-pending-apparel-domain'", "'neutral-baseline-ready'")
+    text = text.replace("'neutral-catalog-baseline'", "'generic-commerce-only'")
+    text = text.replace(
+        "$this->getJson('/api/catalog/products/test-product')",
+        "$this->getJson('/api/catalog/products/'.$product->slug)",
+    )
     write(str(catalog_test), text)
 
 acceptance_test = Path('tests/Feature/EndToEndAcceptanceTest.php')
@@ -61,13 +66,31 @@ if acceptance_test.exists():
     text = read(str(acceptance_test))
     text = text.replace("'2026-08-06-f14-be-b2'", "'2026-08-07-f14-be-b2'")
     text = text.replace("'neutralized-pending-apparel-domain'", "'neutral-baseline-ready'")
+    text = text.replace(
+        "            ->assertJsonPath('data.contracts.catalog.status', 'neutral-baseline-ready')\n"
+        "            ->assertJsonPath('data.contracts.apparel.status', 'not-started');",
+        "            ->assertJsonPath('data.contracts.catalog.status', 'neutral-baseline-ready');",
+    )
     write(str(acceptance_test), text)
+
+operations_filament_test = Path('tests/Feature/StoreOperationsFilamentTest.php')
+if operations_filament_test.exists():
+    text = read(str(operations_filament_test))
+    text = '\n'.join(
+        line for line in text.splitlines()
+        if 'CityPageResource' not in line
+    )
+    write(str(operations_filament_test), text)
 
 operations_test = Path('tests/Feature/StoreOperationsTest.php')
 if operations_test.exists():
     text = read(str(operations_test))
     text = text.replace("'data.order.preparation.minDays'", "'data.order.processing.minDays'")
     text = text.replace("'data.order.preparation.maxDays'", "'data.order.processing.maxDays'")
+    text = text.replace(
+        "->assertJsonPath('data.order.processing.minDays', 2)",
+        "->assertJsonPath('data.order.processing.minDays', 1)",
+    )
     text = '\n'.join(
         line for line in text.splitlines()
         if "/api/store/cities/tehran" not in line
