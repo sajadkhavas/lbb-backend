@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
-      MIGRATION_ATTEMPT: 9
+      MIGRATION_ATTEMPT: 10
       DB_CONNECTION: sqlite
       DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
       CACHE_STORE: array
@@ -65,17 +65,23 @@ jobs:
               raise RuntimeError('B2 payload not found')
 
           source = zlib.decompress(base64.b64decode(match.group(1))).decode('utf-8')
-          guard = re.search(r'(?m)^(?P<indent>[ \t]+)if old not in text:\s*$', source)
-          if not guard:
-              raise RuntimeError('B2 replace helper old-text guard not found')
+          source, count = re.subn(r'(?m)^def replace\(', 'def _strict_replace(', source, count=1)
+          if count != 1:
+              raise RuntimeError('B2 replace helper definition not found')
 
-          indent = guard.group('indent')
-          injected = (
-              guard.group(0)
-              + f"\n{indent}    if new in text:"
-              + f"\n{indent}        return"
-          )
-          source = source[:guard.start()] + injected + source[guard.end():]
+          compatibility_wrapper = '''
+def replace(path, old, new, *args, **kwargs):
+    try:
+        return _strict_replace(path, old, new, *args, **kwargs)
+    except RuntimeError:
+        target = root / path
+        text = target.read_text()
+        if new in text:
+            return None
+        raise
+
+'''
+          source = compatibility_wrapper + source
           payload = base64.b64encode(zlib.compress(source.encode('utf-8'), 9)).decode('ascii')
           path.write_text(
               "import base64\nimport zlib\n\n"
@@ -83,7 +89,7 @@ jobs:
               "exec(compile(zlib.decompress(base64.b64decode(PAYLOAD)).decode('utf-8'), 'f14_be_b2_complete.py', 'exec'))\n",
               encoding='utf-8',
           )
-          print('b2_replace_helper=idempotent')
+          print('b2_replace_helper=idempotent-wrapper')
           PY
 
       - name: Remove food-domain behavior
