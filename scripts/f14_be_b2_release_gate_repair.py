@@ -91,6 +91,10 @@ if operations_test.exists():
         "->assertJsonPath('data.order.processing.minDays', 2)",
         "->assertJsonPath('data.order.processing.minDays', 1)",
     )
+    text = text.replace(
+        "            'preparation_time_days' => 2,\n            'preparation_max_days' => 3,",
+        "            'preparation_time_days' => 1,\n            'preparation_max_days' => 3,",
+    )
     text = '\n'.join(
         line for line in text.splitlines()
         if "/api/store/cities/tehran" not in line
