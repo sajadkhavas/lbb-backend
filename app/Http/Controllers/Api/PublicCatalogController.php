@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace App\Http\Controllers\Api;
 
 use App\Domain\Catalog\PublicCatalogQuery;
 use App\Domain\Catalog\PublicCatalogTransformer;

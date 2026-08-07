@@ -9,10 +9,10 @@ use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\InquiryController;
 use App\Http\Controllers\Api\OtpAuthController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PublicCatalogController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\StoreContentController;
 use App\Http\Controllers\Api\SystemController;
-use App\Http\Controllers\Api\V1\PublicCatalogController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('system')->middleware('throttle:60,1')->group(function () {
