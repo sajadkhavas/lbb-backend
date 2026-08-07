@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\BakeryCityPage;
-use App\Models\BakeryContentPage;
-use App\Models\BakeryFaq;
-use App\Models\BakeryGalleryItem;
-use App\Models\BakeryPost;
+use App\Models\ContentPage;
+use App\Models\Faq;
+use App\Models\GalleryItem;
+use App\Models\Post;
 use App\Models\StoreSetting;
 use App\Support\ApiResponse;
 use App\Support\Pagination;
@@ -47,7 +46,7 @@ class StoreContentController extends Controller
 
     public function page(string $slug): JsonResponse
     {
-        $page = BakeryContentPage::query()
+        $page = ContentPage::query()
             ->published()
             ->where('slug', $slug)
             ->firstOrFail();
@@ -75,13 +74,13 @@ class StoreContentController extends Controller
             'category' => ['nullable', 'string', 'max:100'],
         ]);
         $category = trim((string) ($filters['category'] ?? ''));
-        $faqs = BakeryFaq::query()
+        $faqs = Faq::query()
             ->active()
             ->when($category !== '', fn (Builder $query): Builder => $query->where('category', $category))
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get()
-            ->map(fn (BakeryFaq $faq): array => [
+            ->map(fn (Faq $faq): array => [
                 'id' => $faq->getKey(),
                 'category' => $faq->category,
                 'question' => $faq->question,
@@ -93,12 +92,12 @@ class StoreContentController extends Controller
 
     public function gallery(): JsonResponse
     {
-        $items = BakeryGalleryItem::query()
+        $items = GalleryItem::query()
             ->active()
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get()
-            ->map(fn (BakeryGalleryItem $item): array => [
+            ->map(fn (GalleryItem $item): array => [
                 'id' => $item->getKey(),
                 'title' => $item->title,
                 'caption' => $item->caption,
@@ -119,7 +118,7 @@ class StoreContentController extends Controller
         ]);
         $category = trim((string) ($filters['category'] ?? ''));
         $search = trim((string) ($filters['search'] ?? ''));
-        $posts = BakeryPost::query()
+        $posts = Post::query()
             ->published()
             ->when($category !== '', fn (Builder $query): Builder => $query->where('category', $category))
             ->when($search !== '', function (Builder $query) use ($search): void {
@@ -135,7 +134,7 @@ class StoreContentController extends Controller
             )));
 
         return ApiResponse::success(
-            $posts->getCollection()->map(fn (BakeryPost $post): array => $this->postSummary($post))->all(),
+            $posts->getCollection()->map(fn (Post $post): array => $this->postSummary($post))->all(),
             meta: [
                 'pagination' => Pagination::meta($posts),
                 'filters' => [
@@ -148,9 +147,9 @@ class StoreContentController extends Controller
 
     public function post(string $slug): JsonResponse
     {
-        $post = BakeryPost::query()->published()->where('slug', $slug)->firstOrFail();
-        BakeryPost::withoutTimestamps(
-            fn (): int => BakeryPost::query()->whereKey($post->getKey())->increment('view_count'),
+        $post = Post::query()->published()->where('slug', $slug)->firstOrFail();
+        Post::withoutTimestamps(
+            fn (): int => Post::query()->whereKey($post->getKey())->increment('view_count'),
         );
 
         return ApiResponse::success([
@@ -162,27 +161,7 @@ class StoreContentController extends Controller
         ]);
     }
 
-    public function city(string $slug): JsonResponse
-    {
-        $page = BakeryCityPage::query()->active()->where('slug', $slug)->firstOrFail();
-
-        return ApiResponse::success([
-            'city' => [
-                'id' => $page->public_id,
-                'city' => $page->city,
-                'slug' => $page->slug,
-                'title' => $page->title,
-                'description' => $page->description,
-                'content' => $page->content,
-                'seo' => [
-                    'title' => $page->meta_title,
-                    'description' => $page->meta_description,
-                ],
-            ],
-        ]);
-    }
-
-    private function postSummary(BakeryPost $post): array
+    private function postSummary(Post $post): array
     {
         return [
             'id' => $post->public_id,

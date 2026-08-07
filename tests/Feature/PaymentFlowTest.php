@@ -6,9 +6,9 @@ use App\Enums\InventoryReservationStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentAttemptStatus;
 use App\Enums\PaymentStatus;
-use App\Models\BakeryCategory;
-use App\Models\BakeryProduct;
-use App\Models\BakeryProductVariant;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Customer;
 use App\Models\PaymentAttempt;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -22,7 +22,7 @@ class PaymentFlowTest extends TestCase
 
     private Customer $customer;
 
-    private BakeryProductVariant $variant;
+    private ProductVariant $variant;
 
     protected function setUp(): void
     {
@@ -53,23 +53,22 @@ class PaymentFlowTest extends TestCase
             'is_active' => true,
         ]);
 
-        $category = BakeryCategory::query()->create([
+        $category = Category::query()->create([
             'name' => 'شیرینی',
             'slug' => 'pastry',
             'is_active' => true,
         ]);
 
-        $product = BakeryProduct::query()->create([
+        $product = Product::query()->create([
             'category_id' => $category->getKey(),
             'name' => 'کوکی شکلاتی',
             'slug' => 'chocolate-cookie',
             'product_code' => 'COOKIE-001',
             'preparation_time_days' => 2,
-            'requires_cooling' => false,
             'is_active' => true,
         ]);
 
-        $this->variant = BakeryProductVariant::query()->create([
+        $this->variant = ProductVariant::query()->create([
             'product_id' => $product->getKey(),
             'name' => 'بسته ۶ عددی',
             'sku' => 'COOKIE-001-6',

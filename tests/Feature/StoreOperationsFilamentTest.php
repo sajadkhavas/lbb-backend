@@ -5,12 +5,10 @@ namespace Tests\Feature;
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
-use App\Filament\Resources\BakeryCityPageResource;
-use App\Filament\Resources\BakeryContentPageResource;
-use App\Filament\Resources\BakeryFaqResource;
-use App\Filament\Resources\BakeryGalleryItemResource;
-use App\Filament\Resources\BakeryPostResource;
-use App\Filament\Resources\CustomerAddressResource;
+use App\Filament\Resources\ContentPageResource;
+use App\Filament\Resources\FaqResource;
+use App\Filament\Resources\GalleryItemResource;
+use App\Filament\Resources\PostResource;
 use App\Filament\Resources\DeliveryZoneResource;
 use App\Filament\Resources\InquiryResource;
 use App\Filament\Resources\NotificationOutboxResource;
@@ -42,16 +40,14 @@ class StoreOperationsFilamentTest extends TestCase
         foreach ([
             DeliveryZoneResource::class,
             StoreSettingResource::class,
-            BakeryContentPageResource::class,
-            BakeryFaqResource::class,
-            BakeryGalleryItemResource::class,
-            BakeryCityPageResource::class,
-            BakeryPostResource::class,
+            ContentPageResource::class,
+            FaqResource::class,
+            GalleryItemResource::class,
+            PostResource::class,
             ProductReviewResource::class,
             InquiryResource::class,
             NotificationTemplateResource::class,
             NotificationOutboxResource::class,
-            CustomerAddressResource::class,
             OrderResource::class,
         ] as $resource) {
             $this->actingAs($admin)->get($resource::getUrl('index'))->assertOk();
@@ -64,13 +60,12 @@ class StoreOperationsFilamentTest extends TestCase
         ]);
         $order = Order::query()->create([
             'customer_id' => $customer->getKey(),
-            'order_number' => 'WNM-ADMIN-0001',
+            'order_number' => 'LBB-ADMIN-0001',
             'idempotency_key' => 'admin-order-idempotency-key',
             'request_hash' => hash('sha256', 'admin-order'),
             'status' => OrderStatus::Paid,
             'payment_status' => PaymentStatus::Paid,
             'delivery_method' => DeliveryMethod::Pickup,
-            'requires_cooling' => false,
             'subtotal_toman' => 100_000,
             'delivery_fee_toman' => 0,
             'packaging_fee_toman' => 0,

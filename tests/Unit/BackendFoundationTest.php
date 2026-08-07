@@ -16,31 +16,19 @@ class BackendFoundationTest extends TestCase
         $this->assertTrue((bool) config('cors.supports_credentials'));
     }
 
-    public function test_only_completed_commerce_contracts_are_reported_as_implemented(): void
+    public function test_b2_contract_reports_only_the_neutral_baseline_as_ready(): void
     {
         $contracts = config('lbb.contracts');
 
         $this->assertSame('implemented', $contracts['system']['status']);
-        $this->assertSame('implemented', $contracts['catalog']['status']);
-        $this->assertSame('bakery-catalog', $contracts['catalog']['source']);
-        $this->assertSame('implemented', $contracts['authentication']['status']);
-        $this->assertSame('customer-session-otp', $contracts['authentication']['source']);
-        $this->assertSame('implemented', $contracts['orders']['status']);
-        $this->assertSame('transactional-order-reservations', $contracts['orders']['source']);
-        $this->assertSame('implemented', $contracts['payments']['status']);
-        $this->assertSame('provider-ready-payment-attempts', $contracts['payments']['source']);
-        $this->assertSame(
-            'disabled-until-external-credentials',
-            $contracts['payments']['activation'],
-        );
-        $this->assertSame('implemented', $contracts['store_operations']['status']);
-        $this->assertSame(
-            'delivery-content-reviews-inquiries-notification-outbox',
-            $contracts['store_operations']['source'],
-        );
-        $this->assertSame(
-            'sms-disabled-until-external-credentials',
-            $contracts['store_operations']['activation'],
-        );
+        $this->assertSame('ready', $contracts['domain_cleanup']['status']);
+        $this->assertSame('neutral-baseline-ready', $contracts['catalog']['status']);
+        $this->assertSame('not-started', $contracts['apparel_domain']['status']);
+        $this->assertSame('F14-BE-C', $contracts['apparel_domain']['target_phase']);
+        $this->assertSame('imported-pending-lbb-verification', $contracts['authentication']['status']);
+        $this->assertSame('imported-pending-lbb-verification', $contracts['orders']['status']);
+        $this->assertSame('disabled-pending-lbb-verification', $contracts['payments']['status']);
+        $this->assertSame('not-ready', $contracts['backend_freeze']['status']);
+        $this->assertFalse((bool) config('lbb.launch.backend_complete'));
     }
 }

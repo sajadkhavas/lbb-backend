@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\InventoryReservationStatus;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\BakeryCategoryResource;
-use App\Http\Resources\BakeryProductResource;
-use App\Models\BakeryCategory;
-use App\Models\BakeryProduct;
+use App\Http\Resources\CategoryResource;
+use App\Http\Resources\ProductResource;
+use App\Models\Category;
+use App\Models\Product;
 use App\Support\ApiResponse;
 use App\Support\Pagination;
 use Illuminate\Database\Eloquent\Builder;
@@ -36,7 +36,7 @@ class CatalogController extends Controller
             ? $request->boolean('inStock')
             : false;
 
-        $query = BakeryProduct::query()
+        $query = Product::query()
             ->active()
             ->with($this->catalogRelations());
 
@@ -63,7 +63,7 @@ class CatalogController extends Controller
         if ($inStock) {
             $query->whereHas('activeVariants', function (Builder $variant): void {
                 $variant->whereRaw(
-                    'stock_quantity > COALESCE((SELECT SUM(quantity) FROM inventory_reservations WHERE inventory_reservations.variant_id = bakery_product_variants.id AND status = ? AND expires_at > ?), 0)',
+                    'stock_quantity > COALESCE((SELECT SUM(quantity) FROM inventory_reservations WHERE inventory_reservations.variant_id = product_variants.id AND status = ? AND expires_at > ?), 0)',
                     [InventoryReservationStatus::Active->value, now()],
                 );
             });
@@ -75,7 +75,7 @@ class CatalogController extends Controller
             'lbb.policies.pagination.catalog_default',
             12,
         )));
-        $items = BakeryProductResource::collection($paginator->getCollection())->resolve($request);
+        $items = ProductResource::collection($paginator->getCollection())->resolve($request);
 
         return ApiResponse::success($items, meta: [
             'pagination' => Pagination::meta($paginator),
@@ -91,20 +91,20 @@ class CatalogController extends Controller
 
     public function product(string $slug): JsonResponse
     {
-        $product = BakeryProduct::query()
+        $product = Product::query()
             ->active()
             ->with($this->catalogRelations())
             ->where('slug', $slug)
             ->firstOrFail();
 
         return ApiResponse::success(
-            (new BakeryProductResource($product))->resolve(),
+            (new ProductResource($product))->resolve(),
         );
     }
 
     public function categories(Request $request): JsonResponse
     {
-        $categories = BakeryCategory::query()
+        $categories = Category::query()
             ->active()
             ->withCount([
                 'products' => fn (Builder $products): Builder => $products->active(),
@@ -113,7 +113,7 @@ class CatalogController extends Controller
             ->get();
 
         return ApiResponse::success(
-            BakeryCategoryResource::collection($categories)->resolve($request),
+            CategoryResource::collection($categories)->resolve($request),
         );
     }
 
@@ -140,14 +140,14 @@ class CatalogController extends Controller
                     ELSE regular_price_toman
                 END
             )
-            FROM bakery_product_variants
-            WHERE bakery_product_variants.product_id = bakery_products.id
-                AND bakery_product_variants.is_active = 1)
+            FROM product_variants
+            WHERE product_variants.product_id = products.id
+                AND product_variants.is_active = 1)
         SQL;
 
         match ($sort) {
-            'newest' => $query->latest('bakery_products.created_at'),
-            'name' => $query->orderBy('bakery_products.name'),
+            'newest' => $query->latest('products.created_at'),
+            'name' => $query->orderBy('products.name'),
             'price-asc' => $query->orderByRaw("{$currentPriceSql} ASC"),
             'price-desc' => $query->orderByRaw("{$currentPriceSql} DESC"),
             default => $query->ordered(),

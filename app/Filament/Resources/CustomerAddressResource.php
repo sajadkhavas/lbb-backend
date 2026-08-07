@@ -22,7 +22,7 @@ class CustomerAddressResource extends Resource
 
     protected static ?string $pluralModelLabel = 'آدرس‌های مشتریان';
 
-    protected static ?string $navigationGroup = 'فروشگاه وینیمی';
+    protected static ?string $navigationGroup = 'فروشگاه LBB';
 
     protected static ?int $navigationSort = 10;
 

@@ -37,13 +37,12 @@ class OrderFilamentResourceTest extends TestCase
 
         $order = Order::query()->create([
             'customer_id' => $customer->getKey(),
-            'order_number' => 'WNM-TEST-0001',
+            'order_number' => 'LBB-TEST-0001',
             'idempotency_key' => 'filament-order-key-0001',
             'request_hash' => hash('sha256', 'filament-order'),
             'status' => OrderStatus::AwaitingPayment,
             'payment_status' => PaymentStatus::Unpaid,
             'delivery_method' => DeliveryMethod::Pickup,
-            'requires_cooling' => false,
             'subtotal_toman' => 100_000,
             'delivery_fee_toman' => 0,
             'packaging_fee_toman' => 0,

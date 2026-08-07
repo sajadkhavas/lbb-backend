@@ -6,14 +6,13 @@ use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\ReviewStatus;
-use App\Models\BakeryCategory;
-use App\Models\BakeryCityPage;
-use App\Models\BakeryContentPage;
-use App\Models\BakeryFaq;
-use App\Models\BakeryGalleryItem;
-use App\Models\BakeryPost;
-use App\Models\BakeryProduct;
-use App\Models\BakeryProductVariant;
+use App\Models\Category;
+use App\Models\ContentPage;
+use App\Models\Faq;
+use App\Models\GalleryItem;
+use App\Models\Post;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Customer;
 use App\Models\DeliveryZone;
 use App\Models\Order;
@@ -29,9 +28,9 @@ class StoreOperationsTest extends TestCase
 
     private Customer $customer;
 
-    private BakeryProduct $product;
+    private Product $product;
 
-    private BakeryProductVariant $variant;
+    private ProductVariant $variant;
 
     protected function setUp(): void
     {
@@ -56,23 +55,22 @@ class StoreOperationsTest extends TestCase
             'is_active' => true,
         ]);
 
-        $category = BakeryCategory::query()->create([
+        $category = Category::query()->create([
             'name' => 'کوکی',
             'slug' => 'cookies',
             'is_active' => true,
         ]);
 
-        $this->product = BakeryProduct::query()->create([
+        $this->product = Product::query()->create([
             'category_id' => $category->getKey(),
             'name' => 'کوکی شکلاتی',
             'slug' => 'chocolate-cookie',
             'product_code' => 'COOKIE-001',
             'preparation_time_days' => 2,
-            'requires_cooling' => false,
             'is_active' => true,
         ]);
 
-        $this->variant = BakeryProductVariant::query()->create([
+        $this->variant = ProductVariant::query()->create([
             'product_id' => $this->product->getKey(),
             'name' => 'بسته ۶ عددی',
             'sku' => 'COOKIE-001-6',
@@ -146,15 +144,15 @@ class StoreOperationsTest extends TestCase
             ->assertJsonPath('data.order.totals.deliveryFeeToman', 25_000)
             ->assertJsonPath('data.order.totals.packagingFeeToman', 5_000)
             ->assertJsonPath('data.order.totals.grandTotalToman', 110_000)
-            ->assertJsonPath('data.order.preparation.minDays', 2)
-            ->assertJsonPath('data.order.preparation.maxDays', 3)
+            ->assertJsonPath('data.order.processing.minDays', 1)
+            ->assertJsonPath('data.order.processing.maxDays', 3)
             ->assertJsonPath('data.order.recipient.address', 'خیابان نمونه، پلاک یک');
 
         $this->assertDatabaseHas('orders', [
             'delivery_zone_id' => $zone->getKey(),
             'delivery_fee_toman' => 25_000,
             'packaging_fee_toman' => 5_000,
-            'preparation_time_days' => 2,
+            'preparation_time_days' => 1,
             'preparation_max_days' => 3,
         ]);
     }
@@ -179,7 +177,7 @@ class StoreOperationsTest extends TestCase
             ->assertJsonPath('data.trust.enamad.enabled', true)
             ->assertJsonPath('data.trust.enamad.badgeCode', '<a id="enamad">badge</a>');
 
-        BakeryContentPage::query()->create([
+        ContentPage::query()->create([
             'type' => 'legal',
             'slug' => 'privacy',
             'title' => 'حریم خصوصی',
@@ -187,37 +185,31 @@ class StoreOperationsTest extends TestCase
             'status' => 'published',
             'published_at' => now(),
         ]);
-        BakeryContentPage::query()->create([
+        ContentPage::query()->create([
             'type' => 'page',
             'slug' => 'draft-page',
             'title' => 'پیش‌نویس',
             'status' => 'draft',
         ]);
-        BakeryFaq::query()->create([
+        Faq::query()->create([
             'category' => 'delivery',
             'question' => 'ارسال چگونه است؟',
             'answer' => 'با توجه به منطقه.',
             'sort_order' => 1,
             'is_active' => true,
         ]);
-        BakeryGalleryItem::query()->create([
+        GalleryItem::query()->create([
             'title' => 'ویترین',
             'image_url' => 'https://example.test/gallery.jpg',
             'sort_order' => 1,
             'is_active' => true,
         ]);
-        BakeryPost::query()->create([
+        Post::query()->create([
             'slug' => 'fresh-cookies',
             'title' => 'کوکی تازه',
             'content' => 'مقاله کوکی تازه',
             'status' => 'published',
             'published_at' => now(),
-        ]);
-        BakeryCityPage::query()->create([
-            'city' => 'تهران',
-            'slug' => 'tehran',
-            'title' => 'سفارش کوکی در تهران',
-            'is_active' => true,
         ]);
 
         $this->getJson('/api/store/pages/privacy')->assertOk()->assertJsonPath('data.page.type', 'legal');
@@ -225,7 +217,6 @@ class StoreOperationsTest extends TestCase
         $this->getJson('/api/store/faqs?category=delivery')->assertOk()->assertJsonCount(1, 'data');
         $this->getJson('/api/store/gallery')->assertOk()->assertJsonPath('data.0.title', 'ویترین');
         $this->getJson('/api/store/posts/fresh-cookies')->assertOk()->assertJsonPath('data.post.title', 'کوکی تازه');
-        $this->getJson('/api/store/cities/tehran')->assertOk()->assertJsonPath('data.city.city', 'تهران');
     }
 
     public function test_only_delivered_owned_items_can_receive_one_moderated_verified_review(): void
@@ -315,13 +306,12 @@ class StoreOperationsTest extends TestCase
     {
         $order = Order::query()->create([
             'customer_id' => $this->customer->getKey(),
-            'order_number' => 'WNM-REVIEW-0001',
+            'order_number' => 'LBB-REVIEW-0001',
             'idempotency_key' => 'review-order-idempotency-key',
             'request_hash' => hash('sha256', 'review-order'),
             'status' => OrderStatus::Delivered,
             'payment_status' => PaymentStatus::Paid,
             'delivery_method' => DeliveryMethod::Pickup,
-            'requires_cooling' => false,
             'subtotal_toman' => 80_000,
             'delivery_fee_toman' => 0,
             'packaging_fee_toman' => 0,
@@ -346,7 +336,6 @@ class StoreOperationsTest extends TestCase
             'variant_name' => $this->variant->name,
             'product_code' => $this->product->product_code,
             'sku' => $this->variant->sku,
-            'requires_cooling' => false,
             'unit_price_toman' => 80_000,
             'quantity' => 1,
             'line_total_toman' => 80_000,

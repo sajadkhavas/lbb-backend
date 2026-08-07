@@ -6,6 +6,7 @@ use App\Support\IranianMobile;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Throwable;
@@ -16,6 +17,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Gate::before(static function ($user, string $ability): ?bool {
+            return method_exists($user, 'hasRole') && $user->hasRole('super_admin') ? true : null;
+        });
+
 
         if ($this->app->environment('production')) {
             URL::forceScheme('https');

@@ -4,9 +4,9 @@ namespace Tests\Feature;
 
 use App\Enums\InventoryReservationStatus;
 use App\Enums\OrderStatus;
-use App\Models\BakeryCategory;
-use App\Models\BakeryProduct;
-use App\Models\BakeryProductVariant;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Customer;
 use App\Models\InventoryReservation;
 use App\Models\Order;
@@ -21,7 +21,7 @@ class CheckoutOrderTest extends TestCase
 
     private Customer $customer;
 
-    private BakeryProductVariant $variant;
+    private ProductVariant $variant;
 
     protected function setUp(): void
     {
@@ -34,7 +34,6 @@ class CheckoutOrderTest extends TestCase
             'lbb.checkout.max_total_units' => 50,
             'lbb.checkout.packaging_fee_toman' => 10_000,
             'lbb.checkout.delivery_methods.standard' => ['enabled' => true, 'fee_toman' => 30_000],
-            'lbb.checkout.delivery_methods.chilled' => ['enabled' => true, 'fee_toman' => 90_000],
             'lbb.checkout.delivery_methods.pickup' => ['enabled' => true, 'fee_toman' => 0],
             'session.driver' => 'array',
         ]);
@@ -46,26 +45,24 @@ class CheckoutOrderTest extends TestCase
             'is_active' => true,
         ]);
 
-        $category = BakeryCategory::query()->create([
-            'name' => 'شیرینی',
-            'slug' => 'pastry',
+        $category = Category::query()->create([
+            'name' => 'دسته آزمایشی',
+            'slug' => 'test-category',
             'is_active' => true,
         ]);
 
-        $product = BakeryProduct::query()->create([
+        $product = Product::query()->create([
             'category_id' => $category->getKey(),
-            'name' => 'کوکی شکلاتی',
-            'slug' => 'chocolate-cookie',
-            'product_code' => 'COOKIE-001',
-            'preparation_time_days' => 2,
-            'requires_cooling' => false,
+            'name' => 'محصول آزمایشی',
+            'slug' => 'test-product',
+            'product_code' => 'LBB-TEST-001',
             'is_active' => true,
         ]);
 
-        $this->variant = BakeryProductVariant::query()->create([
+        $this->variant = ProductVariant::query()->create([
             'product_id' => $product->getKey(),
-            'name' => 'بسته ۶ عددی',
-            'sku' => 'COOKIE-001-6',
+            'name' => 'انتخاب استاندارد',
+            'sku' => 'LBB-TEST-001-A',
             'regular_price_toman' => 100_000,
             'sale_price_toman' => 80_000,
             'stock_quantity' => 5,
@@ -87,7 +84,7 @@ class CheckoutOrderTest extends TestCase
             ->assertJsonPath('data.order.totals.packagingFeeToman', 10_000)
             ->assertJsonPath('data.order.totals.grandTotalToman', 200_000)
             ->assertJsonPath('data.order.items.0.unitPriceToman', 80_000)
-            ->assertJsonPath('data.order.items.0.productName', 'کوکی شکلاتی')
+            ->assertJsonPath('data.order.items.0.productName', 'محصول آزمایشی')
             ->assertJsonPath('data.payment.available', false)
             ->assertJsonPath('meta.replayed', false);
 
@@ -98,8 +95,8 @@ class CheckoutOrderTest extends TestCase
             'grand_total_toman' => 200_000,
         ]);
         $this->assertDatabaseHas('order_items', [
-            'product_name' => 'کوکی شکلاتی',
-            'variant_name' => 'بسته ۶ عددی',
+            'product_name' => 'محصول آزمایشی',
+            'variant_name' => 'انتخاب استاندارد',
             'unit_price_toman' => 80_000,
             'quantity' => 2,
             'line_total_toman' => 160_000,
@@ -111,7 +108,7 @@ class CheckoutOrderTest extends TestCase
         ]);
         $this->assertSame(5, $this->variant->fresh()->stock_quantity);
 
-        $this->getJson('/api/catalog/products/chocolate-cookie')
+        $this->getJson('/api/catalog/products/test-product')
             ->assertOk()
             ->assertJsonPath('data.variants.0.stock', 3);
     }
@@ -148,20 +145,6 @@ class CheckoutOrderTest extends TestCase
         $this->assertSame(5, $this->variant->fresh()->stock_quantity);
     }
 
-    public function test_cooling_products_require_chilled_delivery_or_pickup(): void
-    {
-        $this->variant->product()->update(['requires_cooling' => true]);
-
-        $this->checkout('checkout-key-000005', 1, 'standard')
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors('deliveryMethod');
-
-        $this->checkout('checkout-key-000006', 1, 'chilled')
-            ->assertCreated()
-            ->assertJsonPath('data.order.delivery.method', 'chilled')
-            ->assertJsonPath('data.order.delivery.requiresCooling', true)
-            ->assertJsonPath('data.order.totals.deliveryFeeToman', 90_000);
-    }
 
     public function test_customer_can_only_view_own_orders_and_cancel_unpaid_order(): void
     {

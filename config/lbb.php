@@ -19,11 +19,12 @@ return [
     ],
     'api' => [
         'version' => '1',
-        'contract_version' => '2026-08-06-f14-be-b1',
+        'contract_version' => '2026-08-07-f14-be-b2',
         'request_id_header' => 'X-Request-ID',
         'openapi_path' => base_path('docs/openapi.json'),
     ],
     'frontend_origins' => $frontendOrigins,
+    'stateful_domains' => env('SANCTUM_STATEFUL_DOMAINS', 'lbb.ir,www.lbb.ir'),
     'otp' => [
         'provider' => env('SMS_PROVIDER', 'disabled'),
         'length' => (int) env('OTP_LENGTH', 6),
@@ -110,15 +111,26 @@ return [
     ],
     'contracts' => [
         'system' => ['status' => 'implemented'],
-        'catalog' => ['status' => 'migration-in-progress'],
+        'domain_cleanup' => [
+            'status' => 'ready',
+            'source' => 'neutral-commerce-baseline',
+        ],
+        'catalog' => [
+            'status' => 'neutral-baseline-ready',
+            'source' => 'generic-commerce-only',
+        ],
+        'apparel_domain' => [
+            'status' => 'not-started',
+            'target_phase' => 'F14-BE-C',
+        ],
         'authentication' => ['status' => 'imported-pending-lbb-verification'],
         'orders' => ['status' => 'imported-pending-lbb-verification'],
         'payments' => ['status' => 'disabled-pending-lbb-verification'],
-        'store_operations' => ['status' => 'migration-in-progress'],
+        'store_operations' => ['status' => 'neutral-baseline-ready'],
         'backend_freeze' => ['status' => 'not-ready'],
     ],
     'launch' => [
-        'strategy' => 'fail-closed-until-lbb-contract-freeze',
+        'strategy' => 'fail-closed-until-apparel-contract-freeze',
         'backend_complete' => false,
         'frontend_integrated' => false,
         'production_deployed' => false,

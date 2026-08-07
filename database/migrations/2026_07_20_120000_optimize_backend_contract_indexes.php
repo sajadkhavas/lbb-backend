@@ -8,21 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('bakery_products', function (Blueprint $table): void {
+        Schema::table('products', function (Blueprint $table): void {
             $table->index(
                 ['is_active', 'is_featured', 'sort_order'],
-                'bakery_products_featured_contract_index',
-            );
-            $table->index(
-                ['requires_cooling', 'is_active'],
-                'bakery_products_cooling_contract_index',
+                'products_featured_contract_index',
             );
         });
 
-        Schema::table('bakery_product_variants', function (Blueprint $table): void {
+        Schema::table('product_variants', function (Blueprint $table): void {
             $table->index(
                 ['is_active', 'stock_quantity'],
-                'bakery_variants_stock_contract_index',
+                'catalog_variants_stock_contract_index',
             );
         });
 
@@ -55,10 +51,10 @@ return new class extends Migration
             );
         });
 
-        Schema::table('bakery_posts', function (Blueprint $table): void {
+        Schema::table('posts', function (Blueprint $table): void {
             $table->index(
                 ['status', 'published_at', 'id'],
-                'bakery_posts_public_contract_index',
+                'posts_public_contract_index',
             );
         });
 
@@ -87,8 +83,8 @@ return new class extends Migration
             $table->dropIndex('product_reviews_customer_status_index');
         });
 
-        Schema::table('bakery_posts', function (Blueprint $table): void {
-            $table->dropIndex('bakery_posts_public_contract_index');
+        Schema::table('posts', function (Blueprint $table): void {
+            $table->dropIndex('posts_public_contract_index');
         });
 
         Schema::table('customer_addresses', function (Blueprint $table): void {
@@ -105,13 +101,12 @@ return new class extends Migration
             $table->dropIndex('orders_operations_status_index');
         });
 
-        Schema::table('bakery_product_variants', function (Blueprint $table): void {
-            $table->dropIndex('bakery_variants_stock_contract_index');
+        Schema::table('product_variants', function (Blueprint $table): void {
+            $table->dropIndex('catalog_variants_stock_contract_index');
         });
 
-        Schema::table('bakery_products', function (Blueprint $table): void {
-            $table->dropIndex('bakery_products_featured_contract_index');
-            $table->dropIndex('bakery_products_cooling_contract_index');
+        Schema::table('products', function (Blueprint $table): void {
+            $table->dropIndex('products_featured_contract_index');
         });
     }
 };

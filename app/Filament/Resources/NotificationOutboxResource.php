@@ -23,7 +23,7 @@ class NotificationOutboxResource extends Resource
 
     protected static ?string $pluralModelLabel = 'صف اعلان‌ها';
 
-    protected static ?string $navigationGroup = 'فروشگاه وینیمی';
+    protected static ?string $navigationGroup = 'فروشگاه LBB';
 
     protected static ?int $navigationSort = 9;
 

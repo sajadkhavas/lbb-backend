@@ -23,7 +23,7 @@ class ProductReviewResource extends Resource
 
     protected static ?string $pluralModelLabel = 'نظرات محصولات';
 
-    protected static ?string $navigationGroup = 'فروشگاه وینیمی';
+    protected static ?string $navigationGroup = 'فروشگاه LBB';
 
     protected static ?int $navigationSort = 7;
 

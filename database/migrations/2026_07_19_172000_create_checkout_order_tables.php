@@ -12,15 +12,12 @@ return new class extends Migration
             $table->id();
             $table->char('public_id', 26)->unique();
             $table->string('order_number', 32)->unique();
-            $table->foreignId('customer_id')
-                ->constrained('customers')
-                ->restrictOnDelete();
+            $table->foreignId('customer_id')->constrained('customers')->restrictOnDelete();
             $table->string('idempotency_key', 120);
             $table->char('request_hash', 64);
             $table->string('status', 40)->index();
             $table->string('payment_status', 40)->index();
             $table->string('delivery_method', 32)->index();
-            $table->boolean('requires_cooling')->default(false)->index();
             $table->unsignedBigInteger('subtotal_toman');
             $table->unsignedBigInteger('delivery_fee_toman')->default(0);
             $table->unsignedBigInteger('packaging_fee_toman')->default(0);
@@ -47,25 +44,15 @@ return new class extends Migration
 
         Schema::create('order_items', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('order_id')
-                ->constrained('orders')
-                ->cascadeOnDelete();
-            $table->foreignId('product_id')
-                ->nullable()
-                ->constrained('bakery_products')
-                ->nullOnDelete();
-            $table->foreignId('variant_id')
-                ->nullable()
-                ->constrained('bakery_product_variants')
-                ->nullOnDelete();
+            $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
+            $table->foreignId('product_id')->nullable()->constrained('products')->nullOnDelete();
+            $table->foreignId('variant_id')->nullable()->constrained('product_variants')->nullOnDelete();
             $table->char('product_public_id', 26);
             $table->char('variant_public_id', 26);
             $table->string('product_name', 180);
             $table->string('variant_name', 120);
             $table->string('product_code', 80);
             $table->string('sku', 100);
-            $table->unsignedInteger('weight_grams')->nullable();
-            $table->boolean('requires_cooling')->default(false);
             $table->unsignedBigInteger('unit_price_toman');
             $table->unsignedInteger('quantity');
             $table->unsignedBigInteger('line_total_toman');
@@ -77,12 +64,8 @@ return new class extends Migration
         Schema::create('inventory_reservations', function (Blueprint $table): void {
             $table->id();
             $table->char('public_id', 26)->unique();
-            $table->foreignId('order_id')
-                ->constrained('orders')
-                ->cascadeOnDelete();
-            $table->foreignId('variant_id')
-                ->constrained('bakery_product_variants')
-                ->restrictOnDelete();
+            $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
+            $table->foreignId('variant_id')->constrained('product_variants')->restrictOnDelete();
             $table->unsignedInteger('quantity');
             $table->string('status', 24)->index();
             $table->timestamp('expires_at')->index();
@@ -97,9 +80,7 @@ return new class extends Migration
 
         Schema::create('order_status_histories', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('order_id')
-                ->constrained('orders')
-                ->cascadeOnDelete();
+            $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
             $table->string('from_status', 40)->nullable();
             $table->string('to_status', 40);
             $table->string('actor_type', 40)->default('system');

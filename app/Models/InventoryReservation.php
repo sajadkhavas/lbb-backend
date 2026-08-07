@@ -48,7 +48,7 @@ class InventoryReservation extends Model
 
     public function variant(): BelongsTo
     {
-        return $this->belongsTo(BakeryProductVariant::class);
+        return $this->belongsTo(ProductVariant::class);
     }
 
     public function scopeActive(Builder $query): Builder

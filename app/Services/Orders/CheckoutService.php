@@ -8,12 +8,12 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Exceptions\IdempotencyConflict;
 use App\Exceptions\InventoryUnavailable;
-use App\Models\BakeryProductVariant;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\InventoryReservation;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
+use App\Models\ProductVariant;
 use App\Services\Store\DeliveryConfigurationService;
 use App\Support\IranianMobile;
 use Illuminate\Database\QueryException;
@@ -25,23 +25,14 @@ use JsonException;
 
 final class CheckoutService
 {
-    public function __construct(
-        private readonly DeliveryConfigurationService $delivery,
-    ) {}
+    public function __construct(private readonly DeliveryConfigurationService $delivery) {}
 
-    /**
-     * @return array{order: Order, replayed: bool}
-     *
-     * @throws JsonException
-     */
+    /** @return array{order: Order, replayed: bool} @throws JsonException */
     public function create(Customer $customer, array $payload, string $idempotencyKey): array
     {
         $payload = $this->resolveCustomerPayload($customer, $payload);
         $canonical = $this->canonicalize($payload);
-        $requestHash = hash('sha256', json_encode(
-            $canonical,
-            JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
-        ));
+        $requestHash = hash('sha256', json_encode($canonical, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
         $existing = $this->findExisting($customer, $idempotencyKey);
         if ($existing) {
@@ -50,12 +41,7 @@ final class CheckoutService
 
         try {
             return DB::transaction(function () use ($customer, $canonical, $idempotencyKey, $requestHash): array {
-                $existing = Order::query()
-                    ->ownedBy($customer)
-                    ->where('idempotency_key', $idempotencyKey)
-                    ->lockForUpdate()
-                    ->first();
-
+                $existing = Order::query()->ownedBy($customer)->where('idempotency_key', $idempotencyKey)->lockForUpdate()->first();
                 if ($existing) {
                     return $this->replay($existing, $requestHash);
                 }
@@ -69,26 +55,19 @@ final class CheckoutService
             if (! $this->isUniqueConstraintViolation($exception)) {
                 throw $exception;
             }
-
             $existing = $this->findExisting($customer, $idempotencyKey);
             if (! $existing) {
                 throw $exception;
             }
-
             return $this->replay($existing, $requestHash);
         }
     }
 
-    private function createLocked(
-        Customer $customer,
-        array $payload,
-        string $idempotencyKey,
-        string $requestHash,
-    ): Order {
+    private function createLocked(Customer $customer, array $payload, string $idempotencyKey, string $requestHash): Order
+    {
         $items = collect($payload['items']);
         $variantIds = $items->pluck('variantId')->sort()->values();
-
-        $variants = BakeryProductVariant::query()
+        $variants = ProductVariant::query()
             ->whereIn('public_id', $variantIds)
             ->where('is_active', true)
             ->with(['product.category'])
@@ -98,65 +77,38 @@ final class CheckoutService
             ->keyBy('public_id');
 
         if ($variants->count() !== $variantIds->count()) {
-            throw ValidationException::withMessages([
-                'items' => ['یک یا چند محصول دیگر قابل سفارش نیستند.'],
-            ]);
+            throw ValidationException::withMessages(['items' => ['یک یا چند محصول دیگر قابل سفارش نیستند.']]);
         }
 
         $deliveryMethod = DeliveryMethod::from($payload['deliveryMethod']);
-        $requiresCooling = $variants->contains(
-            fn (BakeryProductVariant $variant): bool => (bool) $variant->product?->requires_cooling,
-        );
-
         if ($deliveryMethod->requiresAddress()) {
             foreach (['province', 'city', 'address'] as $field) {
                 if (trim((string) ($payload['customer'][$field] ?? '')) === '') {
-                    throw ValidationException::withMessages([
-                        "customer.{$field}" => ['این مقدار برای ارسال سفارش الزامی است.'],
-                    ]);
+                    throw ValidationException::withMessages(["customer.{$field}" => ['این مقدار برای ارسال سفارش الزامی است.']]);
                 }
             }
         }
 
         $itemSnapshots = [];
         $subtotal = 0;
-        $productPreparationDays = 0;
-
         foreach ($items as $item) {
-            /** @var BakeryProductVariant $variant */
+            /** @var ProductVariant $variant */
             $variant = $variants->get($item['variantId']);
             $product = $variant->product;
-
             if (! $product || ! $product->is_active || ! $product->category?->is_active) {
-                throw ValidationException::withMessages([
-                    'items' => ['یک یا چند محصول دیگر قابل سفارش نیستند.'],
-                ]);
+                throw ValidationException::withMessages(['items' => ['یک یا چند محصول دیگر قابل سفارش نیستند.']]);
             }
 
-            $reserved = (int) InventoryReservation::query()
-                ->where('variant_id', $variant->getKey())
-                ->active()
-                ->sum('quantity');
+            $reserved = (int) InventoryReservation::query()->where('variant_id', $variant->getKey())->active()->sum('quantity');
             $available = max(0, (int) $variant->stock_quantity - $reserved);
             $quantity = (int) $item['quantity'];
-
             if ($quantity > $available) {
-                throw new InventoryUnavailable(
-                    $variant->public_id,
-                    $variant->name,
-                    $quantity,
-                    $available,
-                );
+                throw new InventoryUnavailable($variant->public_id, $variant->name, $quantity, $available);
             }
 
             $unitPrice = $variant->current_price_toman;
             $lineTotal = $unitPrice * $quantity;
             $subtotal += $lineTotal;
-            $productPreparationDays = max(
-                $productPreparationDays,
-                (int) ($product->preparation_time_days ?? 0),
-            );
-
             $itemSnapshots[] = [
                 'product_id' => $product->getKey(),
                 'variant_id' => $variant->getKey(),
@@ -166,8 +118,6 @@ final class CheckoutService
                 'variant_name' => $variant->name,
                 'product_code' => $product->product_code,
                 'sku' => $variant->sku,
-                'weight_grams' => $variant->weight_grams,
-                'requires_cooling' => (bool) $product->requires_cooling,
                 'unit_price_toman' => $unitPrice,
                 'quantity' => $quantity,
                 'line_total_toman' => $lineTotal,
@@ -179,13 +129,10 @@ final class CheckoutService
             $payload['customer']['province'] ?? null,
             $payload['customer']['city'] ?? null,
             $subtotal,
-            $requiresCooling,
         );
-        $preparationMinDays = max($productPreparationDays, $quote['preparation_min_days']);
-        $preparationMaxDays = max($preparationMinDays, $quote['preparation_max_days']);
-        $reservationExpiresAt = now()->addMinutes(
-            max(1, (int) config('lbb.checkout.reservation_minutes', 20)),
-        );
+        $processingMinDays = (int) $quote['preparation_min_days'];
+        $processingMaxDays = max($processingMinDays, (int) $quote['preparation_max_days']);
+        $reservationExpiresAt = now()->addMinutes(max(1, (int) config('lbb.checkout.reservation_minutes', 20)));
 
         $order = Order::query()->create([
             'customer_id' => $customer->getKey(),
@@ -196,30 +143,26 @@ final class CheckoutService
             'payment_status' => PaymentStatus::Unpaid,
             'delivery_method' => $deliveryMethod,
             'delivery_zone_id' => $quote['zone']?->getKey(),
-            'requires_cooling' => $requiresCooling,
             'subtotal_toman' => $subtotal,
             'delivery_fee_toman' => $quote['fee_toman'],
             'packaging_fee_toman' => $quote['packaging_fee_toman'],
             'discount_total_toman' => 0,
             'grand_total_toman' => $subtotal + $quote['fee_toman'] + $quote['packaging_fee_toman'],
             'item_count' => $items->sum('quantity'),
-            'preparation_time_days' => $preparationMinDays,
-            'preparation_max_days' => $preparationMaxDays,
+            'preparation_time_days' => $processingMinDays,
+            'preparation_max_days' => $processingMaxDays,
             'customer_name' => trim($payload['customer']['fullName']),
             'customer_mobile' => IranianMobile::normalize($payload['customer']['mobile']),
             'province' => $deliveryMethod->requiresAddress() ? trim($payload['customer']['province']) : null,
             'city' => $deliveryMethod->requiresAddress() ? trim($payload['customer']['city']) : null,
             'address' => $deliveryMethod->requiresAddress() ? trim($payload['customer']['address']) : null,
-            'postal_code' => $deliveryMethod->requiresAddress()
-                ? $this->nullableTrim($payload['customer']['postalCode'] ?? null)
-                : null,
+            'postal_code' => $deliveryMethod->requiresAddress() ? $this->nullableTrim($payload['customer']['postalCode'] ?? null) : null,
             'notes' => $this->nullableTrim($payload['customer']['notes'] ?? null),
             'reservation_expires_at' => $reservationExpiresAt,
             'placed_at' => now(),
         ]);
 
         $order->items()->createMany($itemSnapshots);
-
         foreach ($itemSnapshots as $snapshot) {
             $order->reservations()->create([
                 'variant_id' => $snapshot['variant_id'],
@@ -248,19 +191,10 @@ final class CheckoutService
         if ($addressId === '') {
             return $payload;
         }
-
-        $address = CustomerAddress::query()
-            ->ownedBy($customer)
-            ->where('public_id', $addressId)
-            ->where('is_active', true)
-            ->first();
-
+        $address = CustomerAddress::query()->ownedBy($customer)->where('public_id', $addressId)->where('is_active', true)->first();
         if (! $address) {
-            throw ValidationException::withMessages([
-                'addressId' => ['آدرس انتخاب‌شده معتبر یا متعلق به این حساب نیست.'],
-            ]);
+            throw ValidationException::withMessages(['addressId' => ['آدرس انتخاب‌شده معتبر یا متعلق به این حساب نیست.']]);
         }
-
         $payload['customer'] = [
             'fullName' => $address->recipient_name,
             'mobile' => $address->mobile,
@@ -270,25 +204,16 @@ final class CheckoutService
             'postalCode' => $address->postal_code,
             'notes' => $payload['customer']['notes'] ?? null,
         ];
-
         return $payload;
     }
 
     private function canonicalize(array $payload): array
     {
         $items = collect($payload['items'])
-            ->map(fn (array $item): array => [
-                'variantId' => trim($item['variantId']),
-                'quantity' => (int) $item['quantity'],
-            ])
+            ->map(fn (array $item): array => ['variantId' => trim($item['variantId']), 'quantity' => (int) $item['quantity']])
             ->groupBy('variantId')
-            ->map(fn (Collection $group, string $variantId): array => [
-                'variantId' => $variantId,
-                'quantity' => $group->sum('quantity'),
-            ])
-            ->sortBy('variantId')
-            ->values()
-            ->all();
+            ->map(fn (Collection $group, string $variantId): array => ['variantId' => $variantId, 'quantity' => $group->sum('quantity')])
+            ->sortBy('variantId')->values()->all();
 
         return [
             'customer' => [
@@ -307,10 +232,7 @@ final class CheckoutService
 
     private function findExisting(Customer $customer, string $idempotencyKey): ?Order
     {
-        return Order::query()
-            ->ownedBy($customer)
-            ->where('idempotency_key', $idempotencyKey)
-            ->first();
+        return Order::query()->ownedBy($customer)->where('idempotency_key', $idempotencyKey)->first();
     }
 
     private function replay(Order $order, string $requestHash): array
@@ -318,11 +240,7 @@ final class CheckoutService
         if (! hash_equals($order->request_hash, $requestHash)) {
             throw new IdempotencyConflict;
         }
-
-        return [
-            'order' => $this->loadOrder($order),
-            'replayed' => true,
-        ];
+        return ['order' => $this->loadOrder($order), 'replayed' => true];
     }
 
     private function loadOrder(Order $order): Order
@@ -332,13 +250,12 @@ final class CheckoutService
 
     private function nextOrderNumber(): string
     {
-        return 'WNM-'.now()->format('ymd').'-'.Str::upper(Str::random(8));
+        return 'LBB-'.now()->format('ymd').'-'.Str::upper(Str::random(8));
     }
 
     private function nullableTrim(mixed $value): ?string
     {
         $value = trim((string) $value);
-
         return $value === '' ? null : $value;
     }
 

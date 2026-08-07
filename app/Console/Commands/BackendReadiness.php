@@ -11,41 +11,28 @@ class BackendReadiness extends Command
 {
     protected $signature = 'backend:readiness {--json : Emit machine-readable JSON}';
 
-    protected $description = 'Validate the frozen LBB backend contract and internal readiness gate';
+    protected $description = 'Validate the current LBB backend contract and fail closed until apparel freeze';
 
     public function handle(): int
     {
         $checks = [
             'contract_version' => $this->check(
-                config('lbb.api.contract_version') === '2026-07-20-phase-16',
+                config('lbb.api.contract_version') === '2026-08-07-f14-be-b2',
                 (string) config('lbb.api.contract_version'),
             ),
-            'backend_gate' => $this->check(
-                config('lbb.launch.internal_gates.backend_complete.status') === 'ready',
-                (string) config('lbb.launch.internal_gates.backend_complete.status'),
+            'domain_cleanup' => $this->check(
+                config('lbb.contracts.domain_cleanup.status') === 'ready',
+                (string) config('lbb.contracts.domain_cleanup.status'),
             ),
             'openapi' => $this->openApiCheck(),
             'database' => $this->databaseCheck(),
-            'pagination_policy' => $this->check(
-                config('lbb.policies.pagination.catalog_max') === 48
-                    && config('lbb.policies.pagination.account_max') === 30,
-                'catalog=48, account=30',
+            'apparel_domain' => $this->check(
+                config('lbb.contracts.apparel_domain.status') === 'ready',
+                (string) config('lbb.contracts.apparel_domain.status'),
             ),
-            'queue_policy' => $this->check(
-                filled(config('lbb.policies.queue.connection')),
-                (string) config('lbb.policies.queue.connection'),
-            ),
-            'storage_policy' => $this->check(
-                filled(config('lbb.policies.storage.media_disk')),
-                (string) config('lbb.policies.storage.media_disk'),
-            ),
-            'legacy_production_boundary' => $this->check(
-                ! app()->environment('production') || ! config('lbb.legacy.enabled'),
-                config('lbb.legacy.enabled') ? 'enabled' : 'disabled',
-            ),
-            'external_inputs_boundary' => $this->check(
-                count(config('lbb.launch.external_only', [])) === 3,
-                'exactly-three-external-inputs',
+            'backend_freeze' => $this->check(
+                config('lbb.contracts.backend_freeze.status') === 'ready',
+                (string) config('lbb.contracts.backend_freeze.status'),
             ),
         ];
 
@@ -67,9 +54,6 @@ class BackendReadiness extends Command
                     $check['detail'],
                 ])->values()->all(),
             );
-            $ready
-                ? $this->info('LBB backend contract is frozen and ready for Phase 17 integration.')
-                : $this->error('LBB backend readiness failed.');
         }
 
         return $ready ? self::SUCCESS : self::FAILURE;
@@ -83,7 +67,7 @@ class BackendReadiness extends Command
             $valid = ($document['openapi'] ?? null) === '3.1.0'
                 && ($document['info']['version'] ?? null) === config('lbb.api.contract_version')
                 && isset($document['paths']['/api/system/openapi'])
-                && ! isset($document['paths']['/api/v1/products']);
+                && ! isset($document['paths']['/api/catalog/products']);
 
             return $this->check($valid, $path);
         } catch (Throwable $exception) {

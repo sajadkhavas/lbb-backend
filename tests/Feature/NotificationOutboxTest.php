@@ -64,13 +64,12 @@ class NotificationOutboxTest extends TestCase
 
         return Order::query()->create([
             'customer_id' => $customer->getKey(),
-            'order_number' => 'WNM-NOTIFY-0001',
+            'order_number' => 'LBB-NOTIFY-0001',
             'idempotency_key' => 'notification-order-idempotency-key',
             'request_hash' => hash('sha256', 'notification-order'),
             'status' => OrderStatus::Ready,
             'payment_status' => PaymentStatus::Paid,
             'delivery_method' => DeliveryMethod::Pickup,
-            'requires_cooling' => false,
             'subtotal_toman' => 100_000,
             'delivery_fee_toman' => 0,
             'packaging_fee_toman' => 0,

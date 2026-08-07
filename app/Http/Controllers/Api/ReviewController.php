@@ -6,7 +6,7 @@ use App\Enums\OrderStatus;
 use App\Enums\ReviewStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SubmitReviewRequest;
-use App\Models\BakeryProduct;
+use App\Models\Product;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ProductReview;
@@ -26,7 +26,7 @@ class ReviewController extends Controller
             'page' => ['nullable', 'integer', 'min:1'],
             'perPage' => ['nullable', 'integer', 'min:1', 'max:'.config('lbb.policies.pagination.account_max', 30)],
         ]);
-        $product = BakeryProduct::query()->where('slug', $slug)->where('is_active', true)->firstOrFail();
+        $product = Product::query()->where('slug', $slug)->where('is_active', true)->firstOrFail();
         $reviews = ProductReview::query()
             ->approved()
             ->where('product_id', $product->getKey())
@@ -51,7 +51,7 @@ class ReviewController extends Controller
                 'verifiedPurchase' => $review->is_verified_purchase,
                 'customerName' => $review->customer?->full_name
                     ? Str::before($review->customer->full_name, ' ')
-                    : 'مشتری وینیمی',
+                    : 'مشتری LBB',
                 'publishedAt' => $review->published_at?->toIso8601String(),
             ])->all(),
             meta: [

@@ -11,50 +11,33 @@ use Illuminate\Validation\ValidationException;
 
 final class DeliveryConfigurationService
 {
-    /**
-     * @return array{zone: ?DeliveryZone, fee_toman: int, packaging_fee_toman: int, preparation_min_days: int, preparation_max_days: int}
-     */
+    /** @return array{zone: ?DeliveryZone, fee_toman: int, packaging_fee_toman: int, preparation_min_days: int, preparation_max_days: int} */
     public function quote(
         DeliveryMethod $method,
         ?string $province,
         ?string $city,
         int $subtotalToman,
-        bool $requiresCooling,
     ): array {
         if (! StoreSetting::value('orders.accepting_orders', true)) {
-            throw ValidationException::withMessages([
-                'checkout' => ['پذیرش سفارش جدید موقتاً متوقف شده است.'],
-            ]);
+            throw ValidationException::withMessages(['checkout' => ['پذیرش سفارش جدید موقتاً متوقف شده است.']]);
         }
 
         $globalMinimum = max(0, (int) StoreSetting::value('orders.minimum_total_toman', 0));
         if ($subtotalToman < $globalMinimum) {
-            throw ValidationException::withMessages([
-                'items' => ["حداقل مبلغ سفارش {$globalMinimum} تومان است."],
-            ]);
-        }
-
-        if ($requiresCooling && $method === DeliveryMethod::Standard) {
-            throw ValidationException::withMessages([
-                'deliveryMethod' => ['این سبد به ارسال سرد یا تحویل حضوری نیاز دارد.'],
-            ]);
+            throw ValidationException::withMessages(['items' => ["حداقل مبلغ سفارش {$globalMinimum} تومان است."]]);
         }
 
         $zone = $this->resolve($province, $city);
         if (! $zone) {
-            return $this->fallbackQuote($method, $subtotalToman);
+            return $this->fallbackQuote($method);
         }
 
         if (! $zone->methodEnabled($method)) {
-            throw ValidationException::withMessages([
-                'deliveryMethod' => ['روش تحویل انتخاب‌شده در منطقه مقصد فعال نیست.'],
-            ]);
+            throw ValidationException::withMessages(['deliveryMethod' => ['روش تحویل انتخاب‌شده در منطقه مقصد فعال نیست.']]);
         }
 
         if ($zone->minimum_order_toman !== null && $subtotalToman < $zone->minimum_order_toman) {
-            throw ValidationException::withMessages([
-                'items' => ["حداقل مبلغ سفارش در این منطقه {$zone->minimum_order_toman} تومان است."],
-            ]);
+            throw ValidationException::withMessages(['items' => ["حداقل مبلغ سفارش در این منطقه {$zone->minimum_order_toman} تومان است."]]);
         }
 
         if ($zone->daily_order_limit !== null) {
@@ -62,11 +45,8 @@ final class DeliveryConfigurationService
                 ->where('delivery_zone_id', $zone->getKey())
                 ->whereDate('placed_at', today())
                 ->count();
-
             if ($todayCount >= $zone->daily_order_limit) {
-                throw ValidationException::withMessages([
-                    'deliveryMethod' => ['ظرفیت سفارش امروز برای این منطقه تکمیل شده است.'],
-                ]);
+                throw ValidationException::withMessages(['deliveryMethod' => ['ظرفیت سفارش امروز برای این منطقه تکمیل شده است.']]);
             }
         }
 
@@ -75,34 +55,16 @@ final class DeliveryConfigurationService
             'fee_toman' => $zone->feeFor($method, $subtotalToman),
             'packaging_fee_toman' => (int) $zone->packaging_fee_toman,
             'preparation_min_days' => (int) $zone->preparation_min_days,
-            'preparation_max_days' => max(
-                (int) $zone->preparation_min_days,
-                (int) $zone->preparation_max_days,
-            ),
+            'preparation_max_days' => max((int) $zone->preparation_min_days, (int) $zone->preparation_max_days),
         ];
     }
 
-    /**
-     * @return array<int, array{method: string, label: string, enabled: bool, feeToman: int}>
-     */
-    public function options(?string $province, ?string $city, int $subtotalToman, bool $requiresCooling): array
+    /** @return array<int, array{method: string, label: string, enabled: bool, feeToman: int}> */
+    public function options(?string $province, ?string $city, int $subtotalToman): array
     {
         $zone = $this->resolve($province, $city);
 
-        return collect(DeliveryMethod::cases())->map(function (DeliveryMethod $method) use (
-            $zone,
-            $subtotalToman,
-            $requiresCooling,
-        ): array {
-            if ($requiresCooling && $method === DeliveryMethod::Standard) {
-                return [
-                    'method' => $method->value,
-                    'label' => $method->label(),
-                    'enabled' => false,
-                    'feeToman' => 0,
-                ];
-            }
-
+        return collect(DeliveryMethod::cases())->map(function (DeliveryMethod $method) use ($zone, $subtotalToman): array {
             if ($zone) {
                 return [
                     'method' => $method->value,
@@ -113,7 +75,6 @@ final class DeliveryConfigurationService
             }
 
             $fallback = config("lbb.checkout.delivery_methods.{$method->value}", []);
-
             return [
                 'method' => $method->value,
                 'label' => $method->label(),
@@ -148,16 +109,12 @@ final class DeliveryConfigurationService
             ->first();
     }
 
-    /**
-     * @return array{zone: null, fee_toman: int, packaging_fee_toman: int, preparation_min_days: int, preparation_max_days: int}
-     */
-    private function fallbackQuote(DeliveryMethod $method, int $subtotalToman): array
+    /** @return array{zone: null, fee_toman: int, packaging_fee_toman: int, preparation_min_days: int, preparation_max_days: int} */
+    private function fallbackQuote(DeliveryMethod $method): array
     {
         $delivery = config("lbb.checkout.delivery_methods.{$method->value}", []);
         if (! ($delivery['enabled'] ?? false)) {
-            throw ValidationException::withMessages([
-                'deliveryMethod' => ['روش تحویل انتخاب‌شده فعال نیست.'],
-            ]);
+            throw ValidationException::withMessages(['deliveryMethod' => ['روش تحویل انتخاب‌شده فعال نیست.']]);
         }
 
         return [
@@ -172,7 +129,6 @@ final class DeliveryConfigurationService
     private function normalize(?string $value): ?string
     {
         $value = trim((string) $value);
-
         return $value === '' ? null : $value;
     }
 }

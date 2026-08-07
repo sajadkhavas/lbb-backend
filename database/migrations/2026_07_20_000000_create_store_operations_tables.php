@@ -23,7 +23,6 @@ return new class extends Migration
             $table->boolean('is_default')->default(false)->index();
             $table->boolean('is_active')->default(true)->index();
             $table->timestamps();
-
             $table->index(['customer_id', 'is_active'], 'customer_addresses_owner_active_index');
         });
 
@@ -34,10 +33,8 @@ return new class extends Migration
             $table->string('province', 100)->nullable()->index();
             $table->string('city', 100)->nullable()->index();
             $table->boolean('standard_enabled')->default(false);
-            $table->boolean('chilled_enabled')->default(false);
             $table->boolean('pickup_enabled')->default(false);
             $table->unsignedBigInteger('standard_fee_toman')->default(0);
-            $table->unsignedBigInteger('chilled_fee_toman')->default(0);
             $table->unsignedBigInteger('pickup_fee_toman')->default(0);
             $table->unsignedBigInteger('packaging_fee_toman')->default(0);
             $table->unsignedBigInteger('minimum_order_toman')->nullable();
@@ -48,7 +45,6 @@ return new class extends Migration
             $table->unsignedInteger('priority')->default(100)->index();
             $table->boolean('is_active')->default(true)->index();
             $table->timestamps();
-
             $table->index(['is_active', 'province', 'city', 'priority'], 'delivery_zones_resolution_index');
         });
 
@@ -63,7 +59,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('bakery_content_pages', function (Blueprint $table): void {
+        Schema::create('content_pages', function (Blueprint $table): void {
             $table->id();
             $table->char('public_id', 26)->unique();
             $table->string('type', 40)->default('page')->index();
@@ -78,7 +74,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('bakery_faqs', function (Blueprint $table): void {
+        Schema::create('faqs', function (Blueprint $table): void {
             $table->id();
             $table->string('category', 100)->default('general')->index();
             $table->string('question', 500);
@@ -88,7 +84,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('bakery_gallery_items', function (Blueprint $table): void {
+        Schema::create('gallery_items', function (Blueprint $table): void {
             $table->id();
             $table->string('title', 220);
             $table->text('caption')->nullable();
@@ -99,21 +95,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('bakery_city_pages', function (Blueprint $table): void {
-            $table->id();
-            $table->char('public_id', 26)->unique();
-            $table->string('city', 100)->index();
-            $table->string('slug', 160)->unique();
-            $table->string('title', 220);
-            $table->text('description')->nullable();
-            $table->longText('content')->nullable();
-            $table->string('meta_title', 220)->nullable();
-            $table->text('meta_description')->nullable();
-            $table->boolean('is_active')->default(true)->index();
-            $table->timestamps();
-        });
-
-        Schema::create('bakery_posts', function (Blueprint $table): void {
+        Schema::create('posts', function (Blueprint $table): void {
             $table->id();
             $table->char('public_id', 26)->unique();
             $table->string('slug', 180)->unique();
@@ -136,7 +118,7 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained('customers')->restrictOnDelete();
             $table->foreignId('order_id')->constrained('orders')->restrictOnDelete();
             $table->foreignId('order_item_id')->constrained('order_items')->restrictOnDelete();
-            $table->foreignId('product_id')->nullable()->constrained('bakery_products')->nullOnDelete();
+            $table->foreignId('product_id')->nullable()->constrained('products')->nullOnDelete();
             $table->unsignedTinyInteger('rating');
             $table->string('title', 180)->nullable();
             $table->text('body')->nullable();
@@ -145,7 +127,6 @@ return new class extends Migration
             $table->boolean('is_verified_purchase')->default(true)->index();
             $table->timestamp('published_at')->nullable()->index();
             $table->timestamps();
-
             $table->unique(['customer_id', 'order_item_id'], 'product_reviews_customer_item_unique');
             $table->index(['product_id', 'status', 'published_at'], 'product_reviews_public_index');
         });
@@ -195,7 +176,6 @@ return new class extends Migration
             $table->timestamp('sent_at')->nullable();
             $table->timestamp('failed_at')->nullable();
             $table->timestamps();
-
             $table->index(['status', 'available_at', 'id'], 'notification_outbox_dispatch_index');
         });
 
@@ -205,13 +185,11 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->text('note');
             $table->timestamp('created_at')->useCurrent();
-
             $table->index(['order_id', 'created_at'], 'order_internal_notes_order_index');
         });
 
         Schema::table('orders', function (Blueprint $table): void {
-            $table->foreignId('delivery_zone_id')->nullable()->after('delivery_method')
-                ->constrained('delivery_zones')->nullOnDelete();
+            $table->foreignId('delivery_zone_id')->nullable()->after('delivery_method')->constrained('delivery_zones')->nullOnDelete();
             $table->unsignedSmallInteger('preparation_max_days')->default(0)->after('preparation_time_days');
             $table->string('tracking_code', 160)->nullable()->after('notes');
             $table->timestamp('confirmed_at')->nullable()->after('paid_at');
@@ -239,7 +217,7 @@ return new class extends Migration
 
         DB::table('notification_templates')->insert([
             ['key' => 'order.paid', 'channel' => 'sms', 'body' => 'سفارش {{order_number}} با موفقیت پرداخت شد.', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['key' => 'order.preparing', 'channel' => 'sms', 'body' => 'آماده‌سازی سفارش {{order_number}} آغاز شد.', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'order.preparing', 'channel' => 'sms', 'body' => 'پردازش سفارش {{order_number}} آغاز شد.', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['key' => 'order.ready', 'channel' => 'sms', 'body' => 'سفارش {{order_number}} آماده تحویل یا ارسال است.', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['key' => 'order.dispatched', 'channel' => 'sms', 'body' => 'سفارش {{order_number}} ارسال شد. کد پیگیری: {{tracking_code}}', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['key' => 'order.delivered', 'channel' => 'sms', 'body' => 'سفارش {{order_number}} تحویل شد. از خرید شما سپاسگزاریم.', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
@@ -272,11 +250,10 @@ return new class extends Migration
         Schema::dropIfExists('notification_templates');
         Schema::dropIfExists('inquiries');
         Schema::dropIfExists('product_reviews');
-        Schema::dropIfExists('bakery_posts');
-        Schema::dropIfExists('bakery_city_pages');
-        Schema::dropIfExists('bakery_gallery_items');
-        Schema::dropIfExists('bakery_faqs');
-        Schema::dropIfExists('bakery_content_pages');
+        Schema::dropIfExists('posts');
+        Schema::dropIfExists('gallery_items');
+        Schema::dropIfExists('faqs');
+        Schema::dropIfExists('content_pages');
         Schema::dropIfExists('store_settings');
         Schema::dropIfExists('delivery_zones');
         Schema::dropIfExists('customer_addresses');

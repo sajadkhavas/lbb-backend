@@ -14,10 +14,8 @@ class DeliveryZone extends Model
         'province',
         'city',
         'standard_enabled',
-        'chilled_enabled',
         'pickup_enabled',
         'standard_fee_toman',
-        'chilled_fee_toman',
         'pickup_fee_toman',
         'packaging_fee_toman',
         'minimum_order_toman',
@@ -40,10 +38,8 @@ class DeliveryZone extends Model
     {
         return [
             'standard_enabled' => 'boolean',
-            'chilled_enabled' => 'boolean',
             'pickup_enabled' => 'boolean',
             'standard_fee_toman' => 'integer',
-            'chilled_fee_toman' => 'integer',
             'pickup_fee_toman' => 'integer',
             'packaging_fee_toman' => 'integer',
             'minimum_order_toman' => 'integer',

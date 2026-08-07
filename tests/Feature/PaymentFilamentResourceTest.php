@@ -39,13 +39,12 @@ class PaymentFilamentResourceTest extends TestCase
 
         $order = Order::query()->create([
             'customer_id' => $customer->getKey(),
-            'order_number' => 'WNM-PAY-0001',
+            'order_number' => 'LBB-PAY-0001',
             'idempotency_key' => 'filament-payment-order-key',
             'request_hash' => hash('sha256', 'filament-payment-order'),
             'status' => OrderStatus::AwaitingPayment,
             'payment_status' => PaymentStatus::Pending,
             'delivery_method' => DeliveryMethod::Pickup,
-            'requires_cooling' => false,
             'subtotal_toman' => 100_000,
             'delivery_fee_toman' => 0,
             'packaging_fee_toman' => 0,

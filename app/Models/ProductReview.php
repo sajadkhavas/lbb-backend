@@ -58,7 +58,7 @@ class ProductReview extends Model
 
     public function product(): BelongsTo
     {
-        return $this->belongsTo(BakeryProduct::class);
+        return $this->belongsTo(Product::class);
     }
 
     public function scopeApproved(Builder $query): Builder

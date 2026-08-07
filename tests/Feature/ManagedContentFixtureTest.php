@@ -16,8 +16,8 @@ class ManagedContentFixtureTest extends TestCase
         $this->seed(LBBStagingSeeder::class);
 
         $pages = [
-            'about' => 'درباره وینیمی',
-            'quality' => 'شفافیت و کیفیت',
+            'about' => 'درباره LBB',
+            'quality' => 'رویکرد کیفیت',
             'shipping' => 'شرایط ارسال',
             'privacy' => 'حریم خصوصی',
             'terms' => 'شرایط استفاده',

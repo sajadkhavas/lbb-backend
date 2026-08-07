@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LBB Backend API",
-    "version": "2026-08-06-f14-be-b1",
-    "description": "Transitional system-only contract. Commerce endpoints are not frozen."
+    "version": "2026-08-07-f14-be-b2",
+    "description": "F14-BE-B2 neutral commerce baseline. Apparel contracts are intentionally not frozen."
   },
   "paths": {
     "/api/system/health": {
@@ -19,7 +19,7 @@
       "get": {
         "responses": {
           "200": {
-            "description": "Readiness status"
+            "description": "Runtime readiness"
           }
         }
       }
@@ -29,6 +29,24 @@
         "responses": {
           "200": {
             "description": "API metadata"
+          }
+        }
+      }
+    },
+    "/api/system/contracts": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Current contract gates"
+          }
+        }
+      }
+    },
+    "/api/system/openapi": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OpenAPI document"
           }
         }
       }

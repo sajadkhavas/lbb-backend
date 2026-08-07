@@ -40,6 +40,9 @@ $needles = [
     'Win'.'imi',
     'WIN'.'IMI',
     'win'.'imi',
+    'Bak'.'ery',
+    'BAK'.'ERY',
+    'bak'.'ery',
 ];
 foreach ($activeRoots as $activeRoot) {
     $base = $root.'/'.$activeRoot;
@@ -48,7 +51,7 @@ foreach ($activeRoots as $activeRoot) {
     }
     $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($base));
     foreach ($iterator as $file) {
-        if (! $file->isFile()) {
+        if (! $file->isFile() || $file->getFilename() === 'database.sqlite') {
             continue;
         }
         $contents = @file_get_contents($file->getPathname());

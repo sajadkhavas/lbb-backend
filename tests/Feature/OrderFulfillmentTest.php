@@ -6,9 +6,9 @@ use App\Enums\DeliveryMethod;
 use App\Enums\InventoryReservationStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
-use App\Models\BakeryCategory;
-use App\Models\BakeryProduct;
-use App\Models\BakeryProductVariant;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Customer;
 use App\Models\InventoryReservation;
 use App\Models\NotificationOutbox;
@@ -25,9 +25,9 @@ class OrderFulfillmentTest extends TestCase
 
     private Customer $customer;
 
-    private BakeryProduct $product;
+    private Product $product;
 
-    private BakeryProductVariant $variant;
+    private ProductVariant $variant;
 
     private int $adminId;
 
@@ -54,23 +54,22 @@ class OrderFulfillmentTest extends TestCase
             'is_active' => true,
         ]);
 
-        $category = BakeryCategory::query()->create([
+        $category = Category::query()->create([
             'name' => 'کوکی',
             'slug' => 'fulfillment-cookies',
             'is_active' => true,
         ]);
 
-        $this->product = BakeryProduct::query()->create([
+        $this->product = Product::query()->create([
             'category_id' => $category->getKey(),
             'name' => 'کوکی عملیات',
             'slug' => 'fulfillment-cookie',
             'product_code' => 'FUL-COOKIE',
             'preparation_time_days' => 1,
-            'requires_cooling' => false,
             'is_active' => true,
         ]);
 
-        $this->variant = BakeryProductVariant::query()->create([
+        $this->variant = ProductVariant::query()->create([
             'product_id' => $this->product->getKey(),
             'name' => 'بسته تست',
             'sku' => 'FUL-COOKIE-1',
@@ -84,7 +83,7 @@ class OrderFulfillmentTest extends TestCase
 
     public function test_admin_fulfillment_transitions_are_controlled_and_queue_public_notifications(): void
     {
-        $order = $this->createPaidOrder(DeliveryMethod::Standard, 'WNM-FUL-0001');
+        $order = $this->createPaidOrder(DeliveryMethod::Standard, 'LBB-FUL-0001');
         $lifecycle = app(OrderLifecycleService::class);
 
         $this->assertValidationFailure(
@@ -135,7 +134,7 @@ class OrderFulfillmentTest extends TestCase
 
     public function test_admin_cancellation_after_payment_restocks_consumed_inventory_exactly_once(): void
     {
-        $order = $this->createPaidOrder(DeliveryMethod::Pickup, 'WNM-FUL-0002');
+        $order = $this->createPaidOrder(DeliveryMethod::Pickup, 'LBB-FUL-0002');
         $lifecycle = app(OrderLifecycleService::class);
 
         $cancelled = $lifecycle->transitionByAdmin(
@@ -164,7 +163,7 @@ class OrderFulfillmentTest extends TestCase
 
     public function test_pickup_order_skips_dispatch_and_can_be_delivered_from_ready(): void
     {
-        $order = $this->createPaidOrder(DeliveryMethod::Pickup, 'WNM-FUL-0003');
+        $order = $this->createPaidOrder(DeliveryMethod::Pickup, 'LBB-FUL-0003');
         $lifecycle = app(OrderLifecycleService::class);
         $order = $lifecycle->transitionByAdmin($order, OrderStatus::Confirmed, $this->adminId);
         $order = $lifecycle->transitionByAdmin($order, OrderStatus::Preparing, $this->adminId);
@@ -196,7 +195,6 @@ class OrderFulfillmentTest extends TestCase
             'status' => OrderStatus::Paid,
             'payment_status' => PaymentStatus::Paid,
             'delivery_method' => $deliveryMethod,
-            'requires_cooling' => false,
             'subtotal_toman' => 200_000,
             'delivery_fee_toman' => 0,
             'packaging_fee_toman' => 0,
@@ -223,7 +221,6 @@ class OrderFulfillmentTest extends TestCase
             'variant_name' => $this->variant->name,
             'product_code' => $this->product->product_code,
             'sku' => $this->variant->sku,
-            'requires_cooling' => false,
             'unit_price_toman' => 100_000,
             'quantity' => 2,
             'line_total_toman' => 200_000,

@@ -46,11 +46,11 @@ class OrderItem extends Model
 
     public function product(): BelongsTo
     {
-        return $this->belongsTo(BakeryProduct::class);
+        return $this->belongsTo(Product::class);
     }
 
     public function variant(): BelongsTo
     {
-        return $this->belongsTo(BakeryProductVariant::class);
+        return $this->belongsTo(ProductVariant::class);
     }
 }

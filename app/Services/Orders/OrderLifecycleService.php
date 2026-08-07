@@ -7,7 +7,7 @@ use App\Enums\InventoryReservationStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Exceptions\InventoryUnavailable;
-use App\Models\BakeryProductVariant;
+use App\Models\ProductVariant;
 use App\Models\Customer;
 use App\Models\InventoryReservation;
 use App\Models\Order;
@@ -258,7 +258,7 @@ final class OrderLifecycleService
             ]);
         }
 
-        $variants = BakeryProductVariant::query()
+        $variants = ProductVariant::query()
             ->whereIn('id', $reservations->pluck('variant_id'))
             ->orderBy('id')
             ->lockForUpdate()
@@ -266,7 +266,7 @@ final class OrderLifecycleService
             ->keyBy('id');
 
         foreach ($reservations as $reservation) {
-            /** @var BakeryProductVariant|null $variant */
+            /** @var ProductVariant|null $variant */
             $variant = $variants->get($reservation->variant_id);
 
             if (! $variant || $variant->stock_quantity < $reservation->quantity) {
@@ -295,7 +295,7 @@ final class OrderLifecycleService
             ->lockForUpdate()
             ->get();
 
-        $variants = BakeryProductVariant::query()
+        $variants = ProductVariant::query()
             ->whereIn('id', $reservations->pluck('variant_id'))
             ->orderBy('id')
             ->lockForUpdate()
@@ -303,7 +303,7 @@ final class OrderLifecycleService
             ->keyBy('id');
 
         foreach ($reservations as $reservation) {
-            /** @var BakeryProductVariant|null $variant */
+            /** @var ProductVariant|null $variant */
             $variant = $variants->get($reservation->variant_id);
             if ($variant) {
                 $variant->increment('stock_quantity', $reservation->quantity);

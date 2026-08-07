@@ -20,13 +20,9 @@ class OrderResource extends JsonResource
             'delivery' => [
                 'method' => $this->delivery_method->value,
                 'methodLabel' => $this->delivery_method->label(),
-                'requiresCooling' => $this->requires_cooling,
                 'feeToman' => $this->delivery_fee_toman,
                 'zone' => $this->resource->relationLoaded('deliveryZone') && $this->deliveryZone
-                    ? [
-                        'id' => $this->deliveryZone->public_id,
-                        'name' => $this->deliveryZone->name,
-                    ]
+                    ? ['id' => $this->deliveryZone->public_id, 'name' => $this->deliveryZone->name]
                     : null,
             ],
             'totals' => [
@@ -37,8 +33,7 @@ class OrderResource extends JsonResource
                 'grandTotalToman' => $this->grand_total_toman,
             ],
             'itemCount' => $this->item_count,
-            'preparationTimeDays' => $this->preparation_time_days,
-            'preparation' => [
+            'processing' => [
                 'minDays' => $this->preparation_time_days,
                 'maxDays' => max($this->preparation_time_days, $this->preparation_max_days),
             ],
