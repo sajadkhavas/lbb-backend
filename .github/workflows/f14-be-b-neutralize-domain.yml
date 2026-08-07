@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
-      MIGRATION_ATTEMPT: 8
+      MIGRATION_ATTEMPT: 9
       DB_CONNECTION: sqlite
       DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
       CACHE_STORE: array
@@ -65,22 +65,17 @@ jobs:
               raise RuntimeError('B2 payload not found')
 
           source = zlib.decompress(base64.b64decode(match.group(1))).decode('utf-8')
-          pattern = re.compile(
-              r"(?P<indent>[ \t]+)if old not in text:\n"
-              r"(?P=indent)[ \t]+raise RuntimeError\(f'expected text missing in \{path\}: \{old!r\}'\)"
-          )
-          found = pattern.search(source)
-          if not found:
-              raise RuntimeError('B2 replace helper guard not found')
+          guard = re.search(r'(?m)^(?P<indent>[ \t]+)if old not in text:\s*$', source)
+          if not guard:
+              raise RuntimeError('B2 replace helper old-text guard not found')
 
-          indent = found.group('indent')
-          replacement = (
-              f"{indent}if old not in text:\n"
-              f"{indent}    if new in text:\n"
-              f"{indent}        return\n"
-              f"{indent}    raise RuntimeError(f'expected text missing in {{path}}: {{old!r}}')"
+          indent = guard.group('indent')
+          injected = (
+              guard.group(0)
+              + f"\n{indent}    if new in text:"
+              + f"\n{indent}        return"
           )
-          source = pattern.sub(replacement, source, count=1)
+          source = source[:guard.start()] + injected + source[guard.end():]
           payload = base64.b64encode(zlib.compress(source.encode('utf-8'), 9)).decode('ascii')
           path.write_text(
               "import base64\nimport zlib\n\n"
