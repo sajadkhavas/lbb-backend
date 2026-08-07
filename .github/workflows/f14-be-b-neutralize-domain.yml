@@ -9,6 +9,7 @@ on:
       - scripts/f14_be_b_neutralize_domain.py
       - scripts/f14_be_b2_prepare.py
       - scripts/f14_be_b2_complete.py
+      - scripts/f14_be_b2_post_cleanup.py
       - scripts/f14_be_b2_contract_fix.py
   workflow_dispatch:
 
@@ -24,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
-      MIGRATION_ATTEMPT: 17
+      MIGRATION_ATTEMPT: 18
       DB_CONNECTION: sqlite
       DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
       CACHE_STORE: array
@@ -104,6 +105,9 @@ jobs:
       - name: Remove food-domain behavior
         run: python3 scripts/f14_be_b2_complete.py
 
+      - name: Repair neutral delivery admin resource
+        run: python3 scripts/f14_be_b2_post_cleanup.py
+
       - name: Align B2 contracts and release gates
         run: python3 scripts/f14_be_b2_contract_fix.py
 
@@ -149,6 +153,7 @@ jobs:
           rm -f scripts/f14_be_b_neutralize_domain.py
           rm -f scripts/f14_be_b2_prepare.py
           rm -f scripts/f14_be_b2_complete.py
+          rm -f scripts/f14_be_b2_post_cleanup.py
           rm -f scripts/f14_be_b2_contract_fix.py
           rm -f database/database.sqlite
           git config user.name 'github-actions[bot]'
