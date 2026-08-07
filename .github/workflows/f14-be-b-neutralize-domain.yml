@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
-      MIGRATION_ATTEMPT: 11
+      MIGRATION_ATTEMPT: 12
       DB_CONNECTION: sqlite
       DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
       CACHE_STORE: array
@@ -80,7 +80,13 @@ jobs:
               "            return None\n"
               "        raise\n\n"
           )
-          source = compatibility_wrapper + source
+          future_block = re.match(r'(?:(?:from __future__ import [^\n]+)\n)+', source)
+          if future_block:
+              insert_at = future_block.end()
+              source = source[:insert_at] + "\n" + compatibility_wrapper + source[insert_at:]
+          else:
+              source = compatibility_wrapper + source
+
           payload = base64.b64encode(zlib.compress(source.encode('utf-8'), 9)).decode('ascii')
           path.write_text(
               "import base64\nimport zlib\n\n"
