@@ -17,6 +17,7 @@ enum ProductFact: string
     case Fit = 'fit';
     case Sku = 'sku';
     case CollectionMembership = 'collection_membership';
+    case SizeGuide = 'size_guide';
 
     public static function values(): array
     {
