@@ -92,7 +92,20 @@ jobs:
             echo 'No changed PHP files in F14-BE-D scope.'
             exit 0
           fi
-          vendor/bin/pint --test "${changed_php[@]}"
+          set +e
+          vendor/bin/pint --test "${changed_php[@]}" 2>&1 | tee /tmp/f14-be-d-pint.txt
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -ne 0 ]; then
+            python3 - <<'PY'
+          from pathlib import Path
+          text = Path('/tmp/f14-be-d-pint.txt').read_text(errors='replace').splitlines()
+          message = '\n'.join(text[-120:])
+          message = message.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          print(f'::error title=Pint phase-scope failure::{message}')
+          PY
+            exit "$status"
+          fi
 
       - name: Foundation audit
         run: composer audit:foundation
