@@ -17,8 +17,6 @@ class OrderItemResource extends JsonResource
             'variantName' => $this->variant_name,
             'productCode' => $this->product_code,
             'sku' => $this->sku,
-            'weightGrams' => $this->weight_grams,
-            'requiresCooling' => $this->requires_cooling,
             'unitPriceToman' => $this->unit_price_toman,
             'quantity' => $this->quantity,
             'lineTotalToman' => $this->line_total_toman,
