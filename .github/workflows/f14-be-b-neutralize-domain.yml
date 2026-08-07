@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
-      MIGRATION_ATTEMPT: 15
+      MIGRATION_ATTEMPT: 16
       DB_CONNECTION: sqlite
       DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
       CACHE_STORE: array
@@ -78,12 +78,10 @@ jobs:
               "            text = handle.read()\n"
               "        if new in text:\n"
               "            return None\n"
-              "        print('B2_REPLACE_PATH=' + str(path))\n"
-              "        print('B2_REPLACE_OLD=' + repr(old))\n"
-              "        print('B2_REPLACE_NEW=' + repr(new))\n"
-              "        for line in text.splitlines():\n"
-              "            if 'preparation' in line or 'Preparation' in line:\n"
-              "                print('B2_CURRENT=' + repr(line))\n"
+              "        semantic = (str(old) + '\\n' + str(new)).lower()\n"
+              "        if 'preparation' in semantic and 'preparation' not in text.lower():\n"
+              "            print('B2_SUPERSEDED_PREPARATION=' + str(path))\n"
+              "            return None\n"
               "        raise\n\n"
           )
           future_block = re.match(r'(?:(?:from __future__ import [^\n]+)\n)+', source)
@@ -100,7 +98,7 @@ jobs:
               "exec(compile(zlib.decompress(base64.b64decode(PAYLOAD)).decode('utf-8'), 'f14_be_b2_complete.py', 'exec'))\n",
               encoding='utf-8',
           )
-          print('b2_replace_helper=intermediate-diagnostic')
+          print('b2_replace_helper=targeted-idempotency')
           PY
 
       - name: Remove food-domain behavior
