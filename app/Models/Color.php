@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\PublicationStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,32 +10,28 @@ use Illuminate\Support\Str;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
 
-class Category extends Model
+class Color extends Model
 {
     use HasSlug, SoftDeletes;
 
     protected $fillable = [
         'name',
         'slug',
-        'description',
-        'image_path',
-        'meta_title',
-        'meta_description',
-        'publication_status',
-        'is_active',
+        'code',
+        'hex',
         'sort_order',
+        'is_active',
     ];
 
     protected $casts = [
-        'publication_status' => PublicationStatus::class,
-        'is_active' => 'boolean',
         'sort_order' => 'integer',
+        'is_active' => 'boolean',
     ];
 
     protected static function booted(): void
     {
-        static::creating(function (self $category): void {
-            $category->public_id ??= (string) Str::ulid();
+        static::creating(function (self $color): void {
+            $color->public_id ??= (string) Str::ulid();
         });
     }
 
@@ -52,19 +47,19 @@ class Category extends Model
             ->saveSlugsTo('slug');
     }
 
-    public function products(): HasMany
+    public function variants(): HasMany
     {
-        return $this->hasMany(Product::class, 'category_id');
+        return $this->hasMany(ProductVariant::class);
+    }
+
+    public function mediaAssets(): HasMany
+    {
+        return $this->hasMany(ProductMediaAsset::class);
     }
 
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
-    }
-
-    public function scopePublished(Builder $query): Builder
-    {
-        return $query->where('publication_status', PublicationStatus::Published->value);
     }
 
     public function scopeOrdered(Builder $query): Builder
