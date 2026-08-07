@@ -14,11 +14,17 @@ use Filament\Tables\Table;
 class DropResource extends Resource
 {
     protected static ?string $model = Drop::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-bolt';
+
     protected static ?string $navigationLabel = 'Dropها';
+
     protected static ?string $modelLabel = 'Drop';
+
     protected static ?string $pluralModelLabel = 'Dropها';
+
     protected static ?string $navigationGroup = 'دامنه پوشاک';
+
     protected static ?int $navigationSort = 13;
 
     public static function form(Form $form): Form

@@ -13,11 +13,17 @@ use Filament\Tables\Table;
 class SizeGuideResource extends Resource
 {
     protected static ?string $model = SizeGuide::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-table-cells';
+
     protected static ?string $navigationLabel = 'راهنمای سایز';
+
     protected static ?string $modelLabel = 'راهنمای سایز';
+
     protected static ?string $pluralModelLabel = 'راهنماهای سایز';
+
     protected static ?string $navigationGroup = 'دامنه پوشاک';
+
     protected static ?int $navigationSort = 15;
 
     public static function form(Form $form): Form

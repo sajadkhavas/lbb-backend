@@ -14,11 +14,17 @@ use Filament\Tables\Table;
 class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
+
     protected static ?string $navigationLabel = 'دسته‌های فروشگاه';
+
     protected static ?string $modelLabel = 'دسته فروشگاه';
+
     protected static ?string $pluralModelLabel = 'دسته‌های فروشگاه';
+
     protected static ?string $navigationGroup = 'فروشگاه LBB';
+
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form

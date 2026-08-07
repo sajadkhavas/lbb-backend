@@ -13,11 +13,17 @@ use Filament\Tables\Table;
 class MeasurementDefinitionResource extends Resource
 {
     protected static ?string $model = MeasurementDefinition::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-adjustments-horizontal';
+
     protected static ?string $navigationLabel = 'تعریف اندازه‌ها';
+
     protected static ?string $modelLabel = 'نوع اندازه';
+
     protected static ?string $pluralModelLabel = 'تعریف اندازه‌ها';
+
     protected static ?string $navigationGroup = 'دامنه پوشاک';
+
     protected static ?int $navigationSort = 14;
 
     public static function form(Form $form): Form

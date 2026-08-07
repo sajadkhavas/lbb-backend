@@ -17,11 +17,17 @@ use Filament\Tables\Table;
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
+
     protected static ?string $navigationLabel = 'محصولات';
+
     protected static ?string $modelLabel = 'محصول';
+
     protected static ?string $pluralModelLabel = 'محصولات';
+
     protected static ?string $navigationGroup = 'فروشگاه LBB';
+
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form

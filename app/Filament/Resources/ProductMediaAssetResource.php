@@ -16,11 +16,17 @@ use Filament\Tables\Table;
 class ProductMediaAssetResource extends Resource
 {
     protected static ?string $model = ProductMediaAsset::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-photo';
+
     protected static ?string $navigationLabel = 'رسانه پوشاک';
+
     protected static ?string $modelLabel = 'رسانه محصول';
+
     protected static ?string $pluralModelLabel = 'رسانه پوشاک';
+
     protected static ?string $navigationGroup = 'دامنه پوشاک';
+
     protected static ?int $navigationSort = 16;
 
     public static function form(Form $form): Form

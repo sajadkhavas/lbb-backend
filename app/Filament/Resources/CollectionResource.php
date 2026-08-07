@@ -14,11 +14,17 @@ use Filament\Tables\Table;
 class CollectionResource extends Resource
 {
     protected static ?string $model = ApparelCollection::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
     protected static ?string $navigationLabel = 'کالکشن‌ها';
+
     protected static ?string $modelLabel = 'کالکشن';
+
     protected static ?string $pluralModelLabel = 'کالکشن‌ها';
+
     protected static ?string $navigationGroup = 'دامنه پوشاک';
+
     protected static ?int $navigationSort = 12;
 
     public static function form(Form $form): Form
