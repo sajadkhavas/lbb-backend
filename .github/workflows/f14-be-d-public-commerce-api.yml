@@ -58,7 +58,22 @@ jobs:
           php artisan route:list --path=api/v1
 
       - name: Full test suite
-        run: php artisan test
+        shell: bash
+        run: |
+          set +e
+          php artisan test 2>&1 | tee /tmp/f14-be-d-full-tests.txt
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -ne 0 ]; then
+            python3 - <<'PY'
+          from pathlib import Path
+          text = Path('/tmp/f14-be-d-full-tests.txt').read_text(errors='replace').splitlines()
+          message = '\n'.join(text[-120:])
+          message = message.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          print(f'::error title=Full test suite failure::{message}')
+          PY
+            exit "$status"
+          fi
 
       - name: Public catalog contract tests
         run: php artisan test tests/Feature/PublicCommerceApiTest.php
