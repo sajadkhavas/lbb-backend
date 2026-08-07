@@ -14,6 +14,13 @@ permissions:
 jobs:
   apparel-domain:
     runs-on: ubuntu-latest
+    env:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: database/database.sqlite
+      CACHE_STORE: array
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: array
+      SANCTUM_STATEFUL_DOMAINS: localhost:5173,localhost,127.0.0.1
 
     steps:
       - uses: actions/checkout@v4
@@ -32,9 +39,6 @@ jobs:
           cp .env.example .env
           touch database/database.sqlite
           php artisan key:generate
-        env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: database/database.sqlite
 
       - name: Composer validation
         run: composer validate --strict --no-check-lock
@@ -44,23 +48,14 @@ jobs:
 
       - name: Fresh migration
         run: php artisan migrate:fresh --force
-        env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: database/database.sqlite
 
       - name: Laravel boot and routes
         run: |
           php artisan about
           php artisan route:list --except-vendor
-        env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: database/database.sqlite
 
       - name: Full test suite
         run: php artisan test
-        env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: database/database.sqlite
 
       - name: Format check
         run: vendor/bin/pint --test
