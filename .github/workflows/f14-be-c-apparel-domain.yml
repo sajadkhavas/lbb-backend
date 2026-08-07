@@ -9,7 +9,7 @@ on:
       - phase/f14-be-b-domain-cleanup
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   apparel-domain:
@@ -26,7 +26,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event_name == 'push' && github.ref_name || github.event.pull_request.head.sha }}
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -36,23 +35,6 @@ jobs:
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
-
-      - name: Format F14-BE-C scope on branch push
-        if: github.event_name == 'push'
-        shell: bash
-        run: |
-          mapfile -t changed_php < <(git diff --name-only 002d59f99448dcc6d12f7d6225d81d532e7b5afc HEAD -- '*.php')
-          if [ "${#changed_php[@]}" -eq 0 ]; then
-            exit 0
-          fi
-          vendor/bin/pint "${changed_php[@]}"
-          if ! git diff --quiet; then
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add -- "${changed_php[@]}"
-            git commit -m 'style(f14-be-c): format phase PHP scope'
-            git push origin HEAD:phase/f14-be-c-apparel-domain
-          fi
 
       - name: Prepare Laravel
         run: |
