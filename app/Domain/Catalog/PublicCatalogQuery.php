@@ -5,6 +5,7 @@ namespace App\Domain\Catalog;
 use App\Enums\EvidenceState;
 use App\Enums\InventoryReservationStatus;
 use App\Enums\ProductFact;
+use App\Models\Category;
 use App\Models\Collection;
 use App\Models\Color;
 use App\Models\Product;
@@ -54,7 +55,7 @@ final class PublicCatalogQuery
     {
         $published = $this->publishedProducts()->select('products.id');
 
-        $categories = \App\Models\Category::query()
+        $categories = Category::query()
             ->published()
             ->active()
             ->whereHas('products', fn (Builder $products): Builder => $products->whereIn('products.id', clone $published))
