@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
-      MIGRATION_ATTEMPT: 12
+      MIGRATION_ATTEMPT: 13
       DB_CONNECTION: sqlite
       DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
       CACHE_STORE: array
@@ -74,8 +74,8 @@ jobs:
               "    try:\n"
               "        return _strict_replace(path, old, new, *args, **kwargs)\n"
               "    except RuntimeError:\n"
-              "        target = root / path\n"
-              "        text = target.read_text()\n"
+              "        with open(path, 'r', encoding='utf-8') as handle:\n"
+              "            text = handle.read()\n"
               "        if new in text:\n"
               "            return None\n"
               "        raise\n\n"
