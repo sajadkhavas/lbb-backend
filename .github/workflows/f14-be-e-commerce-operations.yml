@@ -165,4 +165,4 @@ jobs:
       - name: Commerce tests on MySQL
         run: php artisan test tests/Feature/CommerceOperationsTest.php tests/Feature/CommerceFilamentTest.php
       - name: Real two-process oversell race
-        run: php artisan test tests/Feature/CommerceConcurrencyTest.php
+        run: php tests/Support/commerce_race_harness.php
