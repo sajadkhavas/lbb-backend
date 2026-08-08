@@ -8,6 +8,7 @@ enum PaymentStatus: string
     case Pending = 'pending';
     case Paid = 'paid';
     case Failed = 'failed';
+    case PartiallyRefunded = 'partially_refunded';
     case Refunded = 'refunded';
 
     public function label(): string
@@ -17,6 +18,7 @@ enum PaymentStatus: string
             self::Pending => 'در حال بررسی',
             self::Paid => 'پرداخت‌شده',
             self::Failed => 'ناموفق',
+            self::PartiallyRefunded => 'بخشی بازپرداخت‌شده',
             self::Refunded => 'بازگشت‌داده‌شده',
         };
     }
