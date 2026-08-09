@@ -12,7 +12,6 @@ use App\Models\InventoryReservation;
 use App\Models\ProductVariant;
 use App\Services\Store\DeliveryConfigurationService;
 use App\Support\IranianMobile;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -66,7 +65,7 @@ final class CartValidationService
             ->withTrashed()
             ->whereIn('public_id', $variantIds)
             ->with([
-                'product' => fn (Builder $query): Builder => $query->withTrashed()->with('category'),
+                'product' => fn ($query) => $query->withTrashed()->with('category'),
                 'color',
                 'size',
             ])
