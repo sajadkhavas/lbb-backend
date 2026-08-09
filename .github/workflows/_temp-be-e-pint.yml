@@ -1,0 +1,44 @@
+name: TEMP BE-E Pint Formatter
+
+on:
+  push:
+    branches:
+      - phase/f14-be-e-commerce-operations
+
+permissions:
+  contents: write
+
+env:
+  PHASE_BASE_SHA: 30ea1db3524f0d274509f47caf38644f6c013aa5
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo_sqlite, sqlite3, fileinfo
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Format BE-E changed PHP
+        shell: bash
+        run: |
+          mapfile -t changed_php < <(git diff --name-only "$PHASE_BASE_SHA" HEAD -- '*.php')
+          if [ "${#changed_php[@]}" -eq 0 ]; then
+            exit 0
+          fi
+          vendor/bin/pint "${changed_php[@]}"
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- "${changed_php[@]}"
+          git commit -m 'style(f14-be-e): normalize changed PHP with Pint'
+          git push origin "HEAD:${GITHUB_REF_NAME}"
