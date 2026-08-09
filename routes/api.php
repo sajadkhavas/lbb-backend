@@ -93,6 +93,7 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::get('/colors', [PublicCatalogController::class, 'colors'])->name('colors.index');
         Route::get('/sizes', [PublicCatalogController::class, 'sizes'])->name('sizes.index');
         Route::get('/catalog/facets', [PublicCatalogController::class, 'facets'])->name('catalog.facets');
+        Route::get('/delivery/options', [DeliveryController::class, 'options'])->name('delivery.options');
     });
     Route::get('/search', [PublicCatalogController::class, 'search'])->middleware('throttle:public-search')->name('search');
 
