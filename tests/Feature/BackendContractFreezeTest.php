@@ -10,6 +10,18 @@ class BackendContractFreezeTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config([
+            'lbb.otp.provider' => 'testing',
+            'lbb.otp.expose_test_code' => true,
+            'lbb.otp.retry_after_seconds' => 0,
+            'session.driver' => 'array',
+        ]);
+    }
+
     public function test_frozen_openapi_covers_auth_public_catalog_and_commerce_contract(): void
     {
         $document = $this->getJson('/api/system/openapi')
@@ -60,14 +72,8 @@ class BackendContractFreezeTest extends TestCase
             $this->assertArrayHasKey($path, $document['paths'], "Missing frozen OpenAPI path: {$path}");
         }
 
-        $this->assertSame(
-            [['cookieAuth' => []]],
-            $document['paths']['/api/v1/auth/me']['get']['security'],
-        );
-        $this->assertSame(
-            [['cookieAuth' => []]],
-            $document['paths']['/api/v1/checkout/commit']['post']['security'],
-        );
+        $this->assertSame([['cookieAuth' => []]], $document['paths']['/api/v1/auth/me']['get']['security']);
+        $this->assertSame([['cookieAuth' => []]], $document['paths']['/api/v1/checkout/commit']['post']['security']);
         $this->assertTrue($this->hasRequiredIdempotencyHeader($document['paths']['/api/v1/checkout/commit']['post']));
         $this->assertTrue($this->hasRequiredIdempotencyHeader($document['paths']['/api/v1/orders/{orderId}/payments']['post']));
         $this->assertSame('integer', $document['components']['schemas']['Money']['properties']['amount']['type']);
@@ -80,28 +86,27 @@ class BackendContractFreezeTest extends TestCase
 
     public function test_versioned_auth_surface_establishes_session_without_using_legacy_routes(): void
     {
-        $this->getJson('/api/v1/auth/me')->assertUnauthorized();
+        $this->stateful()->getJson('/api/v1/auth/me')->assertUnauthorized();
 
-        config()->set('lbb.otp.provider', 'testing');
-        config()->set('lbb.otp.expose_test_code', true);
-
-        $challenge = $this->postJson('/api/v1/auth/otp/request', ['mobile' => '09121234567'])
+        $challenge = $this->stateful()->postJson('/api/v1/auth/otp/request', ['mobile' => '09121234567'])
             ->assertAccepted()
-            ->assertJsonPath('success', true)
-            ->json('data');
+            ->assertJsonPath('success', true);
 
-        $this->postJson('/api/v1/auth/otp/verify', [
+        $challengeId = (string) $challenge->json('data.challengeId');
+        $code = (string) $challenge->json('data.debugCode');
+
+        $this->stateful()->postJson('/api/v1/auth/otp/verify', [
             'mobile' => '09121234567',
-            'challengeId' => $challenge['challengeId'],
-            'code' => $challenge['testCode'],
+            'challengeId' => $challengeId,
+            'code' => $code,
         ])->assertOk()->assertJsonPath('data.user.mobileVerified', true);
 
-        $this->getJson('/api/v1/auth/me')
+        $this->stateful()->getJson('/api/v1/auth/me')
             ->assertOk()
             ->assertJsonPath('data.user.mobile', '09121234567');
 
-        $this->postJson('/api/v1/auth/logout')->assertOk();
-        $this->getJson('/api/v1/auth/me')->assertUnauthorized();
+        $this->stateful()->postJson('/api/v1/auth/logout')->assertOk();
+        $this->stateful()->getJson('/api/v1/auth/me')->assertUnauthorized();
     }
 
     public function test_backend_contract_stays_frozen_after_auth_amendment_without_claiming_frontend_or_deployment(): void
@@ -135,5 +140,14 @@ class BackendContractFreezeTest extends TestCase
         }
 
         return false;
+    }
+
+    private function stateful(): static
+    {
+        return $this->withHeaders([
+            'Origin' => 'http://localhost:5173',
+            'Referer' => 'http://localhost:5173/',
+            'User-Agent' => 'LBB-F14D-Contract-Test/1.0',
+        ]);
     }
 }
