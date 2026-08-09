@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Filament\Resources;
+
 use App\Filament\Resources\InventoryResource\Pages;
 use App\Models\ProductVariant;
 use App\Services\Commerce\InventoryLedgerService;
@@ -8,14 +10,24 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
+
 class InventoryResource extends Resource
 {
     protected static ?string $model = ProductVariant::class;
+
     protected static ?string $slug = 'inventory';
+
     protected static ?string $navigationIcon = 'heroicon-o-cube';
+
     protected static ?string $navigationLabel = 'موجودی';
+
     protected static ?string $navigationGroup = 'عملیات فروش';
-    public static function canAccess(): bool { return auth()->user()?->hasRole('super_admin') === true; }
+
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->hasRole('super_admin') === true;
+    }
+
     public static function table(Table $table): Table
     {
         return $table->columns([
@@ -38,6 +50,14 @@ class InventoryResource extends Resource
                 }),
         ])->bulkActions([])->defaultSort('id');
     }
-    public static function canCreate(): bool { return false; }
-    public static function getPages(): array { return ['index' => Pages\ListInventory::route('/')]; }
+
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
+    public static function getPages(): array
+    {
+        return ['index' => Pages\ListInventory::route('/')];
+    }
 }

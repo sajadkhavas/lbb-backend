@@ -42,6 +42,7 @@ final class OrderLifecycleService
             $locked->forceFill(['cancelled_at' => now()])->save();
             $this->notifications->queueOrder($locked, 'order.cancelled');
             $this->audit->record('order.cancelled', 'order', $locked->public_id, $locked, 'customer', $customer->getKey());
+
             return $locked->fresh(['items', 'reservations', 'paymentAttempts', 'statusHistory', 'shipment', 'refunds']);
         }, 3);
     }
@@ -55,6 +56,7 @@ final class OrderLifecycleService
             }
             if ($target === OrderStatus::Cancelled) {
                 $this->cancelByAdminLocked($locked, $actorId, $note);
+
                 return $locked->fresh(['items', 'reservations', 'paymentAttempts', 'statusHistory', 'internalNotes.user', 'shipment', 'refunds']);
             }
 
@@ -67,7 +69,9 @@ final class OrderLifecycleService
                 OrderStatus::Delivered => ['delivered_at' => now()],
                 default => [],
             };
-            if ($attributes !== []) { $locked->forceFill($attributes)->save(); }
+            if ($attributes !== []) {
+                $locked->forceFill($attributes)->save();
+            }
 
             match ($target) {
                 OrderStatus::Ready => $this->shipments->markReady($locked, 'admin', $actorId),
@@ -81,7 +85,9 @@ final class OrderLifecycleService
                 OrderStatus::Preparing => 'order.preparing', OrderStatus::Ready => 'order.ready',
                 OrderStatus::Dispatched => 'order.dispatched', OrderStatus::Delivered => 'order.delivered', default => null,
             };
-            if ($templateKey !== null) { $this->notifications->queueOrder($locked, $templateKey); }
+            if ($templateKey !== null) {
+                $this->notifications->queueOrder($locked, $templateKey);
+            }
             $this->audit->record('order.status_changed', 'order', $locked->public_id, $locked, 'admin', $actorId, ['to' => $target->value]);
 
             return $locked->fresh(['items', 'reservations', 'paymentAttempts', 'statusHistory', 'internalNotes.user', 'shipment', 'refunds']);
@@ -91,9 +97,12 @@ final class OrderLifecycleService
     public function addInternalNote(Order $order, ?int $actorId, string $note): OrderInternalNote
     {
         $note = trim($note);
-        if ($note === '') { throw ValidationException::withMessages(['note' => ['یادداشت نمی‌تواند خالی باشد.']]); }
+        if ($note === '') {
+            throw ValidationException::withMessages(['note' => ['یادداشت نمی‌تواند خالی باشد.']]);
+        }
         $created = OrderInternalNote::query()->create(['order_id' => $order->getKey(), 'user_id' => $actorId, 'note' => $note]);
         $this->audit->record('order.internal_note_added', 'order', $order->public_id, $order, 'admin', $actorId);
+
         return $created;
     }
 
@@ -105,15 +114,21 @@ final class OrderLifecycleService
         foreach ($ids as $id) {
             $didExpire = DB::transaction(function () use ($id): bool {
                 $order = Order::query()->whereKey($id)->lockForUpdate()->first();
-                if (! $order || $order->status !== OrderStatus::AwaitingPayment || $order->reservation_expires_at?->isFuture()) { return false; }
+                if (! $order || $order->status !== OrderStatus::AwaitingPayment || $order->reservation_expires_at?->isFuture()) {
+                    return false;
+                }
                 $this->releaseReservationsLocked($order, InventoryReservationStatus::Expired, 'payment_timeout');
                 $this->shipments->cancel($order);
                 $this->transitionLocked($order, OrderStatus::Expired, 'system', null, 'مهلت پرداخت و رزرو موجودی پایان یافت.');
                 $this->audit->record('order.expired', 'order', $order->public_id, $order);
+
                 return true;
             }, 3);
-            if ($didExpire) { $expired++; }
+            if ($didExpire) {
+                $expired++;
+            }
         }
+
         return $expired;
     }
 
@@ -127,7 +142,9 @@ final class OrderLifecycleService
 
     public function markPaidFromVerifiedPaymentLocked(Order $order): void
     {
-        if ($order->status === OrderStatus::Paid && $order->payment_status === PaymentStatus::Paid) { return; }
+        if ($order->status === OrderStatus::Paid && $order->payment_status === PaymentStatus::Paid) {
+            return;
+        }
         if ($order->status !== OrderStatus::AwaitingPayment) {
             throw ValidationException::withMessages(['order' => ['این سفارش دیگر در وضعیت قابل پرداخت نیست.']]);
         }
@@ -174,7 +191,9 @@ final class OrderLifecycleService
         $this->shipments->cancel($order, 'admin', $actorId);
         $order->forceFill(['cancelled_at' => now(), 'admin_cancelled_at' => now()])->save();
         $this->transitionLocked($order, OrderStatus::Cancelled, 'admin', $actorId, $this->nullableNote($note) ?? 'سفارش توسط مدیر لغو شد.');
-        if ($wasPaid) { $this->refunds->requestForCancellation($order, $actorId, $this->nullableNote($note)); }
+        if ($wasPaid) {
+            $this->refunds->requestForCancellation($order, $actorId, $this->nullableNote($note));
+        }
         $this->notifications->queueOrder($order, 'order.cancelled');
         $this->audit->record('order.cancelled', 'order', $order->public_id, $order, 'admin', $actorId, ['refundRequired' => $wasPaid]);
     }
@@ -183,7 +202,9 @@ final class OrderLifecycleService
     {
         $reservations = InventoryReservation::query()->where('order_id', $order->getKey())
             ->where('status', InventoryReservationStatus::Active->value)->orderBy('variant_id')->lockForUpdate()->get();
-        foreach ($reservations as $reservation) { $this->inventory->release($reservation, $status, $reason, $actorType, $actorId); }
+        foreach ($reservations as $reservation) {
+            $this->inventory->release($reservation, $status, $reason, $actorType, $actorId);
+        }
     }
 
     private function transitionLocked(Order $order, OrderStatus $to, string $actorType, ?int $actorId, string $note): void
@@ -213,13 +234,22 @@ final class OrderLifecycleService
     private function validateDeliveryTransition(Order $order, OrderStatus $target, ?string $trackingCode): void
     {
         if ($target === OrderStatus::Dispatched) {
-            if ($order->delivery_method === DeliveryMethod::Pickup) { throw ValidationException::withMessages(['status' => ['سفارش تحویل حضوری وارد وضعیت ارسال‌شده نمی‌شود.']]); }
-            if (trim((string) $trackingCode) === '') { throw ValidationException::withMessages(['trackingCode' => ['برای ثبت ارسال، کد پیگیری الزامی است.']]); }
+            if ($order->delivery_method === DeliveryMethod::Pickup) {
+                throw ValidationException::withMessages(['status' => ['سفارش تحویل حضوری وارد وضعیت ارسال‌شده نمی‌شود.']]);
+            }
+            if (trim((string) $trackingCode) === '') {
+                throw ValidationException::withMessages(['trackingCode' => ['برای ثبت ارسال، کد پیگیری الزامی است.']]);
+            }
         }
         if ($target === OrderStatus::Delivered && $order->status === OrderStatus::Ready && $order->delivery_method !== DeliveryMethod::Pickup) {
             throw ValidationException::withMessages(['status' => ['سفارش ارسالی ابتدا باید وارد وضعیت ارسال‌شده شود.']]);
         }
     }
 
-    private function nullableNote(?string $note): ?string { $note = trim((string) $note); return $note === '' ? null : $note; }
+    private function nullableNote(?string $note): ?string
+    {
+        $note = trim((string) $note);
+
+        return $note === '' ? null : $note;
+    }
 }

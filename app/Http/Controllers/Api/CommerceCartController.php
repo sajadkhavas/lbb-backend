@@ -1,15 +1,19 @@
 <?php
+
 namespace App\Http\Controllers\Api;
+
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CommerceCartRequest;
 use App\Services\Commerce\CartValidationService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
+
 class CommerceCartController extends Controller
 {
     public function validateCart(CommerceCartRequest $request, CartValidationService $cart): JsonResponse
     {
         $snapshot = $cart->validate($request->user('customer'), $request->validated());
+
         return ApiResponse::success([
             'items' => collect($snapshot['items'])->map(fn (array $item): array => [
                 ...$item,

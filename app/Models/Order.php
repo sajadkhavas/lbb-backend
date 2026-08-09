@@ -25,7 +25,9 @@ class Order extends Model
 
     protected static function booted(): void
     {
-        static::creating(function (self $order): void { $order->public_id ??= (string) Str::ulid(); });
+        static::creating(function (self $order): void {
+            $order->public_id ??= (string) Str::ulid();
+        });
     }
 
     protected function casts(): array
@@ -41,24 +43,90 @@ class Order extends Model
         ];
     }
 
-    public function getRouteKeyName(): string { return 'public_id'; }
-    public function customer(): BelongsTo { return $this->belongsTo(Customer::class); }
-    public function checkoutQuote(): BelongsTo { return $this->belongsTo(CheckoutQuote::class); }
-    public function deliveryZone(): BelongsTo { return $this->belongsTo(DeliveryZone::class); }
-    public function items(): HasMany { return $this->hasMany(OrderItem::class)->orderBy('id'); }
-    public function reservations(): HasMany { return $this->hasMany(InventoryReservation::class); }
-    public function paymentAttempts(): HasMany { return $this->hasMany(PaymentAttempt::class)->latest('id'); }
-    public function statusHistory(): HasMany { return $this->hasMany(OrderStatusHistory::class)->orderBy('created_at'); }
-    public function internalNotes(): HasMany { return $this->hasMany(OrderInternalNote::class)->latest('created_at'); }
-    public function notifications(): HasMany { return $this->hasMany(NotificationOutbox::class)->latest('id'); }
-    public function reviews(): HasMany { return $this->hasMany(ProductReview::class)->latest('id'); }
-    public function shipment(): HasOne { return $this->hasOne(Shipment::class); }
-    public function returns(): HasMany { return $this->hasMany(ReturnRequest::class)->latest('id'); }
-    public function exchanges(): HasMany { return $this->hasMany(ExchangeRequest::class)->latest('id'); }
-    public function refunds(): HasMany { return $this->hasMany(RefundRequest::class)->latest('id'); }
-    public function inventoryLedgerEntries(): HasMany { return $this->hasMany(InventoryLedgerEntry::class)->orderBy('id'); }
+    public function getRouteKeyName(): string
+    {
+        return 'public_id';
+    }
 
-    public function scopeOwnedBy(Builder $query, Customer $customer): Builder { return $query->where('customer_id', $customer->getKey()); }
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function checkoutQuote(): BelongsTo
+    {
+        return $this->belongsTo(CheckoutQuote::class);
+    }
+
+    public function deliveryZone(): BelongsTo
+    {
+        return $this->belongsTo(DeliveryZone::class);
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(OrderItem::class)->orderBy('id');
+    }
+
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(InventoryReservation::class);
+    }
+
+    public function paymentAttempts(): HasMany
+    {
+        return $this->hasMany(PaymentAttempt::class)->latest('id');
+    }
+
+    public function statusHistory(): HasMany
+    {
+        return $this->hasMany(OrderStatusHistory::class)->orderBy('created_at');
+    }
+
+    public function internalNotes(): HasMany
+    {
+        return $this->hasMany(OrderInternalNote::class)->latest('created_at');
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(NotificationOutbox::class)->latest('id');
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class)->latest('id');
+    }
+
+    public function shipment(): HasOne
+    {
+        return $this->hasOne(Shipment::class);
+    }
+
+    public function returns(): HasMany
+    {
+        return $this->hasMany(ReturnRequest::class)->latest('id');
+    }
+
+    public function exchanges(): HasMany
+    {
+        return $this->hasMany(ExchangeRequest::class)->latest('id');
+    }
+
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(RefundRequest::class)->latest('id');
+    }
+
+    public function inventoryLedgerEntries(): HasMany
+    {
+        return $this->hasMany(InventoryLedgerEntry::class)->orderBy('id');
+    }
+
+    public function scopeOwnedBy(Builder $query, Customer $customer): Builder
+    {
+        return $query->where('customer_id', $customer->getKey());
+    }
 
     public function canBeCancelledByCustomer(): bool
     {

@@ -11,6 +11,7 @@ class OrderResource extends JsonResource
     public function toArray(Request $request): array
     {
         $currency = $this->currency ?: 'TOMAN';
+
         return [
             'id' => $this->public_id,
             'number' => $this->order_number,

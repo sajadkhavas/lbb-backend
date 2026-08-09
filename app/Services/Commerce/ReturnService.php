@@ -44,6 +44,7 @@ final class ReturnService
             if (! hash_equals($existing->request_hash, $requestHash)) {
                 throw new IdempotencyConflict;
             }
+
             return ['return' => $existing->load('items.orderItem'), 'replayed' => true];
         }
 
@@ -127,6 +128,7 @@ final class ReturnService
             if (! $existing || ! hash_equals($existing->request_hash, $requestHash)) {
                 throw $exception;
             }
+
             return ['return' => $existing->load('items.orderItem'), 'replayed' => true];
         }
     }
@@ -212,6 +214,7 @@ final class ReturnService
                 'admin_note' => $this->mergeNote($locked->admin_note, $note),
             ])->save();
             $this->audit->record($event, 'return_request', $locked->public_id, $locked->order, 'admin', $adminId);
+
             return $locked->fresh(['items.orderItem']);
         }, 3);
     }
@@ -222,6 +225,7 @@ final class ReturnService
         if ($note === '') {
             return $current;
         }
+
         return trim(($current ? $current."\n" : '').$note);
     }
 }

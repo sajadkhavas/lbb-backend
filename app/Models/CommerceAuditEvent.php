@@ -28,5 +28,8 @@ class CommerceAuditEvent extends Model
         return ['metadata' => 'array', 'created_at' => 'datetime'];
     }
 
-    public function order(): BelongsTo { return $this->belongsTo(Order::class); }
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
 }

@@ -41,6 +41,7 @@ final class ExchangeService
             if (! hash_equals($existing->request_hash, $requestHash)) {
                 throw new IdempotencyConflict;
             }
+
             return ['exchange' => $existing->load(['orderItem', 'destinationVariant']), 'replayed' => true];
         }
 
@@ -121,6 +122,7 @@ final class ExchangeService
             if (! $existing || ! hash_equals($existing->request_hash, $requestHash)) {
                 throw $exception;
             }
+
             return ['exchange' => $existing->load(['orderItem', 'destinationVariant']), 'replayed' => true];
         }
     }
@@ -151,6 +153,7 @@ final class ExchangeService
             $this->audit->record('exchange.approved', 'exchange_request', $locked->public_id, $locked->order, 'admin', $adminId, [
                 'reservationId' => $reservation->public_id,
             ]);
+
             return $locked->fresh(['destinationReservation', 'destinationVariant', 'orderItem']);
         }, 3);
     }
@@ -171,6 +174,7 @@ final class ExchangeService
                 'admin_note' => $this->mergeNote($locked->admin_note, $note),
             ])->save();
             $this->audit->record('exchange.rejected', 'exchange_request', $locked->public_id, $locked->order, 'admin', $adminId);
+
             return $locked->fresh(['destinationReservation']);
         }, 3);
     }
@@ -228,6 +232,7 @@ final class ExchangeService
         if ($note === '') {
             return $current;
         }
+
         return trim(($current ? $current."\n" : '').$note);
     }
 }

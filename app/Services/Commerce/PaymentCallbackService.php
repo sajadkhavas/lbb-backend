@@ -31,6 +31,7 @@ final class PaymentCallbackService
                 $this->audit->record('payment.callback.replayed', 'payment_callback_event', $existing->public_id, $attempt->order, 'provider', null, [
                     'provider' => $attempt->provider,
                 ]);
+
                 return ['event' => $existing, 'replayed' => true];
             }
 

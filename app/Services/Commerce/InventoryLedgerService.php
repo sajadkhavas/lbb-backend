@@ -476,6 +476,7 @@ final class InventoryLedgerService
             'created_at' => now(),
         ]);
     }
+
     private function saveStockLocked(ProductVariant $variant, int $quantity): void
     {
         app()->instance('lbb.inventory_ledger_mutation', true);
@@ -485,5 +486,4 @@ final class InventoryLedgerService
             app()->forgetInstance('lbb.inventory_ledger_mutation');
         }
     }
-
 }

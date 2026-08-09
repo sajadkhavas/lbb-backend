@@ -35,12 +35,35 @@ class ExchangeRequest extends Model
         ];
     }
 
-    public function customer(): BelongsTo { return $this->belongsTo(Customer::class); }
-    public function order(): BelongsTo { return $this->belongsTo(Order::class); }
-    public function orderItem(): BelongsTo { return $this->belongsTo(OrderItem::class); }
-    public function sourceVariant(): BelongsTo { return $this->belongsTo(ProductVariant::class, 'source_variant_id'); }
-    public function destinationVariant(): BelongsTo { return $this->belongsTo(ProductVariant::class, 'destination_variant_id'); }
-    public function destinationReservation(): BelongsTo { return $this->belongsTo(InventoryReservation::class, 'destination_reservation_id'); }
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function orderItem(): BelongsTo
+    {
+        return $this->belongsTo(OrderItem::class);
+    }
+
+    public function sourceVariant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'source_variant_id');
+    }
+
+    public function destinationVariant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'destination_variant_id');
+    }
+
+    public function destinationReservation(): BelongsTo
+    {
+        return $this->belongsTo(InventoryReservation::class, 'destination_reservation_id');
+    }
 
     public function scopeOwnedBy(Builder $query, Customer $customer): Builder
     {

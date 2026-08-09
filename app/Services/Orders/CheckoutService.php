@@ -49,6 +49,7 @@ final class CheckoutService
                 if ($existing) {
                     return $this->replay($existing, $requestHash);
                 }
+
                 return ['order' => $this->createLocked($customer, $canonical, $idempotencyKey, $requestHash), 'replayed' => false];
             }, 3);
         } catch (QueryException $exception) {
@@ -59,6 +60,7 @@ final class CheckoutService
             if (! $existing) {
                 throw $exception;
             }
+
             return $this->replay($existing, $requestHash);
         }
     }
@@ -146,20 +148,26 @@ final class CheckoutService
             'actor_type' => 'customer', 'actor_id' => $customer->getKey(),
             'note' => 'سفارش از Checkout ثبت شد و موجودی از مسیر Ledger رزرو شد.', 'created_at' => now(),
         ]);
+
         return $this->loadOrder($order);
     }
 
     private function resolveCustomerPayload(Customer $customer, array $payload): array
     {
         $addressId = trim((string) ($payload['addressId'] ?? ''));
-        if ($addressId === '') { return $payload; }
+        if ($addressId === '') {
+            return $payload;
+        }
         $address = CustomerAddress::query()->ownedBy($customer)->where('public_id', $addressId)->where('is_active', true)->first();
-        if (! $address) { throw ValidationException::withMessages(['addressId' => ['آدرس انتخاب‌شده معتبر یا متعلق به این حساب نیست.']]); }
+        if (! $address) {
+            throw ValidationException::withMessages(['addressId' => ['آدرس انتخاب‌شده معتبر یا متعلق به این حساب نیست.']]);
+        }
         $payload['customer'] = [
             'fullName' => $address->recipient_name, 'mobile' => $address->mobile, 'province' => $address->province,
             'city' => $address->city, 'address' => $address->address_line, 'postalCode' => $address->postal_code,
             'notes' => $payload['customer']['notes'] ?? null,
         ];
+
         return $payload;
     }
 
@@ -168,6 +176,7 @@ final class CheckoutService
         $items = collect($payload['items'])->map(fn (array $item): array => ['variantId' => trim($item['variantId']), 'quantity' => (int) $item['quantity']])
             ->groupBy('variantId')->map(fn (Collection $group, string $variantId): array => ['variantId' => $variantId, 'quantity' => $group->sum('quantity')])
             ->sortBy('variantId')->values()->all();
+
         return [
             'customer' => [
                 'fullName' => trim($payload['customer']['fullName']), 'mobile' => IranianMobile::normalize($payload['customer']['mobile']),
@@ -178,14 +187,39 @@ final class CheckoutService
         ];
     }
 
-    private function findExisting(Customer $customer, string $idempotencyKey): ?Order { return Order::query()->ownedBy($customer)->where('idempotency_key', $idempotencyKey)->first(); }
+    private function findExisting(Customer $customer, string $idempotencyKey): ?Order
+    {
+        return Order::query()->ownedBy($customer)->where('idempotency_key', $idempotencyKey)->first();
+    }
+
     private function replay(Order $order, string $requestHash): array
     {
-        if (! hash_equals($order->request_hash, $requestHash)) { throw new IdempotencyConflict; }
+        if (! hash_equals($order->request_hash, $requestHash)) {
+            throw new IdempotencyConflict;
+        }
+
         return ['order' => $this->loadOrder($order), 'replayed' => true];
     }
-    private function loadOrder(Order $order): Order { return $order->load(['items', 'reservations', 'deliveryZone', 'shipment']); }
-    private function nextOrderNumber(): string { return 'LBB-'.now()->format('ymd').'-'.Str::upper(Str::random(8)); }
-    private function nullableTrim(mixed $value): ?string { $value = trim((string) $value); return $value === '' ? null : $value; }
-    private function isUniqueConstraintViolation(QueryException $exception): bool { return in_array((string) $exception->getCode(), ['23000', '23505'], true); }
+
+    private function loadOrder(Order $order): Order
+    {
+        return $order->load(['items', 'reservations', 'deliveryZone', 'shipment']);
+    }
+
+    private function nextOrderNumber(): string
+    {
+        return 'LBB-'.now()->format('ymd').'-'.Str::upper(Str::random(8));
+    }
+
+    private function nullableTrim(mixed $value): ?string
+    {
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
+    }
+
+    private function isUniqueConstraintViolation(QueryException $exception): bool
+    {
+        return in_array((string) $exception->getCode(), ['23000', '23505'], true);
+    }
 }

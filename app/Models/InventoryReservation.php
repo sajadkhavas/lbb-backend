@@ -35,9 +35,20 @@ class InventoryReservation extends Model
         ];
     }
 
-    public function order(): BelongsTo { return $this->belongsTo(Order::class); }
-    public function variant(): BelongsTo { return $this->belongsTo(ProductVariant::class); }
-    public function ledgerEntries(): HasMany { return $this->hasMany(InventoryLedgerEntry::class, 'reservation_id'); }
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class);
+    }
+
+    public function ledgerEntries(): HasMany
+    {
+        return $this->hasMany(InventoryLedgerEntry::class, 'reservation_id');
+    }
 
     public function scopeActive(Builder $query): Builder
     {

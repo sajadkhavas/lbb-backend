@@ -9,12 +9,16 @@ use Illuminate\Validation\Validator;
 
 class CommerceCartRequest extends FormRequest
 {
-    public function authorize(): bool { return $this->user('customer') !== null; }
+    public function authorize(): bool
+    {
+        return $this->user('customer') !== null;
+    }
 
     public function rules(): array
     {
         $saved = $this->filled('addressId');
         $requiresAddress = $this->input('deliveryMethod') !== DeliveryMethod::Pickup->value;
+
         return [
             'addressId' => ['nullable', 'string', 'size:26'],
             'customer' => [Rule::requiredIf(! $saved), 'nullable', 'array'],
@@ -39,7 +43,9 @@ class CommerceCartRequest extends FormRequest
         return [function (Validator $validator): void {
             $total = collect($this->input('items', []))->sum(fn (array $item): int => (int) ($item['quantity'] ?? 0));
             $max = max(1, (int) config('lbb.checkout.max_total_units', 50));
-            if ($total > $max) { $validator->errors()->add('items', "تعداد کل اقلام نمی‌تواند بیشتر از {$max} باشد."); }
+            if ($total > $max) {
+                $validator->errors()->add('items', "تعداد کل اقلام نمی‌تواند بیشتر از {$max} باشد.");
+            }
         }];
     }
 }

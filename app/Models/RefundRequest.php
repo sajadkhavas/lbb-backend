@@ -33,8 +33,23 @@ class RefundRequest extends Model
         ];
     }
 
-    public function customer(): BelongsTo { return $this->belongsTo(Customer::class); }
-    public function order(): BelongsTo { return $this->belongsTo(Order::class); }
-    public function returnRequest(): BelongsTo { return $this->belongsTo(ReturnRequest::class); }
-    public function paymentAttempt(): BelongsTo { return $this->belongsTo(PaymentAttempt::class); }
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function returnRequest(): BelongsTo
+    {
+        return $this->belongsTo(ReturnRequest::class);
+    }
+
+    public function paymentAttempt(): BelongsTo
+    {
+        return $this->belongsTo(PaymentAttempt::class);
+    }
 }

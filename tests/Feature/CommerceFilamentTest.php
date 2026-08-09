@@ -1,12 +1,16 @@
 <?php
+
 namespace Tests\Feature;
+
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
+
 class CommerceFilamentTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_guest_and_non_super_admin_cannot_access_sensitive_commerce_operations(): void
     {
         $this->get('/admin/inventory')->assertRedirect();
@@ -14,6 +18,7 @@ class CommerceFilamentTest extends TestCase
         $this->actingAs($user)->get('/admin/inventory')->assertForbidden();
         $this->actingAs($user)->get('/admin/refund-requests')->assertForbidden();
     }
+
     public function test_super_admin_can_open_commerce_operations_surfaces(): void
     {
         Role::create(['name' => 'super_admin', 'guard_name' => 'web']);

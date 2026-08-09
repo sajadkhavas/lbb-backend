@@ -37,10 +37,25 @@ class ReturnRequest extends Model
         ];
     }
 
-    public function customer(): BelongsTo { return $this->belongsTo(Customer::class); }
-    public function order(): BelongsTo { return $this->belongsTo(Order::class); }
-    public function items(): HasMany { return $this->hasMany(ReturnItem::class); }
-    public function refunds(): HasMany { return $this->hasMany(RefundRequest::class); }
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(ReturnItem::class);
+    }
+
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(RefundRequest::class);
+    }
 
     public function scopeOwnedBy(Builder $query, Customer $customer): Builder
     {

@@ -11,6 +11,13 @@ class ReturnItem extends Model
 
     protected $casts = ['quantity' => 'integer', 'refund_value_toman' => 'integer'];
 
-    public function returnRequest(): BelongsTo { return $this->belongsTo(ReturnRequest::class); }
-    public function orderItem(): BelongsTo { return $this->belongsTo(OrderItem::class); }
+    public function returnRequest(): BelongsTo
+    {
+        return $this->belongsTo(ReturnRequest::class);
+    }
+
+    public function orderItem(): BelongsTo
+    {
+        return $this->belongsTo(OrderItem::class);
+    }
 }

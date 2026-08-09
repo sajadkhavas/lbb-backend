@@ -15,12 +15,13 @@ use App\Exceptions\CommerceException;
 use App\Models\Category;
 use App\Models\Color;
 use App\Models\Customer;
-use App\Models\InventoryLedgerEntry;
+use App\Models\ExchangeRequest;
 use App\Models\InventoryReservation;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\RefundRequest;
+use App\Models\ReturnRequest;
 use App\Models\Size;
 use App\Services\Commerce\ExchangeService;
 use App\Services\Commerce\InventoryLedgerService;
@@ -37,8 +38,11 @@ class CommerceOperationsTest extends TestCase
     use RefreshDatabase;
 
     private Customer $customer;
+
     private Product $product;
+
     private ProductVariant $source;
+
     private ProductVariant $destination;
 
     protected function setUp(): void
@@ -190,7 +194,7 @@ class CommerceOperationsTest extends TestCase
             'reason' => 'سایز مناسب نیست', 'items' => [['orderItemId' => $line->public_id, 'quantity' => 1]],
         ], ['Idempotency-Key' => 'return-request-000001'])->assertCreated();
         $returnId = $created->json('data.return.id');
-        $return = \App\Models\ReturnRequest::query()->where('public_id', $returnId)->firstOrFail();
+        $return = ReturnRequest::query()->where('public_id', $returnId)->firstOrFail();
         $service = app(ReturnService::class);
         $return = $service->approve($return, 1);
         $return = $service->receive($return, 1);
@@ -210,7 +214,7 @@ class CommerceOperationsTest extends TestCase
             'orderItemId' => $line->public_id, 'destinationVariantId' => $this->destination->public_id,
             'quantity' => 1, 'reason' => 'نیاز به سایز دیگر',
         ], ['Idempotency-Key' => 'exchange-request-0001'])->assertCreated();
-        $exchange = \App\Models\ExchangeRequest::query()->where('public_id', $created->json('data.exchange.id'))->firstOrFail();
+        $exchange = ExchangeRequest::query()->where('public_id', $created->json('data.exchange.id'))->firstOrFail();
         $service = app(ExchangeService::class);
         $exchange = $service->approve($exchange, 1);
         $this->assertSame(ExchangeStatus::Approved, $exchange->status);
@@ -289,7 +293,10 @@ class CommerceOperationsTest extends TestCase
     private function postCart(string $endpoint, int $quantity, ?int $expected = null)
     {
         $item = ['variantId' => $this->source->public_id, 'quantity' => $quantity];
-        if ($expected !== null) { $item['expectedUnitPriceToman'] = $expected; }
+        if ($expected !== null) {
+            $item['expectedUnitPriceToman'] = $expected;
+        }
+
         return $this->actingAs($this->customer, 'customer')->postJson($endpoint, [
             'customer' => ['fullName' => 'مشتری Commerce', 'mobile' => '09121111111', 'province' => 'تهران', 'city' => 'تهران', 'address' => 'آدرس تست', 'postalCode' => '1234567890'],
             'deliveryMethod' => 'standard', 'items' => [$item],
@@ -302,6 +309,7 @@ class CommerceOperationsTest extends TestCase
         $response = $this->actingAs($this->customer, 'customer')->postJson('/api/v1/checkout/commit', ['quoteId' => $quote->json('data.quoteId')], [
             'Idempotency-Key' => $key,
         ])->assertCreated();
+
         return Order::query()->where('public_id', $response->json('data.order.id'))->with(['items', 'reservations', 'shipment'])->firstOrFail();
     }
 
@@ -312,6 +320,7 @@ class CommerceOperationsTest extends TestCase
         $order->forceFill([
             'status' => OrderStatus::Delivered, 'payment_status' => PaymentStatus::Paid, 'paid_at' => now()->subHour(), 'delivered_at' => now(),
         ])->save();
+
         return $order->fresh(['items', 'reservations', 'shipment']);
     }
 }

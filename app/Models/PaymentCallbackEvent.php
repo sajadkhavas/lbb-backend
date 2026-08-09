@@ -25,6 +25,13 @@ class PaymentCallbackEvent extends Model
         return ['received_at' => 'datetime', 'processed_at' => 'datetime'];
     }
 
-    public function paymentAttempt(): BelongsTo { return $this->belongsTo(PaymentAttempt::class); }
-    public function order(): BelongsTo { return $this->belongsTo(Order::class); }
+    public function paymentAttempt(): BelongsTo
+    {
+        return $this->belongsTo(PaymentAttempt::class);
+    }
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
 }

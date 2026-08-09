@@ -106,6 +106,7 @@ final class RefundService
             }
             $locked->forceFill(['status' => RefundStatus::Pending])->save();
             $this->audit->record('refund.pending', 'refund_request', $locked->public_id, $locked->order, 'admin', $adminId);
+
             return $locked;
         }, 3);
     }
@@ -164,6 +165,7 @@ final class RefundService
                 'failed_at' => now(),
             ])->save();
             $this->audit->record('refund.failed', 'refund_request', $locked->public_id, $locked->order, 'provider', $actorId);
+
             return $locked;
         }, 3);
     }

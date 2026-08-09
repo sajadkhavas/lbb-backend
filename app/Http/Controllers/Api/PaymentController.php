@@ -26,11 +26,17 @@ class PaymentController extends Controller
             return ApiResponse::error('کلید Idempotency معتبر نیست.', 422, ['idempotencyKey' => ['یک کلید یکتا با طول ۱۶ تا ۱۲۰ کاراکتر ارسال کنید.']]);
         }
         $order = Order::query()->ownedBy($request->user('customer'))->where('public_id', $orderId)->firstOrFail();
-        try { $result = $payments->initiate($request->user('customer'), $order, $idempotencyKey); }
-        catch (IdempotencyConflict $exception) { return ApiResponse::error($exception->getMessage(), 409, code: CommerceErrorCode::DuplicateRequest->value); }
-        catch (PaymentUnavailable $exception) { return ApiResponse::error($exception->getMessage(), 503, code: CommerceErrorCode::PaymentUnavailable->value); }
-        catch (PaymentProviderException $exception) { return ApiResponse::error($exception->getMessage(), 502, ['provider' => ['code' => $exception->providerCode]], code: CommerceErrorCode::PaymentUnavailable->value); }
-        catch (JsonException) { return ApiResponse::error('امکان ایجاد درخواست پرداخت وجود ندارد.', 422); }
+        try {
+            $result = $payments->initiate($request->user('customer'), $order, $idempotencyKey);
+        } catch (IdempotencyConflict $exception) {
+            return ApiResponse::error($exception->getMessage(), 409, code: CommerceErrorCode::DuplicateRequest->value);
+        } catch (PaymentUnavailable $exception) {
+            return ApiResponse::error($exception->getMessage(), 503, code: CommerceErrorCode::PaymentUnavailable->value);
+        } catch (PaymentProviderException $exception) {
+            return ApiResponse::error($exception->getMessage(), 502, ['provider' => ['code' => $exception->providerCode]], code: CommerceErrorCode::PaymentUnavailable->value);
+        } catch (JsonException) {
+            return ApiResponse::error('امکان ایجاد درخواست پرداخت وجود ندارد.', 422);
+        }
 
         return ApiResponse::success([
             'order' => (new OrderResource($result['order']))->resolve($request),
@@ -40,10 +46,15 @@ class PaymentController extends Controller
 
     public function verify(VerifyPaymentRequest $request, PaymentService $payments): JsonResponse
     {
-        try { $result = $payments->verify($request->user('customer'), $request->string('authority')->toString(), $request->string('status')->toString()); }
-        catch (PaymentUnavailable $exception) { return ApiResponse::error($exception->getMessage(), 503, code: CommerceErrorCode::PaymentUnavailable->value); }
-        catch (PaymentProviderException $exception) { return ApiResponse::error($exception->getMessage(), 502, ['provider' => ['code' => $exception->providerCode]], code: CommerceErrorCode::PaymentUnavailable->value); }
+        try {
+            $result = $payments->verify($request->user('customer'), $request->string('authority')->toString(), $request->string('status')->toString());
+        } catch (PaymentUnavailable $exception) {
+            return ApiResponse::error($exception->getMessage(), 503, code: CommerceErrorCode::PaymentUnavailable->value);
+        } catch (PaymentProviderException $exception) {
+            return ApiResponse::error($exception->getMessage(), 502, ['provider' => ['code' => $exception->providerCode]], code: CommerceErrorCode::PaymentUnavailable->value);
+        }
         $verified = $result['attempt']->isVerified();
+
         return ApiResponse::success([
             'verified' => $verified, 'order' => (new OrderResource($result['order']))->resolve($request),
             'payment' => (new PaymentAttemptResource($result['attempt']))->resolve($request),

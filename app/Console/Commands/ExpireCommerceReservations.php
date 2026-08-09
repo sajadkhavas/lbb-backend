@@ -11,6 +11,7 @@ use Illuminate\Console\Command;
 class ExpireCommerceReservations extends Command
 {
     protected $signature = 'commerce:expire-reservations';
+
     protected $description = 'Expire stale commerce reservations through the inventory ledger.';
 
     public function handle(InventoryLedgerService $inventory): int

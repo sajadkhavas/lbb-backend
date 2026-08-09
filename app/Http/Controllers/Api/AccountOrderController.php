@@ -22,6 +22,7 @@ class AccountOrderController extends Controller
         $orders = Order::query()->ownedBy($request->user('customer'))
             ->with(['items', 'paymentAttempts', 'deliveryZone', 'shipment', 'returns.items.orderItem', 'exchanges.destinationVariant', 'refunds'])
             ->latest('placed_at')->paginate((int) ($filters['perPage'] ?? config('lbb.policies.pagination.account_default', 10)));
+
         return ApiResponse::success(OrderResource::collection($orders->getCollection())->resolve($request), meta: ['pagination' => Pagination::meta($orders)]);
     }
 
@@ -32,6 +33,7 @@ class AccountOrderController extends Controller
                 'returns.items.orderItem', 'exchanges.orderItem', 'exchanges.sourceVariant', 'exchanges.destinationVariant',
                 'exchanges.destinationReservation', 'refunds'])
             ->firstOrFail();
+
         return ApiResponse::success(['order' => (new OrderResource($order))->resolve($request)]);
     }
 
@@ -39,6 +41,7 @@ class AccountOrderController extends Controller
     {
         $order = Order::query()->ownedBy($request->user('customer'))->where('public_id', $orderId)->firstOrFail();
         $cancelled = $lifecycle->cancelByCustomer($order, $request->user('customer'));
+
         return ApiResponse::success(['order' => (new OrderResource($cancelled))->resolve($request)], 'سفارش لغو و رزرو موجودی آزاد شد.');
     }
 }

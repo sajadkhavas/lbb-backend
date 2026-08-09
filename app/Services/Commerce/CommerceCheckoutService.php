@@ -4,7 +4,6 @@ namespace App\Services\Commerce;
 
 use App\Enums\CheckoutQuoteStatus;
 use App\Enums\CommerceErrorCode;
-use App\Enums\InventoryReservationStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Exceptions\CommerceException;

@@ -18,7 +18,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::before(static fn ($user, string $ability): ?bool => method_exists($user, 'hasRole') && $user->hasRole('super_admin') ? true : null);
-        if ($this->app->environment('production')) { URL::forceScheme('https'); }
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
 
         RateLimiter::for('public-catalog', static fn (Request $request): array => [Limit::perMinute(120)->by('public-catalog-ip:'.($request->ip() ?? 'unknown'))]);
         RateLimiter::for('public-search', static fn (Request $request): array => [Limit::perMinute(60)->by('public-search-ip:'.($request->ip() ?? 'unknown'))]);
@@ -40,8 +42,12 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         RateLimiter::for('otp-request', function (Request $request): array {
-            try { $mobileKey = IranianMobile::hash((string) $request->input('mobile')); }
-            catch (Throwable) { $mobileKey = hash('sha256', (string) $request->input('mobile')); }
+            try {
+                $mobileKey = IranianMobile::hash((string) $request->input('mobile'));
+            } catch (Throwable) {
+                $mobileKey = hash('sha256', (string) $request->input('mobile'));
+            }
+
             return [Limit::perMinute(5)->by('otp-request-ip:'.($request->ip() ?? 'unknown')), Limit::perMinute(2)->by('otp-request-mobile:'.$mobileKey)];
         });
         RateLimiter::for('otp-verify', static fn (Request $request): array => [

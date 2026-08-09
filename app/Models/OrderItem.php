@@ -17,7 +17,9 @@ class OrderItem extends Model
 
     protected static function booted(): void
     {
-        static::creating(function (self $item): void { $item->public_id ??= (string) Str::ulid(); });
+        static::creating(function (self $item): void {
+            $item->public_id ??= (string) Str::ulid();
+        });
     }
 
     protected function casts(): array
@@ -25,9 +27,28 @@ class OrderItem extends Model
         return ['unit_price_toman' => 'integer', 'quantity' => 'integer', 'line_total_toman' => 'integer'];
     }
 
-    public function order(): BelongsTo { return $this->belongsTo(Order::class); }
-    public function product(): BelongsTo { return $this->belongsTo(Product::class); }
-    public function variant(): BelongsTo { return $this->belongsTo(ProductVariant::class); }
-    public function returnItems(): HasMany { return $this->hasMany(ReturnItem::class); }
-    public function exchanges(): HasMany { return $this->hasMany(ExchangeRequest::class); }
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class);
+    }
+
+    public function returnItems(): HasMany
+    {
+        return $this->hasMany(ReturnItem::class);
+    }
+
+    public function exchanges(): HasMany
+    {
+        return $this->hasMany(ExchangeRequest::class);
+    }
 }
