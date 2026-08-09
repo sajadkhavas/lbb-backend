@@ -16,18 +16,18 @@ class BackendFoundationTest extends TestCase
         $this->assertTrue((bool) config('cors.supports_credentials'));
     }
 
-    public function test_b2_contract_reports_only_the_neutral_baseline_as_ready(): void
+    public function test_be_e_contract_reports_commerce_ready_but_not_frozen(): void
     {
         $contracts = config('lbb.contracts');
 
         $this->assertSame('implemented', $contracts['system']['status']);
         $this->assertSame('ready', $contracts['domain_cleanup']['status']);
-        $this->assertSame('neutral-baseline-ready', $contracts['catalog']['status']);
-        $this->assertSame('not-started', $contracts['apparel_domain']['status']);
-        $this->assertSame('F14-BE-C', $contracts['apparel_domain']['target_phase']);
-        $this->assertSame('imported-pending-lbb-verification', $contracts['authentication']['status']);
-        $this->assertSame('imported-pending-lbb-verification', $contracts['orders']['status']);
-        $this->assertSame('disabled-pending-lbb-verification', $contracts['payments']['status']);
+        $this->assertSame('public-v1-ready', $contracts['catalog']['status']);
+        $this->assertSame('ready', $contracts['apparel_domain']['status']);
+        $this->assertSame('ready-for-commerce', $contracts['authentication']['status']);
+        $this->assertSame('commerce-operations-ready', $contracts['orders']['status']);
+        $this->assertSame('provider-ready-fail-closed', $contracts['payments']['status']);
+        $this->assertSame('commerce-operations-ready', $contracts['store_operations']['status']);
         $this->assertSame('not-ready', $contracts['backend_freeze']['status']);
         $this->assertFalse((bool) config('lbb.launch.backend_complete'));
     }
