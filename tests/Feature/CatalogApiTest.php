@@ -12,11 +12,11 @@ class CatalogApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_catalog_contract_reports_neutral_baseline(): void
+    public function test_catalog_contract_reports_public_v1_baseline(): void
     {
         $this->getJson('/api/system/contracts')->assertOk()
-            ->assertJsonPath('data.contracts.catalog.status', 'neutral-baseline-ready')
-            ->assertJsonPath('data.contracts.catalog.source', 'generic-commerce-only');
+            ->assertJsonPath('data.contracts.catalog.status', 'public-v1-ready')
+            ->assertJsonPath('data.contracts.catalog.source', 'f14-be-d');
     }
 
     public function test_catalog_calculates_prices_stock_and_content_boundaries(): void

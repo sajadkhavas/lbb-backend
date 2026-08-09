@@ -4,23 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class OrderItem extends Model
 {
     protected $fillable = [
-        'order_id',
-        'product_id',
-        'variant_id',
-        'product_public_id',
-        'variant_public_id',
-        'product_name',
-        'variant_name',
-        'product_code',
-        'sku',
-        'unit_price_toman',
-        'quantity',
-        'line_total_toman',
+        'order_id', 'product_id', 'variant_id', 'product_public_id', 'variant_public_id', 'product_name',
+        'variant_name', 'product_code', 'sku', 'color_name', 'size_name', 'unit_price_toman', 'quantity',
+        'line_total_toman', 'currency',
     ];
 
     protected static function booted(): void
@@ -32,11 +24,7 @@ class OrderItem extends Model
 
     protected function casts(): array
     {
-        return [
-            'unit_price_toman' => 'integer',
-            'quantity' => 'integer',
-            'line_total_toman' => 'integer',
-        ];
+        return ['unit_price_toman' => 'integer', 'quantity' => 'integer', 'line_total_toman' => 'integer'];
     }
 
     public function order(): BelongsTo
@@ -52,5 +40,15 @@ class OrderItem extends Model
     public function variant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class);
+    }
+
+    public function returnItems(): HasMany
+    {
+        return $this->hasMany(ReturnItem::class);
+    }
+
+    public function exchanges(): HasMany
+    {
+        return $this->hasMany(ExchangeRequest::class);
     }
 }

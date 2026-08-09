@@ -181,13 +181,13 @@ class CustomerOtpAuthTest extends TestCase
         $this->assertDatabaseCount('otp_challenges', 1);
     }
 
-    public function test_imported_customer_contracts_remain_fail_closed_during_b2(): void
+    public function test_customer_contracts_are_ready_for_commerce_but_backend_freeze_remains_closed(): void
     {
         $this->getJson('/api/system/contracts')
             ->assertOk()
-            ->assertJsonPath('data.contracts.authentication.status', 'imported-pending-lbb-verification')
-            ->assertJsonPath('data.contracts.orders.status', 'imported-pending-lbb-verification')
-            ->assertJsonPath('data.contracts.payments.status', 'disabled-pending-lbb-verification')
+            ->assertJsonPath('data.contracts.authentication.status', 'ready-for-commerce')
+            ->assertJsonPath('data.contracts.orders.status', 'commerce-operations-ready')
+            ->assertJsonPath('data.contracts.payments.status', 'provider-ready-fail-closed')
             ->assertJsonPath('data.contracts.backend_freeze.status', 'not-ready');
     }
 

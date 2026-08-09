@@ -6,20 +6,14 @@ use App\Enums\InventoryReservationStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class InventoryReservation extends Model
 {
     protected $fillable = [
-        'order_id',
-        'variant_id',
-        'quantity',
-        'status',
-        'expires_at',
-        'released_at',
-        'consumed_at',
-        'restocked_at',
-        'release_reason',
+        'order_id', 'variant_id', 'purpose', 'correlation_key', 'quantity', 'status', 'expires_at',
+        'released_at', 'consumed_at', 'restocked_at', 'release_reason',
     ];
 
     protected static function booted(): void
@@ -51,16 +45,18 @@ class InventoryReservation extends Model
         return $this->belongsTo(ProductVariant::class);
     }
 
+    public function ledgerEntries(): HasMany
+    {
+        return $this->hasMany(InventoryLedgerEntry::class, 'reservation_id');
+    }
+
     public function scopeActive(Builder $query): Builder
     {
-        return $query
-            ->where('status', InventoryReservationStatus::Active->value)
-            ->where('expires_at', '>', now());
+        return $query->where('status', InventoryReservationStatus::Active->value)->where('expires_at', '>', now());
     }
 
     public function isActive(): bool
     {
-        return $this->status === InventoryReservationStatus::Active
-            && $this->expires_at->isFuture();
+        return $this->status === InventoryReservationStatus::Active && $this->expires_at->isFuture();
     }
 }
