@@ -16,10 +16,11 @@ class BackendFoundationTest extends TestCase
         $this->assertTrue((bool) config('cors.supports_credentials'));
     }
 
-    public function test_be_e_contract_reports_commerce_ready_but_not_frozen(): void
+    public function test_be_f_contract_is_frozen_but_final_acceptance_is_not_claimed(): void
     {
         $contracts = config('lbb.contracts');
 
+        $this->assertSame('2026-08-09-f14-be-f', config('lbb.api.contract_version'));
         $this->assertSame('implemented', $contracts['system']['status']);
         $this->assertSame('ready', $contracts['domain_cleanup']['status']);
         $this->assertSame('public-v1-ready', $contracts['catalog']['status']);
@@ -28,7 +29,10 @@ class BackendFoundationTest extends TestCase
         $this->assertSame('commerce-operations-ready', $contracts['orders']['status']);
         $this->assertSame('provider-ready-fail-closed', $contracts['payments']['status']);
         $this->assertSame('commerce-operations-ready', $contracts['store_operations']['status']);
-        $this->assertSame('not-ready', $contracts['backend_freeze']['status']);
+        $this->assertSame('ready', $contracts['backend_freeze']['status']);
+        $this->assertSame('f14-be-f', $contracts['backend_freeze']['source']);
         $this->assertFalse((bool) config('lbb.launch.backend_complete'));
+        $this->assertFalse((bool) config('lbb.launch.frontend_integrated'));
+        $this->assertFalse((bool) config('lbb.launch.production_deployed'));
     }
 }

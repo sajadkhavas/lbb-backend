@@ -181,14 +181,17 @@ class CustomerOtpAuthTest extends TestCase
         $this->assertDatabaseCount('otp_challenges', 1);
     }
 
-    public function test_customer_contracts_are_ready_for_commerce_but_backend_freeze_remains_closed(): void
+    public function test_customer_contracts_remain_commerce_ready_after_backend_freeze(): void
     {
         $this->getJson('/api/system/contracts')
             ->assertOk()
             ->assertJsonPath('data.contracts.authentication.status', 'ready-for-commerce')
             ->assertJsonPath('data.contracts.orders.status', 'commerce-operations-ready')
             ->assertJsonPath('data.contracts.payments.status', 'provider-ready-fail-closed')
-            ->assertJsonPath('data.contracts.backend_freeze.status', 'not-ready');
+            ->assertJsonPath('data.contracts.backend_freeze.status', 'ready')
+            ->assertJsonPath('data.launch.backend_complete', false)
+            ->assertJsonPath('data.launch.frontend_integrated', false)
+            ->assertJsonPath('data.launch.production_deployed', false);
     }
 
     private function requestChallenge(string $mobile): array

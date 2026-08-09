@@ -10,7 +10,7 @@ $zarinpalSandbox = $boolean('ZARINPAL_SANDBOX', true);
 return [
     'brand' => ['name' => env('LBB_BRAND_NAME', 'LBB'), 'name_en' => env('LBB_BRAND_NAME_EN', 'LBB')],
     'api' => [
-        'version' => '1', 'contract_version' => '2026-08-08-f14-be-e', 'request_id_header' => 'X-Request-ID',
+        'version' => '1', 'contract_version' => '2026-08-09-f14-be-f', 'request_id_header' => 'X-Request-ID',
         'openapi_path' => base_path('docs/openapi.json'),
     ],
     'frontend_origins' => $frontendOrigins,
@@ -63,7 +63,7 @@ return [
         'catalog' => ['status' => 'public-v1-ready', 'source' => 'f14-be-d'], 'apparel_domain' => ['status' => 'ready', 'source' => 'f14-be-c'],
         'authentication' => ['status' => 'ready-for-commerce'], 'orders' => ['status' => 'commerce-operations-ready'],
         'payments' => ['status' => 'provider-ready-fail-closed'], 'store_operations' => ['status' => 'commerce-operations-ready'],
-        'backend_freeze' => ['status' => 'not-ready', 'target_phase' => 'F14-BE-F'],
+        'backend_freeze' => ['status' => 'ready', 'source' => 'f14-be-f', 'contract_version' => '2026-08-09-f14-be-f'],
     ],
-    'launch' => ['strategy' => 'fail-closed-until-backend-freeze', 'backend_complete' => false, 'frontend_integrated' => false, 'production_deployed' => false],
+    'launch' => ['strategy' => 'backend-contract-frozen-awaiting-final-acceptance', 'backend_complete' => false, 'frontend_integrated' => false, 'production_deployed' => false],
 ];
