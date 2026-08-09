@@ -24,6 +24,7 @@ jobs:
       QUEUE_CONNECTION: sync
       SESSION_DRIVER: array
       SANCTUM_STATEFUL_DOMAINS: localhost:5173,localhost,127.0.0.1
+      FRONTEND_URL: http://localhost:5173
     steps:
       - uses: actions/checkout@v5
         with:
@@ -115,6 +116,8 @@ jobs:
       CACHE_STORE: array
       QUEUE_CONNECTION: sync
       SESSION_DRIVER: array
+      SANCTUM_STATEFUL_DOMAINS: localhost:5173,localhost,127.0.0.1
+      FRONTEND_URL: http://localhost:5173
     steps:
       - uses: actions/checkout@v5
       - uses: shivammathur/setup-php@v2
