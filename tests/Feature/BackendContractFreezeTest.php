@@ -10,7 +10,7 @@ class BackendContractFreezeTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_frozen_openapi_covers_public_catalog_and_commerce_contract(): void
+    public function test_frozen_openapi_covers_auth_public_catalog_and_commerce_contract(): void
     {
         $document = $this->getJson('/api/system/openapi')
             ->assertOk()
@@ -18,10 +18,14 @@ class BackendContractFreezeTest extends TestCase
             ->json();
 
         $this->assertSame('3.1.0', $document['openapi']);
-        $this->assertSame('2026-08-09-f14-be-f', $document['info']['version']);
+        $this->assertSame('2026-08-09-f14-be-f1', $document['info']['version']);
 
         $requiredPaths = [
             '/api/system/openapi',
+            '/api/v1/auth/otp/request',
+            '/api/v1/auth/otp/verify',
+            '/api/v1/auth/me',
+            '/api/v1/auth/logout',
             '/api/v1/categories',
             '/api/v1/categories/{slug}',
             '/api/v1/products',
@@ -58,6 +62,10 @@ class BackendContractFreezeTest extends TestCase
 
         $this->assertSame(
             [['cookieAuth' => []]],
+            $document['paths']['/api/v1/auth/me']['get']['security'],
+        );
+        $this->assertSame(
+            [['cookieAuth' => []]],
             $document['paths']['/api/v1/checkout/commit']['post']['security'],
         );
         $this->assertTrue($this->hasRequiredIdempotencyHeader($document['paths']['/api/v1/checkout/commit']['post']));
@@ -70,17 +78,45 @@ class BackendContractFreezeTest extends TestCase
         $this->assertFalse($document['x-lbb-freeze']['productionDeployed']);
     }
 
-    public function test_backend_contract_stays_frozen_after_backend_acceptance_without_claiming_frontend_or_deployment(): void
+    public function test_versioned_auth_surface_establishes_session_without_using_legacy_routes(): void
+    {
+        $this->getJson('/api/v1/auth/me')->assertUnauthorized();
+
+        config()->set('lbb.otp.provider', 'testing');
+        config()->set('lbb.otp.expose_test_code', true);
+
+        $challenge = $this->postJson('/api/v1/auth/otp/request', ['mobile' => '09121234567'])
+            ->assertAccepted()
+            ->assertJsonPath('success', true)
+            ->json('data');
+
+        $this->postJson('/api/v1/auth/otp/verify', [
+            'mobile' => '09121234567',
+            'challengeId' => $challenge['challengeId'],
+            'code' => $challenge['testCode'],
+        ])->assertOk()->assertJsonPath('data.user.mobileVerified', true);
+
+        $this->getJson('/api/v1/auth/me')
+            ->assertOk()
+            ->assertJsonPath('data.user.mobile', '09121234567');
+
+        $this->postJson('/api/v1/auth/logout')->assertOk();
+        $this->getJson('/api/v1/auth/me')->assertUnauthorized();
+    }
+
+    public function test_backend_contract_stays_frozen_after_auth_amendment_without_claiming_frontend_or_deployment(): void
     {
         $this->getJson('/api/system/contracts')
             ->assertOk()
-            ->assertJsonPath('data.contractVersion', '2026-08-09-f14-be-f')
+            ->assertJsonPath('data.contractVersion', '2026-08-09-f14-be-f1')
             ->assertJsonPath('data.contracts.domain_cleanup.status', 'ready')
             ->assertJsonPath('data.contracts.apparel_domain.status', 'ready')
             ->assertJsonPath('data.contracts.catalog.status', 'public-v1-ready')
+            ->assertJsonPath('data.contracts.authentication.status', 'public-v1-ready')
+            ->assertJsonPath('data.contracts.authentication.source', 'f14-be-f1')
             ->assertJsonPath('data.contracts.orders.status', 'commerce-operations-ready')
             ->assertJsonPath('data.contracts.backend_freeze.status', 'ready')
-            ->assertJsonPath('data.contracts.backend_freeze.source', 'f14-be-f')
+            ->assertJsonPath('data.contracts.backend_freeze.source', 'f14-be-f1')
             ->assertJsonPath('data.launch.backend_complete', true)
             ->assertJsonPath('data.launch.frontend_integrated', false)
             ->assertJsonPath('data.launch.production_deployed', false);
