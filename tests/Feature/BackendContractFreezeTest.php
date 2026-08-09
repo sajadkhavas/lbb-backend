@@ -70,7 +70,7 @@ class BackendContractFreezeTest extends TestCase
         $this->assertFalse($document['x-lbb-freeze']['productionDeployed']);
     }
 
-    public function test_backend_contract_is_frozen_but_final_acceptance_and_deployment_are_not_claimed(): void
+    public function test_backend_contract_stays_frozen_after_backend_acceptance_without_claiming_frontend_or_deployment(): void
     {
         $this->getJson('/api/system/contracts')
             ->assertOk()
@@ -81,7 +81,7 @@ class BackendContractFreezeTest extends TestCase
             ->assertJsonPath('data.contracts.orders.status', 'commerce-operations-ready')
             ->assertJsonPath('data.contracts.backend_freeze.status', 'ready')
             ->assertJsonPath('data.contracts.backend_freeze.source', 'f14-be-f')
-            ->assertJsonPath('data.launch.backend_complete', false)
+            ->assertJsonPath('data.launch.backend_complete', true)
             ->assertJsonPath('data.launch.frontend_integrated', false)
             ->assertJsonPath('data.launch.production_deployed', false);
 

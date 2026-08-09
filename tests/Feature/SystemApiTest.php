@@ -18,17 +18,17 @@ class SystemApiTest extends TestCase
             ->assertJsonPath('meta.contractVersion', '2026-08-09-f14-be-f');
     }
 
-    public function test_meta_reports_frozen_contract_without_claiming_final_acceptance(): void
+    public function test_meta_reports_accepted_backend_without_claiming_frontend_or_deployment(): void
     {
         $this->getJson('/api/system/meta')
             ->assertOk()
             ->assertJsonPath('data.brand.nameEn', 'LBB')
             ->assertJsonPath('data.contractVersion', '2026-08-09-f14-be-f')
-            ->assertJsonPath('data.backendComplete', false)
+            ->assertJsonPath('data.backendComplete', true)
             ->assertJsonPath('data.openApiUrl', '/api/system/openapi');
     }
 
-    public function test_contract_endpoint_reports_backend_freeze_without_claiming_frontend_or_deployment(): void
+    public function test_contract_endpoint_reports_accepted_backend_and_preserves_external_boundaries(): void
     {
         $this->getJson('/api/system/contracts')
             ->assertOk()
@@ -42,7 +42,7 @@ class SystemApiTest extends TestCase
             ->assertJsonPath('data.contracts.store_operations.status', 'commerce-operations-ready')
             ->assertJsonPath('data.contracts.backend_freeze.status', 'ready')
             ->assertJsonPath('data.contracts.backend_freeze.source', 'f14-be-f')
-            ->assertJsonPath('data.launch.backend_complete', false)
+            ->assertJsonPath('data.launch.backend_complete', true)
             ->assertJsonPath('data.launch.frontend_integrated', false)
             ->assertJsonPath('data.launch.production_deployed', false);
     }

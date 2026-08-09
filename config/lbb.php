@@ -65,5 +65,5 @@ return [
         'payments' => ['status' => 'provider-ready-fail-closed'], 'store_operations' => ['status' => 'commerce-operations-ready'],
         'backend_freeze' => ['status' => 'ready', 'source' => 'f14-be-f', 'contract_version' => '2026-08-09-f14-be-f'],
     ],
-    'launch' => ['strategy' => 'backend-contract-frozen-awaiting-final-acceptance', 'backend_complete' => false, 'frontend_integrated' => false, 'production_deployed' => false],
+    'launch' => ['strategy' => 'backend-accepted-awaiting-frontend-integration-and-deployment', 'backend_complete' => true, 'frontend_integrated' => false, 'production_deployed' => false],
 ];
