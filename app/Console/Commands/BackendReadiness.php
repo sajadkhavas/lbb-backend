@@ -87,6 +87,7 @@ class BackendReadiness extends Command
                 '/api/v1/auth/logout',
                 '/api/v1/products',
                 '/api/v1/products/{slug}',
+                '/api/v1/delivery/options',
                 '/api/v1/cart/validate',
                 '/api/v1/checkout/quote',
                 '/api/v1/checkout/commit',
