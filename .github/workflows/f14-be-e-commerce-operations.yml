@@ -66,8 +66,20 @@ jobs:
           escaped = summary.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
           print(f'::notice title=Full backend test result::{escaped}')
           if any(token in summary.lower() for token in ('failed', 'skipped')):
-              tail = '\n'.join(lines[-220:]).replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
-              print(f'::error title=Full backend suite diagnostic::{tail}')
+              needles = ('FAIL', 'FAILED', 'Error', 'Exception', 'SQLSTATE', 'Failed asserting', 'Expected response', 'Response status code', 'Undefined', 'TypeError')
+              selected = []
+              for i, line in enumerate(lines):
+                  if any(token in line for token in needles):
+                      start = max(0, i - 2)
+                      end = min(len(lines), i + 5)
+                      selected.extend(lines[start:end])
+              compact = []
+              for line in selected:
+                  if not compact or compact[-1] != line:
+                      compact.append(line)
+              message = '\n'.join(compact[:120]) or '\n'.join(lines[-80:])
+              message = message[:10000].replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+              print(f'::error title=Full backend suite diagnostic::{message}')
           PY
           if [ "$status" -ne 0 ]; then
             exit "$status"
@@ -163,6 +175,30 @@ jobs:
             exit "$status"
           fi
       - name: Commerce tests on MySQL
-        run: php artisan test tests/Feature/CommerceOperationsTest.php tests/Feature/CommerceFilamentTest.php
+        shell: bash
+        run: |
+          set +e
+          php artisan test tests/Feature/CommerceOperationsTest.php tests/Feature/CommerceFilamentTest.php 2>&1 | tee /tmp/f14-be-e-mysql-tests.txt
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -ne 0 ]; then
+            python3 - <<'PY'
+          from pathlib import Path
+          lines = Path('/tmp/f14-be-e-mysql-tests.txt').read_text(errors='replace').splitlines()
+          needles = ('FAIL', 'FAILED', 'Error', 'Exception', 'SQLSTATE', 'Failed asserting', 'Expected response', 'Response status code', 'Undefined', 'TypeError')
+          selected = []
+          for i, line in enumerate(lines):
+              if any(token in line for token in needles):
+                  selected.extend(lines[max(0, i - 2):min(len(lines), i + 5)])
+          compact = []
+          for line in selected:
+              if not compact or compact[-1] != line:
+                  compact.append(line)
+          message = ('\n'.join(compact[:120]) or '\n'.join(lines[-80:]))[:10000]
+          message = message.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          print(f'::error title=MySQL commerce test diagnostic::{message}')
+          PY
+            exit "$status"
+          fi
       - name: Real two-process oversell race
         run: php tests/Support/commerce_race_harness.php
