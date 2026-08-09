@@ -51,8 +51,12 @@ class EndToEndAcceptanceTest extends TestCase
         ]);
 
         $this->getJson('/api/system/contracts')->assertOk()
-            ->assertJsonPath('meta.contractVersion', '2026-08-07-f14-be-b2')
-            ->assertJsonPath('data.contracts.catalog.status', 'neutral-baseline-ready');
+            ->assertJsonPath('meta.contractVersion', '2026-08-09-f14-be-f')
+            ->assertJsonPath('data.contracts.catalog.status', 'public-v1-ready')
+            ->assertJsonPath('data.contracts.backend_freeze.status', 'ready')
+            ->assertJsonPath('data.launch.backend_complete', true)
+            ->assertJsonPath('data.launch.frontend_integrated', false)
+            ->assertJsonPath('data.launch.production_deployed', false);
 
         $payload = [
             'customer' => [

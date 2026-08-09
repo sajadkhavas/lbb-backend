@@ -11,29 +11,37 @@ class BackendReadiness extends Command
 {
     protected $signature = 'backend:readiness {--json : Emit machine-readable JSON}';
 
-    protected $description = 'Validate the current LBB backend contract and fail closed until apparel freeze';
+    protected $description = 'Validate the frozen LBB backend contract and infrastructure readiness';
 
     public function handle(): int
     {
         $checks = [
             'contract_version' => $this->check(
-                config('lbb.api.contract_version') === '2026-08-07-f14-be-b2',
+                config('lbb.api.contract_version') === '2026-08-09-f14-be-f',
                 (string) config('lbb.api.contract_version'),
             ),
             'domain_cleanup' => $this->check(
                 config('lbb.contracts.domain_cleanup.status') === 'ready',
                 (string) config('lbb.contracts.domain_cleanup.status'),
             ),
-            'openapi' => $this->openApiCheck(),
-            'database' => $this->databaseCheck(),
             'apparel_domain' => $this->check(
                 config('lbb.contracts.apparel_domain.status') === 'ready',
                 (string) config('lbb.contracts.apparel_domain.status'),
+            ),
+            'catalog' => $this->check(
+                config('lbb.contracts.catalog.status') === 'public-v1-ready',
+                (string) config('lbb.contracts.catalog.status'),
+            ),
+            'commerce_operations' => $this->check(
+                config('lbb.contracts.orders.status') === 'commerce-operations-ready',
+                (string) config('lbb.contracts.orders.status'),
             ),
             'backend_freeze' => $this->check(
                 config('lbb.contracts.backend_freeze.status') === 'ready',
                 (string) config('lbb.contracts.backend_freeze.status'),
             ),
+            'openapi' => $this->openApiCheck(),
+            'database' => $this->databaseCheck(),
         ];
 
         $ready = collect($checks)->every(fn (array $check): bool => $check['ok']);
@@ -64,10 +72,24 @@ class BackendReadiness extends Command
         try {
             $path = (string) config('lbb.api.openapi_path');
             $document = json_decode(File::get($path), true, flags: JSON_THROW_ON_ERROR);
+            $requiredPaths = [
+                '/api/system/openapi',
+                '/api/v1/products',
+                '/api/v1/products/{slug}',
+                '/api/v1/cart/validate',
+                '/api/v1/checkout/quote',
+                '/api/v1/checkout/commit',
+                '/api/v1/account/orders',
+                '/api/v1/orders/{orderId}/payments',
+                '/api/v1/payments/verify',
+                '/api/v1/orders/{orderId}/returns',
+                '/api/v1/orders/{orderId}/exchanges',
+                '/api/v1/refunds',
+            ];
+            $paths = array_keys($document['paths'] ?? []);
             $valid = ($document['openapi'] ?? null) === '3.1.0'
                 && ($document['info']['version'] ?? null) === config('lbb.api.contract_version')
-                && isset($document['paths']['/api/system/openapi'])
-                && ! isset($document['paths']['/api/catalog/products']);
+                && collect($requiredPaths)->every(fn (string $required): bool => in_array($required, $paths, true));
 
             return $this->check($valid, $path);
         } catch (Throwable $exception) {
