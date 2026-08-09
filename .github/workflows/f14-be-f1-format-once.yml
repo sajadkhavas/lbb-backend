@@ -1,0 +1,41 @@
+name: F14 BE-F1 Format Once
+
+on:
+  push:
+    branches:
+      - phase/f14-be-f1-versioned-auth-contract
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: phase/f14-be-f1-versioned-auth-contract
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Format changed PHP only
+        shell: bash
+        run: |
+          BASE=a3370c7711c6c3dd05aa2fbfb86dacecb0451cf3
+          mapfile -t changed_php < <(git diff --name-only "$BASE" HEAD -- '*.php')
+          if [ "${#changed_php[@]}" -gt 0 ]; then
+            vendor/bin/pint "${changed_php[@]}"
+          fi
+          if git diff --quiet; then
+            echo 'No formatting changes required.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- '*.php'
+          git commit -m 'F14 BE-F1: apply Pint formatting'
+          git push origin HEAD:phase/f14-be-f1-versioned-auth-contract
