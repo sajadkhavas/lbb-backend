@@ -73,9 +73,10 @@ class SystemController extends Controller
             'launch' => config('lbb.launch', []),
             'policies' => config('lbb.policies', []),
             'notes' => [
-                'قرارداد کاتالوگ پوشاک هنوز در حال مهاجرت است.',
-                'خرید، پرداخت و پیامک تا پایان ممیزی و انجماد قرارداد LBB غیرفعال می‌مانند.',
-                'این پاسخ به معنی آمادگی انتشار production نیست.',
+                'قرارداد نسخه‌دار /api/v1 در F14-BE-F منجمد شده است.',
+                'قیمت، موجودی، سفارش و وضعیت پرداخت در بک‌اند authoritative هستند.',
+                'پرداخت، بازپرداخت و پیامک بدون Provider و تنظیمات واقعی fail-closed باقی می‌مانند.',
+                'frontend integration و production deployment هنوز در این وضعیت ادعا نمی‌شوند.',
             ],
         ]);
     }
