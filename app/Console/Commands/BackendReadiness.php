@@ -15,10 +15,13 @@ class BackendReadiness extends Command
 
     public function handle(): int
     {
+        $contractVersion = (string) config('lbb.api.contract_version');
+        $freezeVersion = (string) config('lbb.contracts.backend_freeze.contract_version');
+
         $checks = [
             'contract_version' => $this->check(
-                config('lbb.api.contract_version') === '2026-08-09-f14-be-f',
-                (string) config('lbb.api.contract_version'),
+                $contractVersion !== '' && $contractVersion === $freezeVersion,
+                $contractVersion,
             ),
             'domain_cleanup' => $this->check(
                 config('lbb.contracts.domain_cleanup.status') === 'ready',
@@ -31,6 +34,10 @@ class BackendReadiness extends Command
             'catalog' => $this->check(
                 config('lbb.contracts.catalog.status') === 'public-v1-ready',
                 (string) config('lbb.contracts.catalog.status'),
+            ),
+            'authentication' => $this->check(
+                config('lbb.contracts.authentication.status') === 'public-v1-ready',
+                (string) config('lbb.contracts.authentication.status'),
             ),
             'commerce_operations' => $this->check(
                 config('lbb.contracts.orders.status') === 'commerce-operations-ready',
@@ -47,7 +54,7 @@ class BackendReadiness extends Command
         $ready = collect($checks)->every(fn (array $check): bool => $check['ok']);
         $payload = [
             'ready' => $ready,
-            'contractVersion' => config('lbb.api.contract_version'),
+            'contractVersion' => $contractVersion,
             'checks' => $checks,
         ];
 
@@ -74,6 +81,10 @@ class BackendReadiness extends Command
             $document = json_decode(File::get($path), true, flags: JSON_THROW_ON_ERROR);
             $requiredPaths = [
                 '/api/system/openapi',
+                '/api/v1/auth/otp/request',
+                '/api/v1/auth/otp/verify',
+                '/api/v1/auth/me',
+                '/api/v1/auth/logout',
                 '/api/v1/products',
                 '/api/v1/products/{slug}',
                 '/api/v1/cart/validate',
