@@ -22,7 +22,7 @@ class BackendContractFreezeTest extends TestCase
         ]);
     }
 
-    public function test_frozen_openapi_covers_auth_public_catalog_and_commerce_contract(): void
+    public function test_frozen_openapi_covers_auth_public_catalog_delivery_and_commerce_contract(): void
     {
         $document = $this->getJson('/api/system/openapi')
             ->assertOk()
@@ -49,6 +49,7 @@ class BackendContractFreezeTest extends TestCase
             '/api/v1/colors',
             '/api/v1/sizes',
             '/api/v1/catalog/facets',
+            '/api/v1/delivery/options',
             '/api/v1/search',
             '/api/v1/cart/validate',
             '/api/v1/checkout/quote',
@@ -82,6 +83,23 @@ class BackendContractFreezeTest extends TestCase
         $this->assertSame('fail-closed', $document['x-lbb-freeze']['paymentWithoutProvider']);
         $this->assertFalse($document['x-lbb-freeze']['frontendIntegrated']);
         $this->assertFalse($document['x-lbb-freeze']['productionDeployed']);
+    }
+
+    public function test_versioned_delivery_options_expose_server_configuration_without_legacy_route_dependency(): void
+    {
+        $this->getJson('/api/v1/delivery/options?province=تهران&city=تهران&subtotalToman=1000000')
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonStructure([
+                'data' => [
+                    'zone',
+                    'methods' => [
+                        '*' => ['method', 'label', 'enabled', 'feeToman'],
+                    ],
+                ],
+                'meta' => ['apiVersion', 'contractVersion'],
+            ])
+            ->assertJsonPath('meta.contractVersion', '2026-08-09-f14-be-f1');
     }
 
     public function test_versioned_auth_surface_establishes_session_without_using_legacy_routes(): void
