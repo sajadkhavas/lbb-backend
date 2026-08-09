@@ -16,7 +16,7 @@ class BackendFoundationTest extends TestCase
         $this->assertTrue((bool) config('cors.supports_credentials'));
     }
 
-    public function test_be_f_contract_is_frozen_but_final_acceptance_is_not_claimed(): void
+    public function test_be_g_accepts_backend_without_changing_frozen_contract_or_external_boundaries(): void
     {
         $contracts = config('lbb.contracts');
 
@@ -31,7 +31,7 @@ class BackendFoundationTest extends TestCase
         $this->assertSame('commerce-operations-ready', $contracts['store_operations']['status']);
         $this->assertSame('ready', $contracts['backend_freeze']['status']);
         $this->assertSame('f14-be-f', $contracts['backend_freeze']['source']);
-        $this->assertFalse((bool) config('lbb.launch.backend_complete'));
+        $this->assertTrue((bool) config('lbb.launch.backend_complete'));
         $this->assertFalse((bool) config('lbb.launch.frontend_integrated'));
         $this->assertFalse((bool) config('lbb.launch.production_deployed'));
     }
