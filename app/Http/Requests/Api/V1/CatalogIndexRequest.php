@@ -19,10 +19,10 @@ class CatalogIndexRequest extends FormRequest
 
         return [
             'q' => ['nullable', 'string', 'max:120'],
-            'category' => ['nullable', 'string', 'max:200', 'regex:/^[\pL\pN_-]+$/u'],
-            'collection' => ['nullable', 'string', 'max:200', 'regex:/^[\pL\pN_-]+$/u'],
-            'color' => ['nullable', 'string', 'max:140', 'regex:/^[\pL\pN_-]+$/u'],
-            'size' => ['nullable', 'string', 'max:40'],
+            'category' => ['nullable', 'string', 'max:400', 'regex:/^[\pL\pN_,-]+$/u'],
+            'collection' => ['nullable', 'string', 'max:400', 'regex:/^[\pL\pN_,-]+$/u'],
+            'color' => ['nullable', 'string', 'max:400', 'regex:/^[\pL\pN_,-]+$/u'],
+            'size' => ['nullable', 'string', 'max:200', 'regex:/^[\pL\pN_. ,-]+$/u'],
             'availability' => ['nullable', Rule::in(PublicCatalogQuery::AVAILABILITY)],
             'min_price' => ['nullable', 'integer', 'min:0'],
             'max_price' => ['nullable', 'integer', 'min:0', 'gte:min_price'],
