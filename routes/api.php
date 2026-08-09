@@ -72,6 +72,15 @@ Route::middleware(['auth:customer', 'customer.active'])->group(function () {
 });
 
 Route::prefix('v1')->name('api.v1.')->group(function (): void {
+    Route::prefix('auth')->name('auth.')->group(function (): void {
+        Route::post('/otp/request', [OtpAuthController::class, 'requestOtp'])->middleware('throttle:otp-request')->name('otp.request');
+        Route::post('/otp/verify', [OtpAuthController::class, 'verify'])->middleware('throttle:otp-verify')->name('otp.verify');
+        Route::middleware(['auth:customer', 'customer.active', 'throttle:60,1'])->group(function (): void {
+            Route::get('/me', [OtpAuthController::class, 'me'])->name('me');
+            Route::post('/logout', [OtpAuthController::class, 'logout'])->name('logout');
+        });
+    });
+
     Route::middleware('throttle:public-catalog')->group(function (): void {
         Route::get('/categories', [PublicCatalogController::class, 'categories'])->name('categories.index');
         Route::get('/categories/{slug}', [PublicCatalogController::class, 'category'])->name('categories.show');
