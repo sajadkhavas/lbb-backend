@@ -30,6 +30,7 @@ yarn-error.log
 !/storage/framework/views/.gitignore
 /bootstrap/cache/*
 !/bootstrap/cache/.gitignore
+/database/*.sqlite
 .DS_Store
 Thumbs.db
 
