@@ -2,8 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Enums\DeliveryMethod;
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Models\Customer;
+use App\Models\Order;
 use App\Models\PushSubscription;
+use App\Services\Notifications\NotificationOutboxService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -70,6 +75,56 @@ class WebPushSubscriptionTest extends TestCase
             ->assertJsonPath('data.activeCount', 0);
 
         $this->assertNotNull($subscription->fresh()->revoked_at);
+    }
+
+    public function test_order_notification_outbox_queues_web_push_for_each_active_customer_subscription(): void
+    {
+        $customer = $this->customer('09123456782');
+        $subscription = $customer->pushSubscriptions()->create([
+            'endpoint_hash' => PushSubscription::endpointHash('https://push.example.test/subscriptions/order-device'),
+            'endpoint' => 'https://push.example.test/subscriptions/order-device',
+            'p256dh' => str_repeat('p', 88),
+            'auth_token' => str_repeat('a', 24),
+            'content_encoding' => 'aes128gcm',
+            'last_seen_at' => now(),
+        ]);
+        $order = Order::query()->create([
+            'customer_id' => $customer->getKey(),
+            'order_number' => 'LBB-PUSH-0001',
+            'idempotency_key' => 'push-order-test-0001',
+            'request_hash' => hash('sha256', 'push-order-test-0001'),
+            'status' => OrderStatus::Paid,
+            'payment_status' => PaymentStatus::Paid,
+            'delivery_method' => DeliveryMethod::Pickup,
+            'subtotal_toman' => 100_000,
+            'delivery_fee_toman' => 0,
+            'packaging_fee_toman' => 0,
+            'discount_total_toman' => 0,
+            'grand_total_toman' => 100_000,
+            'item_count' => 1,
+            'customer_name' => 'مشتری پوش',
+            'customer_mobile' => $customer->mobile,
+            'placed_at' => now(),
+            'paid_at' => now(),
+        ]);
+
+        app(NotificationOutboxService::class)->queueOrder($order, 'order.paid');
+
+        $this->assertDatabaseHas('notification_outboxes', [
+            'customer_id' => $customer->getKey(),
+            'order_id' => $order->getKey(),
+            'channel' => 'sms',
+            'template_key' => 'order.paid',
+        ]);
+        $this->assertDatabaseHas('notification_outboxes', [
+            'customer_id' => $customer->getKey(),
+            'order_id' => $order->getKey(),
+            'channel' => 'web_push',
+            'destination' => $subscription->public_id,
+            'template_key' => 'order.paid',
+            'provider' => 'web-push',
+        ]);
+        $this->assertDatabaseCount('notification_outboxes', 2);
     }
 
     public function test_subscription_mutations_require_customer_authentication(): void
