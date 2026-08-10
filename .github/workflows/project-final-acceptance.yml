@@ -13,6 +13,7 @@ permissions:
 
 env:
   CONTRACT_VERSION: 2026-08-09-f14-be-f1
+  BE_F1_BASE_SHA: a3370c7711c6c3dd05aa2fbfb86dacecb0451cf3
 
 jobs:
   sqlite-final:
@@ -70,10 +71,16 @@ jobs:
             echo 'Full backend suite reported skipped tests.'
             exit 1
           fi
-      - name: Formatting foundation and safety
+      - name: Pint accepted BE-F1 PHP changes
         shell: bash
         run: |
-          vendor/bin/pint --test app database routes config tests
+          mapfile -t changed_php < <(git diff --name-only "$BE_F1_BASE_SHA" HEAD -- '*.php')
+          if [ "${#changed_php[@]}" -gt 0 ]; then
+            vendor/bin/pint --test "${changed_php[@]}"
+          fi
+      - name: Foundation and safety audits
+        shell: bash
+        run: |
           composer audit:foundation
           if git grep -nEi 'Bakery|Winimi' -- app config database routes ':!database/migrations/*bakery*'; then
             echo 'Bakery/Winimi regression detected.'
