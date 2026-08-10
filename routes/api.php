@@ -141,6 +141,5 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
 
         Route::get('/refunds', [CommerceRefundController::class, 'index'])->middleware('throttle:commerce-order')->name('refunds.index');
         Route::get('/refunds/{refundId}', [CommerceRefundController::class, 'show'])->middleware('throttle:commerce-order')->name('refunds.show');
-        Route::post('/orders/{orderId}/refunds', [CommerceRefundController::class, 'store'])->middleware('throttle:commerce-return')->name('refunds.store');
     });
 });
