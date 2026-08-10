@@ -15,7 +15,7 @@ class SystemApiTest extends TestCase
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.status', 'ok')
             ->assertJsonPath('data.service', 'lbb-backend')
-            ->assertJsonPath('meta.contractVersion', '2026-08-09-f14-be-f');
+            ->assertJsonPath('meta.contractVersion', '2026-08-09-f14-be-f1');
     }
 
     public function test_meta_reports_accepted_backend_without_claiming_frontend_or_deployment(): void
@@ -23,7 +23,7 @@ class SystemApiTest extends TestCase
         $this->getJson('/api/system/meta')
             ->assertOk()
             ->assertJsonPath('data.brand.nameEn', 'LBB')
-            ->assertJsonPath('data.contractVersion', '2026-08-09-f14-be-f')
+            ->assertJsonPath('data.contractVersion', '2026-08-09-f14-be-f1')
             ->assertJsonPath('data.backendComplete', true)
             ->assertJsonPath('data.openApiUrl', '/api/system/openapi');
     }
@@ -36,12 +36,14 @@ class SystemApiTest extends TestCase
             ->assertJsonPath('data.contracts.domain_cleanup.status', 'ready')
             ->assertJsonPath('data.contracts.catalog.status', 'public-v1-ready')
             ->assertJsonPath('data.contracts.apparel_domain.status', 'ready')
-            ->assertJsonPath('data.contracts.authentication.status', 'ready-for-commerce')
+            ->assertJsonPath('data.contracts.authentication.status', 'public-v1-ready')
+            ->assertJsonPath('data.contracts.authentication.source', 'f14-be-f1')
             ->assertJsonPath('data.contracts.orders.status', 'commerce-operations-ready')
             ->assertJsonPath('data.contracts.payments.status', 'provider-ready-fail-closed')
             ->assertJsonPath('data.contracts.store_operations.status', 'commerce-operations-ready')
             ->assertJsonPath('data.contracts.backend_freeze.status', 'ready')
-            ->assertJsonPath('data.contracts.backend_freeze.source', 'f14-be-f')
+            ->assertJsonPath('data.contracts.backend_freeze.source', 'f14-be-f1')
+            ->assertJsonPath('data.contracts.backend_freeze.contract_version', '2026-08-09-f14-be-f1')
             ->assertJsonPath('data.launch.backend_complete', true)
             ->assertJsonPath('data.launch.frontend_integrated', false)
             ->assertJsonPath('data.launch.production_deployed', false);
@@ -53,6 +55,6 @@ class SystemApiTest extends TestCase
             ->assertNotFound()
             ->assertJsonPath('success', false)
             ->assertJsonPath('code', 'resource_not_found')
-            ->assertJsonPath('meta.contractVersion', '2026-08-09-f14-be-f');
+            ->assertJsonPath('meta.contractVersion', '2026-08-09-f14-be-f1');
     }
 }

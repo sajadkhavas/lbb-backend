@@ -168,34 +168,38 @@ final class PublicCatalogQuery
 
     private function applyFilters(Builder $query, array $filters): Builder
     {
-        if (filled($filters['category'] ?? null)) {
-            $query->whereHas('category', fn (Builder $category): Builder => $category->where('slug', $filters['category']));
+        $categories = $this->csv($filters['category'] ?? null);
+        if ($categories !== []) {
+            $query->whereHas('category', fn (Builder $category): Builder => $category->whereIn('slug', $categories));
         }
 
-        if (filled($filters['collection'] ?? null)) {
+        $collections = $this->csv($filters['collection'] ?? null);
+        if ($collections !== []) {
             $query
                 ->whereHas('collections', fn (Builder $collection): Builder => $collection
                     ->published()
-                    ->where('slug', $filters['collection']))
+                    ->whereIn('slug', $collections))
                 ->whereHas('evidences', static fn (Builder $evidence): Builder => $evidence
                     ->where('fact_key', ProductFact::CollectionMembership->value)
                     ->where('state', EvidenceState::Verified->value));
         }
 
-        if (filled($filters['color'] ?? null)) {
+        $colors = $this->csv($filters['color'] ?? null);
+        if ($colors !== []) {
             $query->whereHas('activeVariants', fn (Builder $variants): Builder => $variants
                 ->sellable()
                 ->whereHas('color', fn (Builder $color): Builder => $color
                     ->active()
-                    ->where('slug', $filters['color'])));
+                    ->whereIn('slug', $colors)));
         }
 
-        if (filled($filters['size'] ?? null)) {
+        $sizes = $this->csv($filters['size'] ?? null);
+        if ($sizes !== []) {
             $query->whereHas('activeVariants', fn (Builder $variants): Builder => $variants
                 ->sellable()
                 ->whereHas('size', fn (Builder $size): Builder => $size
                     ->active()
-                    ->where('code', $filters['size'])));
+                    ->whereIn('code', $sizes)));
         }
 
         if (filled($filters['q'] ?? null)) {
@@ -269,5 +273,18 @@ final class PublicCatalogQuery
             'stock_quantity - COALESCE((SELECT SUM(quantity) FROM inventory_reservations WHERE inventory_reservations.variant_id = product_variants.id AND inventory_reservations.status = ? AND inventory_reservations.expires_at > ?), 0) '.$operator.' 0',
             [InventoryReservationStatus::Active->value, now()],
         );
+    }
+
+    /** @return list<string> */
+    private function csv(mixed $value): array
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter(array_map(
+            static fn (string $part): string => trim($part),
+            explode(',', $value),
+        ), static fn (string $part): bool => $part !== '')));
     }
 }
