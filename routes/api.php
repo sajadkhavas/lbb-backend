@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\InquiryController;
 use App\Http\Controllers\Api\OtpAuthController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PublicCatalogController;
+use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\StoreContentController;
 use App\Http\Controllers\Api\SystemController;
@@ -49,6 +50,27 @@ Route::prefix('auth')->group(function () {
     Route::middleware(['auth:customer', 'customer.active', 'throttle:60,1'])->group(function () {
         Route::get('me', [OtpAuthController::class, 'me']);
         Route::post('logout', [OtpAuthController::class, 'logout']);
+    });
+});
+
+Route::prefix('web-push')->name('web-push.')->group(function (): void {
+    Route::get('/config', [PushSubscriptionController::class, 'configuration'])
+        ->middleware('throttle:60,1')
+        ->name('config');
+
+    Route::middleware(['auth:customer', 'customer.active'])->group(function (): void {
+        Route::get('/subscriptions', [PushSubscriptionController::class, 'index'])
+            ->middleware('throttle:60,1')
+            ->name('subscriptions.index');
+        Route::post('/subscriptions', [PushSubscriptionController::class, 'store'])
+            ->middleware('throttle:30,1')
+            ->name('subscriptions.store');
+        Route::delete('/subscriptions', [PushSubscriptionController::class, 'destroy'])
+            ->middleware('throttle:30,1')
+            ->name('subscriptions.destroy');
+        Route::post('/test', [PushSubscriptionController::class, 'test'])
+            ->middleware('throttle:3,1')
+            ->name('test');
     });
 });
 
@@ -119,5 +141,6 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
 
         Route::get('/refunds', [CommerceRefundController::class, 'index'])->middleware('throttle:commerce-order')->name('refunds.index');
         Route::get('/refunds/{refundId}', [CommerceRefundController::class, 'show'])->middleware('throttle:commerce-order')->name('refunds.show');
+        Route::post('/orders/{orderId}/refunds', [CommerceRefundController::class, 'store'])->middleware('throttle:commerce-return')->name('refunds.store');
     });
 });
