@@ -1,0 +1,69 @@
+name: Web Push Bootstrap
+
+on:
+  push:
+    branches:
+      - phase/web-push-notifications
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: database/database.sqlite
+      CACHE_STORE: array
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: array
+      SANCTUM_STATEFUL_DOMAINS: localhost:5173,localhost,127.0.0.1
+      FRONTEND_URL: http://localhost:5173
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: phase/web-push-notifications
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, curl, openssl, bcmath, pdo_sqlite, sqlite3, fileinfo
+          coverage: none
+      - name: Install and lock Web Push
+        run: composer require minishlink/web-push:^10.1 --no-interaction --with-all-dependencies
+      - name: Remove accidental out-of-scope refund route if present
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('routes/api.php')
+          text = path.read_text()
+          line = "        Route::post('/orders/{orderId}/refunds', [CommerceRefundController::class, 'store'])->middleware('throttle:commerce-return')->name('refunds.store');\n"
+          path.write_text(text.replace(line, ''))
+          PY
+      - name: Format changed Push PHP
+        run: vendor/bin/pint app/Http/Controllers/Api/PushSubscriptionController.php app/Models/PushSubscription.php app/Models/Customer.php app/Enums/NotificationChannel.php app/Services/Notifications/WebPushService.php app/Services/Notifications/NotificationOutboxService.php database/migrations/2026_08_10_000001_create_push_subscriptions_table.php tests/Feature/WebPushSubscriptionTest.php routes/api.php config/lbb.php
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          touch database/database.sqlite
+          php artisan key:generate
+          php artisan migrate:fresh --force
+      - name: Validate Push implementation
+        run: |
+          composer validate --strict --no-check-lock
+          find app database tests routes config -name '*.php' -print0 | xargs -0 -n1 php -l
+          php artisan route:list --path=api/web-push
+          php artisan test tests/Feature/WebPushSubscriptionTest.php tests/Feature/BackendContractFreezeTest.php tests/Feature/BackendFinalAcceptanceTest.php
+      - name: Commit lock and formatting
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add composer.json composer.lock app database tests routes config
+          if git diff --cached --quiet; then
+            echo 'No bootstrap changes to commit.'
+            exit 0
+          fi
+          git commit -m 'build(push): lock web push runtime dependency'
+          git push origin HEAD:phase/web-push-notifications
