@@ -110,13 +110,13 @@ class WebPushSubscriptionTest extends TestCase
 
         app(NotificationOutboxService::class)->queueOrder($order, 'order.paid');
 
-        $this->assertDatabaseHas('notification_outboxes', [
+        $this->assertDatabaseHas('notification_outbox', [
             'customer_id' => $customer->getKey(),
             'order_id' => $order->getKey(),
             'channel' => 'sms',
             'template_key' => 'order.paid',
         ]);
-        $this->assertDatabaseHas('notification_outboxes', [
+        $this->assertDatabaseHas('notification_outbox', [
             'customer_id' => $customer->getKey(),
             'order_id' => $order->getKey(),
             'channel' => 'web_push',
@@ -124,7 +124,7 @@ class WebPushSubscriptionTest extends TestCase
             'template_key' => 'order.paid',
             'provider' => 'web-push',
         ]);
-        $this->assertDatabaseCount('notification_outboxes', 2);
+        $this->assertDatabaseCount('notification_outbox', 2);
     }
 
     public function test_subscription_mutations_require_customer_authentication(): void
