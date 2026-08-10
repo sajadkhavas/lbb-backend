@@ -72,7 +72,8 @@ final class WebPushService
             'TTL' => max(60, (int) config('lbb.web_push.ttl_seconds', 21600)),
             'urgency' => (string) config('lbb.web_push.urgency', 'normal'),
             'contentType' => 'application/json',
-        ], max(2, (int) config('lbb.web_push.timeout_seconds', 8)));
+        ]);
+        $webPush->setReuseVAPIDHeaders(true);
 
         $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
         $report = $webPush->sendOneNotification($subscription, $json);
