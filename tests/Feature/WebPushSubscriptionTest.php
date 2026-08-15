@@ -6,6 +6,7 @@ use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Customer;
+use App\Models\NotificationOutbox;
 use App\Models\Order;
 use App\Models\PushSubscription;
 use App\Services\Notifications\NotificationOutboxService;
@@ -120,10 +121,21 @@ class WebPushSubscriptionTest extends TestCase
             'customer_id' => $customer->getKey(),
             'order_id' => $order->getKey(),
             'channel' => 'web_push',
-            'destination' => $subscription->public_id,
             'template_key' => 'order.paid',
             'provider' => 'web-push',
         ]);
+
+        $pushOutbox = NotificationOutbox::query()
+            ->where('customer_id', $customer->getKey())
+            ->where('order_id', $order->getKey())
+            ->where('channel', 'web_push')
+            ->firstOrFail();
+
+        $this->assertSame($subscription->public_id, $pushOutbox->destination);
+        $this->assertNotSame(
+            $subscription->public_id,
+            DB::table('notification_outbox')->where('id', $pushOutbox->getKey())->value('destination'),
+        );
         $this->assertDatabaseCount('notification_outbox', 2);
     }
 
