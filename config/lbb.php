@@ -52,6 +52,16 @@ return [
         'retry_seconds' => (int) env('NOTIFICATION_RETRY_SECONDS', 60), 'timeout_seconds' => (int) env('NOTIFICATION_TIMEOUT_SECONDS', 8),
         'kavenegar' => ['api_key' => env('KAVENEGAR_API_KEY'), 'sender' => env('KAVENEGAR_ORDER_SENDER'), 'base_url' => env('KAVENEGAR_BASE_URL', 'https://api.kavenegar.com/v1')],
     ],
+    'web_push' => [
+        'enabled' => $boolean('WEB_PUSH_ENABLED'),
+        'vapid' => [
+            'subject' => env('WEB_PUSH_VAPID_SUBJECT', env('APP_URL')),
+            'public_key' => env('WEB_PUSH_VAPID_PUBLIC_KEY'),
+            'private_key' => env('WEB_PUSH_VAPID_PRIVATE_KEY'),
+        ],
+        'ttl_seconds' => (int) env('WEB_PUSH_TTL_SECONDS', 21600),
+        'urgency' => env('WEB_PUSH_URGENCY', 'normal'),
+    ],
     'policies' => [
         'pagination' => ['shape' => ['page', 'perPage', 'total', 'totalPages', 'from', 'to', 'hasMore'], 'catalog_default' => 12, 'catalog_max' => 48, 'account_default' => 10, 'account_max' => 30],
         'cache' => ['store' => env('CACHE_STORE', 'database'), 'prefix' => env('CACHE_PREFIX', 'lbb')],
@@ -63,6 +73,7 @@ return [
         'catalog' => ['status' => 'public-v1-ready', 'source' => 'f14-be-d'], 'apparel_domain' => ['status' => 'ready', 'source' => 'f14-be-c'],
         'authentication' => ['status' => 'public-v1-ready', 'source' => 'f14-be-f1'], 'orders' => ['status' => 'commerce-operations-ready'],
         'payments' => ['status' => 'provider-ready-fail-closed'], 'store_operations' => ['status' => 'commerce-operations-ready'],
+        'web_push' => ['status' => 'additive-post-freeze', 'source' => 'web-push-notifications'],
         'backend_freeze' => ['status' => 'ready', 'source' => 'f14-be-f1', 'contract_version' => '2026-08-09-f14-be-f1'],
     ],
     'launch' => ['strategy' => 'backend-accepted-awaiting-frontend-integration-and-deployment', 'backend_complete' => true, 'frontend_integrated' => false, 'production_deployed' => false],
