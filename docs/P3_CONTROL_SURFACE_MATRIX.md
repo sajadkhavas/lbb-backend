@@ -1,68 +1,86 @@
-# LBB P3 — Frontend Control Surface Matrix
+# LBB P3 — Backend/Admin/API Control Surface Matrix
 
-Status: **AUDIT IN PROGRESS**
+Status: **IMPLEMENTED / ACCEPTANCE CANDIDATE**
+
+## Locked identity
+
+- P3 backend START/base: `4156b201c104f4cdff7148341ca3705b1289779f`
+- Historical P2 `BACKEND_RELEASE_SHA`: `dd35070ddb168833d30adabde957b86b56da0542`
+- P3 storefront contract: `2026-09-06-p3-storefront-v1`
+- Last implementation exact-head Gate before this documentation sync: `34045191915` — **SUCCESS**
+- Production/server mutation: **NO**
 
 ## Governing rule
 
-Every frontend business/content/config/data surface must have an explicit backend owner, an admin control surface, a versioned API contract, and a frontend consumer. Developer-owned presentation structure stays in Git; merchant-editable truth must not be hardcoded as the authoritative live source.
+Every merchant-editable storefront business/content/configuration/data surface must have an explicit Backend owner, a usable Admin/Filament surface where applicable, a versioned API contract and a matching Frontend live consumer. Developer-owned presentation structure remains in the Frontend repository.
 
-## Ownership boundary
+## Final matrix
 
-### Backend/Admin/API controlled
-- catalog: products, variants, media, price, stock and collections
-- navigation labels/targets and announcement content
-- homepage/brand-intro content, hero media, CTAs and merchandising selections
-- page content, FAQ, contact/social/trust values and legal/support copy
-- journal/lookbook/editorial content
-- category merchandising/SEO copy and page/global SEO values
-- shipping/business settings
-- customer, auth, cart, checkout, orders, returns, inventory, payment and notifications
+| Storefront surface | Backend owner | Admin | API contract | P3 result |
+| --- | --- | --- | --- | --- |
+| Products / variants / media / price / stock | Catalog + inventory domains | Existing resources | Existing `/api/v1/products*` and catalog APIs | **PASS** |
+| Categories / category SEO | Category domain | Existing Category resource | Existing `/api/v1/categories*` | **PASS** |
+| Collections | Collection domain | Existing Collection resource | Existing `/api/v1/collections*` | **PASS** |
+| Journal | `Post` | Existing Post resource | `/api/v1/storefront/journal` + `/{slug}` | **PASS** |
+| Lookbook | `GalleryItem` | Existing GalleryItem resource | `/api/v1/storefront/lookbook` | **PASS** |
+| FAQ | `Faq` | Existing Faq resource | `/api/v1/storefront/faqs` | **PASS** |
+| Safe static pages / page SEO | `ContentPage` | Existing ContentPage resource | `/api/v1/storefront/pages/{slug}` | **PASS** |
+| Brand/contact/social/global SEO | Typed public `StoreSetting` | Existing StoreSetting resource | `/api/v1/storefront/bootstrap` | **PASS** |
+| Announcement bar / navigation | Typed public `StoreSetting` JSON | Existing StoreSetting resource | `/api/v1/storefront/bootstrap` | **PASS** |
+| Homepage / Hero / Brand Intro | Typed public `StoreSetting` + catalog | Existing StoreSetting/Product resources | bootstrap + existing product API | **PASS** |
+| Shipping/business rules | DeliveryZone + StoreSetting | Existing resources | Existing `/api/v1/delivery/options` and commerce APIs | **PASS — activation deferred to P4** |
+| Auth/account/cart/checkout/orders/returns | Customer/commerce domains | Existing operational resources | Existing `/api/v1` | **PASS — production activation deferred to P4** |
+| Inventory/payment/notifications | Existing operational domains | Existing Admin/operational controls | Existing commerce APIs | **PASS — production activation deferred to P4** |
 
-### Developer controlled
-- route/component/layout implementation
-- design system/CSS and responsive behavior
-- security/validation logic
-- API implementation and contract structure
-- accessibility/performance engineering
+## Additive P3 storefront contract
 
-## Verified backend truth
+P3 adds the following versioned public endpoints without breaking the frozen P2 catalog/auth/commerce contracts:
 
-- `StoreSetting`, `ContentPage`, `Faq` and `GalleryItem` models exist.
-- Their database tables exist in `2026_07_20_000000_create_store_operations_tables.php`.
-- Filament resources already exist for `StoreSetting`, `ContentPage`, `Faq` and `GalleryItem`; P3 must reuse them, not create duplicates.
-- Existing Filament resources also cover Category, Collection, Post, DeliveryZone and the main operational commerce domains.
-- Public legacy storefront endpoints exist for settings/pages/FAQ/gallery/posts.
-- Existing `/api/v1` catalog/auth/commerce routes remain the frozen P2 base contract; P3 storefront-content additions must be additive/versioned.
+- `/api/v1/storefront/bootstrap`
+- `/api/v1/storefront/pages/{slug}`
+- `/api/v1/storefront/faqs`
+- `/api/v1/storefront/lookbook`
+- `/api/v1/storefront/journal`
+- `/api/v1/storefront/journal/{slug}`
 
-## Verified frontend truth
+The bootstrap exposes only settings explicitly marked public. Private `StoreSetting` values remain excluded. Contract responses carry `2026-09-06-p3-storefront-v1` and the Frontend rejects a mismatched contract version.
 
-- product/catalog transport already supports backend mode.
-- category and collection API contracts already expose merchant-editable description/SEO fields.
-- collection metadata, journal content and lookbook content are still resolved from local frontend data even when a backend is configured.
-- brand/global SEO, announcement bar, navigation, homepage/hero/brand-intro and footer/contact content are still hardcoded/local in the frontend.
-- P3 must remove local business objects as the authoritative live source while retaining explicit prototype/test fallback only.
+## Structured public settings
 
-## Matrix
+P3 registers typed public settings for:
 
-| Frontend surface | Backend owner | Admin | API | Frontend live consumer | P3 status |
-| --- | --- | --- | --- | --- | --- |
-| Products / variants / media / stock | Catalog domain | Existing Product/Inventory resources | Existing `/api/v1/products*` | Existing backend adapter | VERIFY |
-| Categories / category SEO | Category domain | Existing Category resource | Existing `/api/v1/categories*` | Local category copy still authoritative in places | GAP |
-| Collections | Collection domain | Existing Collection resource | Existing `/api/v1/collections*` | Metadata currently local | GAP |
-| Journal | `Post` | Existing Post resource | Legacy store posts; v1 content route needed | Currently local | GAP |
-| Lookbook | `GalleryItem` | Existing GalleryItem resource | Legacy gallery; v1 content route needed | Currently local | GAP |
-| FAQ | `Faq` | Existing Faq resource | Legacy store FAQs; v1 content route needed | Currently local route copy | GAP |
-| Static pages / page SEO | `ContentPage` | Existing ContentPage resource | Legacy store pages; v1 content route needed | Currently local | GAP |
-| Global/contact/social/trust settings | `StoreSetting` | Existing StoreSetting resource | Legacy settings; v1 bootstrap needed | currently local/hardcoded | GAP |
-| Header announcement / navigation | Structured public `StoreSetting` JSON | Existing StoreSetting resource | v1 bootstrap needed | currently local | GAP |
-| Homepage / hero / brand intro | Structured public `StoreSetting` + homepage content | Existing StoreSetting/ContentPage resources | v1 bootstrap/page contract needed | currently local | GAP |
-| Footer/contact | Store settings/content | Existing StoreSetting/ContentPage resources | v1 bootstrap needed | currently local | GAP |
-| Shipping display/rules | Delivery/settings domain | Existing DeliveryZone/StoreSetting resources | Existing `/api/v1/delivery/options` | partial | AUDIT |
-| Auth/account/orders/cart/checkout/returns | Commerce/customer domains | Existing operational resources | Existing `/api/v1` | existing backend client | VERIFY |
+- brand identity and approved copy;
+- public contact/social/location labels;
+- announcement messages;
+- shop/editorial/service/brand navigation;
+- homepage presentation and Hero product selection;
+- versioned first-visit Brand Intro;
+- global SEO defaults.
 
-## P3 implementation direction
+Existing Filament resources are reused; P3 does not create duplicate Admin domains.
 
-- Keep domain data on its dedicated models/resources (`Product`, `Category`, `Collection`, `Post`, `GalleryItem`, delivery/commerce domains).
-- Use public typed `StoreSetting` values for structured global storefront configuration such as brand, navigation, announcements, homepage controls, footer/contact and global SEO defaults.
-- Add an additive `/api/v1/storefront` content surface; do not break the P2 frozen catalog/auth/commerce contract.
-- A row is not PASS until the admin, API and live frontend consumer are all covered by tests.
+## Truth and safety gates
+
+- Only verified LBB business truth is registered in the P3 settings migration.
+- Safe `about` and `contact` content pages are registered for the live content contract.
+- Terms, Privacy and Returns legal copy is not fabricated or force-published.
+- Historical inherited `SiteDataSeeder` content for another business is not treated as a live LBB source.
+- Private settings are not exposed by the public bootstrap.
+- Frontend-authoritative price/stock remains forbidden.
+- P3 does not deploy to Production and does not activate payment or real commerce.
+
+## Quality coverage
+
+The P3 Storefront Integration workflow verifies:
+
+- Composer metadata/security;
+- SQLite fresh migration and full suite with zero skips;
+- PHP syntax, routes and readiness;
+- OpenAPI contract/version/safety flags;
+- P3 storefront-control and frozen-contract tests;
+- Pint on the P3 PHP delta;
+- foundation and secret-safety checks;
+- MySQL 8.4 migration and P3/commerce/auth/Web Push regression;
+- real two-process oversell race.
+
+After this documentation sync, the new exact-head workflow run must also be **SUCCESS** before the source PR is merged.
