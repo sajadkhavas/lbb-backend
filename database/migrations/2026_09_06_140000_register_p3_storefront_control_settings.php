@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 return new class extends Migration
 {
@@ -119,10 +120,62 @@ return new class extends Migration
                 ],
             );
         }
+
+        $pages = [
+            [
+                'slug' => 'about',
+                'type' => 'page',
+                'title' => 'درباره LBB',
+                'excerpt' => 'LBB؛ پوشاک خیابانی و استریت‌ویر منتخب در کرج، از رگال تا فروشگاه حضوری و آنلاین.',
+                'content' => '<p>LBB با تمرکز بر پوشاک خیابانی، استریت‌ویر و آیتم‌های وارداتی منتخب شکل گرفته است.</p><p>هدف ما این است که پیش از انتخاب، اطلاعات محصول، تن‌خور، سایز و جزئیات لازم روشن باشد.</p><p>فروشگاه حضوری LBB در کرج، پاساژ مهستان در کنار فروشگاه آنلاین در دسترس است.</p>',
+                'meta_title' => 'درباره LBB | از رگال تا فروشگاه',
+                'meta_description' => 'داستان LBB؛ فروشگاه پوشاک خیابانی و استریت‌ویر در کرج با مجموعه‌ای منتخب از تولیدات و آیتم‌های وارداتی.',
+            ],
+            [
+                'slug' => 'contact',
+                'type' => 'page',
+                'title' => 'تماس با LBB',
+                'excerpt' => 'راه‌های تماس عمومی و اطلاعات فروشگاه حضوری LBB در کرج.',
+                'content' => '<p>فروشگاه حضوری LBB: کرج، پاساژ مهستان.</p><p>تلفن: 026-3256-0477</p><p>واتساپ: 0902-858-4879</p><p>اینستاگرام: @lbbclo</p>',
+                'meta_title' => 'تماس با LBB | فروشگاه حضوری کرج',
+                'meta_description' => 'راه‌های تماس با LBB و اطلاعات فروشگاه حضوری در کرج، پاساژ مهستان.',
+            ],
+        ];
+
+        foreach ($pages as $page) {
+            DB::table('content_pages')->insertOrIgnore([
+                'public_id' => (string) Str::ulid(),
+                'type' => $page['type'],
+                'slug' => $page['slug'],
+                'title' => $page['title'],
+                'excerpt' => $page['excerpt'],
+                'content' => $page['content'],
+                'meta_title' => $page['meta_title'],
+                'meta_description' => $page['meta_description'],
+                'status' => 'published',
+                'published_at' => $now,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            DB::table('content_pages')->where('slug', $page['slug'])->update([
+                'type' => $page['type'],
+                'title' => $page['title'],
+                'excerpt' => $page['excerpt'],
+                'content' => $page['content'],
+                'meta_title' => $page['meta_title'],
+                'meta_description' => $page['meta_description'],
+                'status' => 'published',
+                'published_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
     }
 
     public function down(): void
     {
+        DB::table('content_pages')->whereIn('slug', ['about', 'contact'])->delete();
+
         DB::table('store_settings')->whereIn('key', [
             'brand.identity',
             'brand.copy',
