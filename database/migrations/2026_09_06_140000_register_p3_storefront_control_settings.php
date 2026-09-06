@@ -35,6 +35,15 @@ return new class extends Migration
                 'secondaryCta' => 'اطلاعات فروشگاه حضوری',
                 'storeLocationLabel' => 'فروشگاه حضوری ال‌بی‌بی — کرج، پاساژ مهستان',
             ]],
+            ['group' => 'contact', 'key' => 'contact.public', 'type' => 'json', 'label' => 'اطلاعات تماس عمومی', 'value' => [
+                'phone' => '026-3256-0477',
+                'whatsapp' => '0902-858-4879',
+                'instagramHandle' => '@lbbclo',
+                'instagramUrl' => 'https://www.instagram.com/lbbclo',
+                'locationLabel' => 'کرج، پاساژ مهستان',
+                'city' => 'کرج',
+                'province' => 'البرز',
+            ]],
             ['group' => 'announcement', 'key' => 'announcement.messages', 'type' => 'json', 'label' => 'پیام‌های نوار بالای سایت', 'value' => [
                 ['text' => 'LBB؛ الهام‌گرفته از ذهنی خلاق', 'href' => '/shop'],
                 ['text' => 'فروشگاه حضوری LBB — کرج، پاساژ مهستان', 'href' => '/contact'],
@@ -64,6 +73,20 @@ return new class extends Migration
                 ['label' => 'درباره LBB', 'latin' => 'ABOUT', 'href' => '/about'],
                 ['label' => 'قوانین', 'latin' => 'TERMS', 'href' => '/terms'],
                 ['label' => 'حریم خصوصی', 'latin' => 'PRIVACY', 'href' => '/privacy'],
+            ]],
+            ['group' => 'home', 'key' => 'home.presentation', 'type' => 'json', 'label' => 'چیدمان و انتخاب‌های صفحه خانه', 'value' => [
+                'heroProductSlug' => 'lbb-signature-tee',
+                'categoryOrder' => ['tshirts', 'hoodies', 'pants', 'shoes', 'socks'],
+                'sections' => [
+                    'ticker',
+                    'trust',
+                    'categories',
+                    'products',
+                    'drop_story',
+                    'decision_support',
+                    'local_store',
+                    'instagram',
+                ],
             ]],
             ['group' => 'home', 'key' => 'home.brand_intro', 'type' => 'json', 'label' => 'معرفی اولین ورود', 'value' => [
                 'enabled' => true,
@@ -103,11 +126,13 @@ return new class extends Migration
         DB::table('store_settings')->whereIn('key', [
             'brand.identity',
             'brand.copy',
+            'contact.public',
             'announcement.messages',
             'navigation.shop',
             'navigation.editorial',
             'navigation.service',
             'navigation.brand',
+            'home.presentation',
             'home.brand_intro',
             'seo.defaults',
         ])->delete();
