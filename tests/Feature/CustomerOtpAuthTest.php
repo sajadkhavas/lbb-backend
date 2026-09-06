@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Customer;
 use App\Models\OtpChallenge;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class CustomerOtpAuthTest extends TestCase
@@ -19,119 +21,136 @@ class CustomerOtpAuthTest extends TestCase
             'lbb.otp.provider' => 'testing',
             'lbb.otp.expose_test_code' => true,
             'lbb.otp.retry_after_seconds' => 0,
+            'lbb.otp.expires_seconds' => 120,
+            'lbb.otp.max_attempts' => 5,
             'session.driver' => 'array',
         ]);
     }
 
-    public function test_otp_request_normalizes_mobile_and_never_stores_plain_code_or_mobile_in_cache_key(): void
+    public function test_otp_request_normalizes_mobile_and_never_stores_plain_code_or_mobile_payload(): void
     {
         $response = $this->stateful()->postJson('/api/auth/otp/request', [
-            'mobile' => '+98 912 345 6789',
-        ])->assertAccepted();
-
-        $challengeId = (string) $response->json('data.challengeId');
-        $debugCode = (string) $response->json('data.debugCode');
-
-        $this->assertSame(6, strlen($debugCode));
-        $this->assertDatabaseHas('otp_challenges', [
-            'public_id' => $challengeId,
-            'mobile' => '09123456789',
+            'mobile' => '۰۹۱۲ ۳۴۵ ۶۷۸۹',
         ]);
 
-        $challenge = OtpChallenge::query()->where('public_id', $challengeId)->firstOrFail();
+        $response
+            ->assertAccepted()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.expiresIn', 120)
+            ->assertJsonStructure(['data' => ['challengeId', 'debugCode']]);
+
+        $challenge = OtpChallenge::query()->firstOrFail();
+        $debugCode = (string) $response->json('data.debugCode');
+        $rawPayload = DB::table('otp_challenges')->value('mobile_payload');
+
+        $this->assertSame('09123456789', $challenge->mobile_payload);
+        $this->assertNotSame('09123456789', $rawPayload);
         $this->assertNotSame($debugCode, $challenge->code_hash);
-        $this->assertStringNotContainsString('09123456789', (string) $challenge->request_key);
+        $this->assertTrue(Hash::check($debugCode, $challenge->code_hash));
     }
 
     public function test_customer_can_verify_otp_use_session_update_profile_and_logout(): void
     {
-        [$challengeId, $code] = $this->requestChallenge('09123456781');
+        $challenge = $this->requestChallenge('09123456780');
 
-        $this->stateful()->postJson('/api/auth/otp/verify', [
-            'mobile' => '09123456781',
-            'challengeId' => $challengeId,
-            'code' => $code,
-        ])->assertOk()
-            ->assertJsonPath('data.user.mobile', '09123456781')
+        $verify = $this->stateful()->postJson('/api/auth/otp/verify', [
+            'mobile' => '989123456780',
+            'challengeId' => $challenge['challengeId'],
+            'code' => $challenge['code'],
+        ]);
+
+        $verify
+            ->assertOk()
+            ->assertJsonPath('data.user.mobile', '09123456780')
             ->assertJsonPath('data.user.mobileVerified', true);
+
+        $customer = Customer::query()->where('mobile', '09123456780')->firstOrFail();
+        $this->assertAuthenticatedAs($customer, 'customer');
 
         $this->stateful()->getJson('/api/auth/me')
             ->assertOk()
-            ->assertJsonPath('data.user.mobile', '09123456781');
+            ->assertJsonPath('data.user.id', $customer->public_id);
 
         $this->stateful()->patchJson('/api/account/profile', [
-            'fullName' => 'مشتری تست',
-            'email' => 'customer@example.com',
+            'fullName' => 'سجاد خواص',
+            'email' => 'sajad@example.test',
             'marketingConsent' => true,
         ])->assertOk()
-            ->assertJsonPath('data.user.fullName', 'مشتری تست')
-            ->assertJsonPath('data.user.email', 'customer@example.com')
+            ->assertJsonPath('data.user.fullName', 'سجاد خواص')
+            ->assertJsonPath('data.user.email', 'sajad@example.test')
             ->assertJsonPath('data.user.marketingConsent', true);
 
-        $this->stateful()->postJson('/api/auth/logout')->assertOk();
-        $this->stateful()->getJson('/api/auth/me')->assertUnauthorized();
+        $this->stateful()->postJson('/api/auth/logout')
+            ->assertOk();
+
+        $this->stateful()->getJson('/api/auth/me')
+            ->assertUnauthorized();
     }
 
     public function test_disabling_customer_invalidates_an_existing_session(): void
     {
-        [$challengeId, $code] = $this->requestChallenge('09123456782');
+        $challenge = $this->requestChallenge('09123456785');
 
         $this->stateful()->postJson('/api/auth/otp/verify', [
-            'mobile' => '09123456782',
-            'challengeId' => $challengeId,
-            'code' => $code,
+            'mobile' => '09123456785',
+            'challengeId' => $challenge['challengeId'],
+            'code' => $challenge['code'],
         ])->assertOk();
 
-        Customer::query()->where('mobile', '09123456782')->update(['is_active' => false]);
+        $customer = Customer::query()->where('mobile', '09123456785')->firstOrFail();
+        $customer->update(['is_active' => false]);
 
-        $this->stateful()->getJson('/api/auth/me')->assertForbidden();
+        $this->stateful()->getJson('/api/auth/me')
+            ->assertUnauthorized()
+            ->assertJsonPath('success', false);
+
+        $this->assertGuest('customer');
     }
 
     public function test_wrong_code_increments_attempts_and_consumed_code_cannot_be_reused(): void
     {
-        [$challengeId, $code] = $this->requestChallenge('09123456783');
+        $challenge = $this->requestChallenge('09123456781');
 
         $this->stateful()->postJson('/api/auth/otp/verify', [
-            'mobile' => '09123456783',
-            'challengeId' => $challengeId,
-            'code' => $this->wrongCode($code),
+            'mobile' => '09123456781',
+            'challengeId' => $challenge['challengeId'],
+            'code' => $this->wrongCode($challenge['code']),
         ])->assertUnprocessable();
 
-        $this->assertDatabaseHas('otp_challenges', [
-            'public_id' => $challengeId,
-            'attempts' => 1,
-        ]);
+        $this->assertSame(1, OtpChallenge::query()->firstOrFail()->attempts);
 
-        $this->stateful()->postJson('/api/auth/otp/verify', [
-            'mobile' => '09123456783',
-            'challengeId' => $challengeId,
-            'code' => $code,
-        ])->assertOk();
+        $payload = [
+            'mobile' => '09123456781',
+            'challengeId' => $challenge['challengeId'],
+            'code' => $challenge['code'],
+        ];
 
-        $this->stateful()->postJson('/api/auth/otp/verify', [
-            'mobile' => '09123456783',
-            'challengeId' => $challengeId,
-            'code' => $code,
-        ])->assertUnprocessable();
+        $this->stateful()->postJson('/api/auth/otp/verify', $payload)->assertOk();
+        $this->stateful()->postJson('/api/auth/otp/verify', $payload)->assertUnprocessable();
     }
 
     public function test_challenge_is_locked_after_maximum_failed_attempts(): void
     {
         config(['lbb.otp.max_attempts' => 2]);
-        [$challengeId, $code] = $this->requestChallenge('09123456785');
-        $wrong = $this->wrongCode($code);
+        $challenge = $this->requestChallenge('09123456782');
+        $wrongCode = $this->wrongCode($challenge['code']);
+
+        for ($attempt = 0; $attempt < 2; $attempt++) {
+            $this->stateful()->postJson('/api/auth/otp/verify', [
+                'mobile' => '09123456782',
+                'challengeId' => $challenge['challengeId'],
+                'code' => $wrongCode,
+            ])->assertUnprocessable();
+        }
 
         $this->stateful()->postJson('/api/auth/otp/verify', [
-            'mobile' => '09123456785',
-            'challengeId' => $challengeId,
-            'code' => $wrong,
+            'mobile' => '09123456782',
+            'challengeId' => $challenge['challengeId'],
+            'code' => $challenge['code'],
         ])->assertUnprocessable();
 
-        $this->stateful()->postJson('/api/auth/otp/verify', [
-            'mobile' => '09123456785',
-            'challengeId' => $challengeId,
-            'code' => $wrong,
-        ])->assertTooManyRequests();
+        $this->assertDatabaseCount('customers', 0);
+        $this->assertSame(2, OtpChallenge::query()->firstOrFail()->attempts);
     }
 
     public function test_disabled_provider_returns_service_unavailable_and_removes_challenge(): void
@@ -139,7 +158,7 @@ class CustomerOtpAuthTest extends TestCase
         config(['lbb.otp.provider' => 'disabled']);
 
         $this->stateful()->postJson('/api/auth/otp/request', [
-            'mobile' => '09123456786',
+            'mobile' => '09123456783',
         ])->assertServiceUnavailable();
 
         $this->assertDatabaseCount('otp_challenges', 0);
@@ -147,7 +166,7 @@ class CustomerOtpAuthTest extends TestCase
 
     public function test_resend_cooldown_returns_retry_after_without_creating_another_challenge(): void
     {
-        config(['lbb.otp.retry_after_seconds' => 120]);
+        config(['lbb.otp.retry_after_seconds' => 60]);
         $this->requestChallenge('09123456784');
 
         $response = $this->stateful()->postJson('/api/auth/otp/request', [
@@ -186,8 +205,8 @@ class CustomerOtpAuthTest extends TestCase
         ])->assertAccepted();
 
         return [
-            (string) $response->json('data.challengeId'),
-            (string) $response->json('data.debugCode'),
+            'challengeId' => (string) $response->json('data.challengeId'),
+            'code' => (string) $response->json('data.debugCode'),
         ];
     }
 
@@ -201,7 +220,7 @@ class CustomerOtpAuthTest extends TestCase
         return $this->withHeaders([
             'Origin' => 'http://localhost:5173',
             'Referer' => 'http://localhost:5173/',
-            'User-Agent' => 'LBB-Customer-Contract-Test/1.0',
+            'User-Agent' => 'LBB-Test-Client/1.0',
         ]);
     }
 }
