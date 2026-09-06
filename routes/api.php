@@ -18,8 +18,8 @@ use App\Http\Controllers\Api\PublicCatalogController;
 use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\StoreContentController;
+use App\Http\Controllers\Api\StorefrontContentController;
 use App\Http\Controllers\Api\SystemController;
-use App\Http\Controllers\Api\V1\StorefrontContentController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('system')->middleware('throttle:60,1')->group(function () {
