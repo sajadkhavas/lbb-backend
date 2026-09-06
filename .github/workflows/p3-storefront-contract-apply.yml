@@ -113,18 +113,6 @@ jobs:
 
           test = Path('tests/Feature/BackendContractFreezeTest.php')
           test.write_text(test.read_text().replace(old, version))
-
-          p2 = Path('.github/workflows/p2-backend-release-freeze.yml')
-          p2_text = p2.read_text()
-          p2_text = p2_text.replace(
-              '  sqlite-release:\n    runs-on:',
-              "  sqlite-release:\n    if: github.event_name == 'push' || startsWith(github.head_ref, 'phase/p2-') || startsWith(github.head_ref, 'docs/p2-')\n    runs-on:"
-          )
-          p2_text = p2_text.replace(
-              '  mysql-commerce-race:\n    runs-on:',
-              "  mysql-commerce-race:\n    if: github.event_name == 'push' || startsWith(github.head_ref, 'phase/p2-') || startsWith(github.head_ref, 'docs/p2-')\n    runs-on:"
-          )
-          p2.write_text(p2_text)
           PY
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
@@ -143,7 +131,7 @@ jobs:
         run: |
           git config user.name 'lbb-p3-bot'
           git config user.email '144109918+sajadkhavas@users.noreply.github.com'
-          git add docs/openapi.json config/lbb.php tests/Feature/BackendContractFreezeTest.php .github/workflows/p2-backend-release-freeze.yml
+          git add docs/openapi.json config/lbb.php tests/Feature/BackendContractFreezeTest.php
           git diff --cached --quiet && exit 0
           git commit -m 'feat(p3): freeze additive storefront API contract'
           git push origin HEAD:phase/p3-live-integration-control-surface
