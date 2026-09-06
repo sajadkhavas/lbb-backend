@@ -10,7 +10,7 @@ $zarinpalSandbox = $boolean('ZARINPAL_SANDBOX', true);
 return [
     'brand' => ['name' => env('LBB_BRAND_NAME', 'LBB'), 'name_en' => env('LBB_BRAND_NAME_EN', 'LBB')],
     'api' => [
-        'version' => '1', 'contract_version' => '2026-08-09-f14-be-f1', 'request_id_header' => 'X-Request-ID',
+        'version' => '1', 'contract_version' => '2026-09-06-p3-storefront-v1', 'request_id_header' => 'X-Request-ID',
         'openapi_path' => base_path('docs/openapi.json'),
     ],
     'frontend_origins' => $frontendOrigins,
@@ -74,7 +74,8 @@ return [
         'authentication' => ['status' => 'public-v1-ready', 'source' => 'f14-be-f1'], 'orders' => ['status' => 'commerce-operations-ready'],
         'payments' => ['status' => 'provider-ready-fail-closed'], 'store_operations' => ['status' => 'commerce-operations-ready'],
         'web_push' => ['status' => 'additive-post-freeze', 'source' => 'web-push-notifications'],
-        'backend_freeze' => ['status' => 'ready', 'source' => 'f14-be-f1', 'contract_version' => '2026-08-09-f14-be-f1'],
+        'storefront_content' => ['status' => 'public-v1-ready', 'source' => 'p3-storefront-v1', 'contract_version' => '2026-09-06-p3-storefront-v1'],
+        'backend_freeze' => ['status' => 'ready', 'source' => 'f14-be-f1', 'contract_version' => '2026-09-06-p3-storefront-v1'],
     ],
-    'launch' => ['strategy' => 'backend-accepted-awaiting-frontend-integration-and-deployment', 'backend_complete' => true, 'frontend_integrated' => false, 'production_deployed' => false],
+    'launch' => ['strategy' => 'p3-storefront-contract-ready-awaiting-frontend-integration-and-deployment', 'backend_complete' => true, 'frontend_integrated' => false, 'production_deployed' => false],
 ];
