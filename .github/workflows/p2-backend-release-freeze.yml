@@ -18,6 +18,7 @@ env:
 
 jobs:
   sqlite-release:
+    if: github.event_name == 'push' || startsWith(github.head_ref, 'phase/p2-') || startsWith(github.head_ref, 'docs/p2-')
     runs-on: ubuntu-24.04
     timeout-minutes: 55
     env:
@@ -122,6 +123,7 @@ jobs:
           fi
 
   mysql-commerce-race:
+    if: github.event_name == 'push' || startsWith(github.head_ref, 'phase/p2-') || startsWith(github.head_ref, 'docs/p2-')
     runs-on: ubuntu-24.04
     timeout-minutes: 55
     services:
