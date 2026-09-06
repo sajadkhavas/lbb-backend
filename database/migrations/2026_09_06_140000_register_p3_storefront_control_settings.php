@@ -1,0 +1,115 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\DB;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        $now = now();
+
+        $settings = [
+            ['group' => 'brand', 'key' => 'brand.identity', 'type' => 'json', 'label' => 'هویت برند', 'value' => [
+                'name' => 'LBB',
+                'nameFa' => 'ال‌بی‌بی',
+                'category' => 'پوشاک خیابانی و استریت‌ویر',
+                'city' => 'کرج',
+                'province' => 'البرز',
+                'physicalLocation' => 'پاساژ مهستان',
+                'physicalLocationShort' => 'کرج، پاساژ مهستان',
+                'instagramHandle' => '@lbbclo',
+                'instagramUrl' => 'https://www.instagram.com/lbbclo',
+                'slogan' => 'الهام‌گرفته از ذهنی خلاق',
+                'storyTitle' => 'از رگال تا فروشگاه',
+                'descriptor' => 'پوشاک خیابانی، استریت‌ویر و آیتم‌های وارداتی منتخب LBB در کرج؛ با راهنمای سایز و جزئیات روشن محصول.',
+                'shortIntroduction' => 'LBB فروشگاه پوشاک خیابانی و استریت‌ویر در کرج است؛ با مجموعه‌ای منتخب از تولیدات و آیتم‌های وارداتی.',
+            ]],
+            ['group' => 'brand', 'key' => 'brand.copy', 'type' => 'json', 'label' => 'متن‌های اصلی برند و صفحه خانه', 'value' => [
+                'homepageTitle' => 'LBB | پوشاک خیابانی و استریت‌ویر در کرج',
+                'homepageDescription' => 'خرید پوشاک خیابانی و استریت‌ویر LBB در کرج؛ تیشرت، شلوار، کتونی و آیتم‌های وارداتی منتخب با راهنمای سایز و جزئیات محصول.',
+                'heroEyebrow' => 'LBB / STREETWEAR / KARAJ',
+                'heroTitle' => 'از پینترست تا رگال LBB',
+                'heroBody' => 'آیتم‌های استریت‌ویر منتخب، از فرم‌های ترند و الهام‌های روز تا پوشاک وارداتی؛ با راهنمای سایز و جزئیات هر محصول برای انتخاب دقیق‌تر.',
+                'primaryCta' => 'خرید جدیدترین‌ها',
+                'secondaryCta' => 'اطلاعات فروشگاه حضوری',
+                'storeLocationLabel' => 'فروشگاه حضوری ال‌بی‌بی — کرج، پاساژ مهستان',
+            ]],
+            ['group' => 'announcement', 'key' => 'announcement.messages', 'type' => 'json', 'label' => 'پیام‌های نوار بالای سایت', 'value' => [
+                ['text' => 'LBB؛ الهام‌گرفته از ذهنی خلاق', 'href' => '/shop'],
+                ['text' => 'فروشگاه حضوری LBB — کرج، پاساژ مهستان', 'href' => '/contact'],
+                ['text' => 'راهنمای سایز اختصاصی برای انتخاب دقیق‌تر', 'href' => '/size-guide'],
+            ]],
+            ['group' => 'navigation', 'key' => 'navigation.shop', 'type' => 'json', 'label' => 'منوی فروشگاه', 'value' => [
+                ['label' => 'همه محصولات', 'latin' => 'SHOP ALL', 'description' => 'مشاهده کامل کاتالوگ', 'href' => '/shop'],
+                ['label' => 'تیشرت', 'latin' => 'T-SHIRTS', 'description' => 'اورسایز، باکس، یقه‌دار، آستین‌بلند و حلقه‌ای', 'href' => '/tshirts'],
+                ['label' => 'سویشرت / هودی', 'latin' => 'SWEATSHIRTS', 'description' => 'در موجودی فعلی، هودی فعال است', 'href' => '/hoodies'],
+                ['label' => 'شلوار', 'latin' => 'PANTS', 'description' => 'جین، پارچه‌ای، اسلش، جورتز و شرت', 'href' => '/pants'],
+                ['label' => 'کتونی', 'latin' => 'SNEAKERS', 'description' => 'دسته فیلترمحور بر اساس برند، سایز، رنگ و استایل', 'href' => '/shoes'],
+                ['label' => 'جوراب', 'latin' => 'SOCKS', 'description' => 'موجودی فعلی کاتالوگ', 'href' => '/socks'],
+            ]],
+            ['group' => 'navigation', 'key' => 'navigation.editorial', 'type' => 'json', 'label' => 'منوی محتوایی', 'value' => [
+                ['label' => 'کالکشن‌ها', 'latin' => 'COLLECTIONS', 'description' => 'دراپ‌ها و فصل‌های LBB', 'href' => '/collections'],
+                ['label' => 'لوک‌بوک', 'latin' => 'LOOKBOOK', 'description' => 'استایل‌ها در بافت شهری', 'href' => '/lookbook'],
+                ['label' => 'ژورنال', 'latin' => 'JOURNAL', 'description' => 'راهنما، فرهنگ و متریال', 'href' => '/journal'],
+            ]],
+            ['group' => 'navigation', 'key' => 'navigation.service', 'type' => 'json', 'label' => 'منوی خدمات', 'value' => [
+                ['label' => 'راهنمای سایز', 'latin' => 'SIZE GUIDE', 'href' => '/size-guide'],
+                ['label' => 'ارسال و مرجوعی', 'latin' => 'SHIPPING', 'href' => '/shipping-returns'],
+                ['label' => 'پیگیری سفارش', 'latin' => 'TRACK ORDER', 'href' => '/track-order'],
+                ['label' => 'سوالات متداول', 'latin' => 'FAQ', 'href' => '/faq'],
+                ['label' => 'تماس', 'latin' => 'CONTACT', 'href' => '/contact'],
+            ]],
+            ['group' => 'navigation', 'key' => 'navigation.brand', 'type' => 'json', 'label' => 'منوی برند', 'value' => [
+                ['label' => 'درباره LBB', 'latin' => 'ABOUT', 'href' => '/about'],
+                ['label' => 'قوانین', 'latin' => 'TERMS', 'href' => '/terms'],
+                ['label' => 'حریم خصوصی', 'latin' => 'PRIVACY', 'href' => '/privacy'],
+            ]],
+            ['group' => 'home', 'key' => 'home.brand_intro', 'type' => 'json', 'label' => 'معرفی اولین ورود', 'value' => [
+                'enabled' => true,
+                'version' => 'v1',
+                'eyebrow' => 'LBB / STREETWEAR',
+                'title' => 'از رگال تا فروشگاه',
+                'body' => 'LBB؛ الهام‌گرفته از ذهنی خلاق',
+                'storyCta' => 'داستان LBB',
+                'storeCta' => 'ورود به فروشگاه',
+            ]],
+            ['group' => 'seo', 'key' => 'seo.defaults', 'type' => 'json', 'label' => 'تنظیمات پیش‌فرض SEO', 'value' => [
+                'siteName' => 'LBB',
+                'locale' => 'fa_IR',
+                'organizationDescription' => 'برند پوشاک خیابانی و استریت‌ویر LBB',
+                'instagramUrl' => 'https://www.instagram.com/lbbclo',
+            ]],
+        ];
+
+        foreach ($settings as $setting) {
+            DB::table('store_settings')->updateOrInsert(
+                ['key' => $setting['key']],
+                [
+                    'group' => $setting['group'],
+                    'type' => $setting['type'],
+                    'value' => json_encode($setting['value'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                    'label' => $setting['label'],
+                    'is_public' => true,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ],
+            );
+        }
+    }
+
+    public function down(): void
+    {
+        DB::table('store_settings')->whereIn('key', [
+            'brand.identity',
+            'brand.copy',
+            'announcement.messages',
+            'navigation.shop',
+            'navigation.editorial',
+            'navigation.service',
+            'navigation.brand',
+            'home.brand_intro',
+            'seo.defaults',
+        ])->delete();
+    }
+};
