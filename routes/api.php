@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\StoreContentController;
 use App\Http\Controllers\Api\SystemController;
+use App\Http\Controllers\Api\V1\StorefrontContentController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('system')->middleware('throttle:60,1')->group(function () {
@@ -104,6 +105,15 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     });
 
     Route::middleware('throttle:public-catalog')->group(function (): void {
+        Route::prefix('storefront')->name('storefront.')->group(function (): void {
+            Route::get('/bootstrap', [StorefrontContentController::class, 'bootstrap'])->name('bootstrap');
+            Route::get('/pages/{slug}', [StorefrontContentController::class, 'page'])->name('pages.show');
+            Route::get('/faqs', [StorefrontContentController::class, 'faqs'])->name('faqs.index');
+            Route::get('/lookbook', [StorefrontContentController::class, 'lookbook'])->name('lookbook.index');
+            Route::get('/journal', [StorefrontContentController::class, 'journal'])->name('journal.index');
+            Route::get('/journal/{slug}', [StorefrontContentController::class, 'journalPost'])->name('journal.show');
+        });
+
         Route::get('/categories', [PublicCatalogController::class, 'categories'])->name('categories.index');
         Route::get('/categories/{slug}', [PublicCatalogController::class, 'category'])->name('categories.show');
         Route::get('/products', [PublicCatalogController::class, 'products'])->name('products.index');
