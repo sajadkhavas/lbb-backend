@@ -25,7 +25,10 @@ class P3StorefrontControlSurfaceTest extends TestCase
             'is_public' => false,
         ]);
 
-        $response = $this->getJson('/api/v1/storefront/bootstrap')->assertOk();
+        $response = $this->getJson('/api/v1/storefront/bootstrap')
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('meta.contractVersion', '2026-09-06-p3-storefront-v1');
         $payload = $response->json('data');
 
         $this->assertSame('2026-09-06-p3-storefront-v1', $payload['contractVersion']);
@@ -102,10 +105,14 @@ class P3StorefrontControlSurfaceTest extends TestCase
 
         $this->getJson('/api/v1/storefront/pages/about-live')
             ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('meta.contractVersion', '2026-09-06-p3-storefront-v1')
             ->assertJsonPath('data.title', 'درباره LBB');
         $this->getJson('/api/v1/storefront/pages/private-draft')->assertNotFound();
 
-        $faq = $this->getJson('/api/v1/storefront/faqs')->assertOk();
+        $faq = $this->getJson('/api/v1/storefront/faqs')
+            ->assertOk()
+            ->assertJsonPath('meta.contractVersion', '2026-09-06-p3-storefront-v1');
         $this->assertCount(1, $faq->json('data'));
         $this->assertSame('ارسال؟', $faq->json('data.0.question'));
 
@@ -118,6 +125,7 @@ class P3StorefrontControlSurfaceTest extends TestCase
         $this->assertSame('live-post', $journal->json('data.0.slug'));
         $this->getJson('/api/v1/storefront/journal/live-post')
             ->assertOk()
+            ->assertJsonPath('meta.contractVersion', '2026-09-06-p3-storefront-v1')
             ->assertJsonPath('data.content', '<p>Article</p>');
         $this->getJson('/api/v1/storefront/journal/draft-post')->assertNotFound();
     }
