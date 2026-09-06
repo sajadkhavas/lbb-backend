@@ -8,6 +8,7 @@ use App\Models\Faq;
 use App\Models\GalleryItem;
 use App\Models\Post;
 use App\Models\StoreSetting;
+use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
 class StorefrontContentController extends Controller
@@ -26,11 +27,9 @@ class StorefrontContentController extends Controller
                 fn (StoreSetting $setting): array => [$setting->key => $setting->typedValue()]
             ));
 
-        return response()->json([
-            'data' => [
-                'contractVersion' => self::CONTRACT_VERSION,
-                'settings' => $settings,
-            ],
+        return ApiResponse::success([
+            'contractVersion' => self::CONTRACT_VERSION,
+            'settings' => $settings,
         ]);
     }
 
@@ -41,24 +40,22 @@ class StorefrontContentController extends Controller
             ->where('slug', $slug)
             ->firstOrFail();
 
-        return response()->json([
-            'data' => [
-                'slug' => $page->slug,
-                'type' => $page->type,
-                'title' => $page->title,
-                'excerpt' => $page->excerpt,
-                'content' => $page->content,
-                'metaTitle' => $page->meta_title,
-                'metaDescription' => $page->meta_description,
-                'publishedAt' => $page->published_at?->toIso8601String(),
-            ],
+        return ApiResponse::success([
+            'slug' => $page->slug,
+            'type' => $page->type,
+            'title' => $page->title,
+            'excerpt' => $page->excerpt,
+            'content' => $page->content,
+            'metaTitle' => $page->meta_title,
+            'metaDescription' => $page->meta_description,
+            'publishedAt' => $page->published_at?->toIso8601String(),
         ]);
     }
 
     public function faqs(): JsonResponse
     {
-        return response()->json([
-            'data' => Faq::query()
+        return ApiResponse::success(
+            Faq::query()
                 ->active()
                 ->orderBy('sort_order')
                 ->orderBy('id')
@@ -68,14 +65,15 @@ class StorefrontContentController extends Controller
                     'question' => $faq->question,
                     'answer' => $faq->answer,
                     'sortOrder' => $faq->sort_order,
-                ]),
-        ]);
+                ])
+                ->values(),
+        );
     }
 
     public function lookbook(): JsonResponse
     {
-        return response()->json([
-            'data' => GalleryItem::query()
+        return ApiResponse::success(
+            GalleryItem::query()
                 ->active()
                 ->orderBy('sort_order')
                 ->orderBy('id')
@@ -86,30 +84,30 @@ class StorefrontContentController extends Controller
                     'imageUrl' => $item->image_url,
                     'linkUrl' => $item->link_url,
                     'sortOrder' => $item->sort_order,
-                ]),
-        ]);
+                ])
+                ->values(),
+        );
     }
 
     public function journal(): JsonResponse
     {
-        return response()->json([
-            'data' => Post::query()
+        return ApiResponse::success(
+            Post::query()
                 ->published()
                 ->latest('published_at')
                 ->get(['public_id', 'slug', 'title', 'excerpt', 'category', 'tags', 'cover_url', 'author', 'published_at'])
-                ->map(fn (Post $post): array => $this->postSummary($post)),
-        ]);
+                ->map(fn (Post $post): array => $this->postSummary($post))
+                ->values(),
+        );
     }
 
     public function journalPost(string $slug): JsonResponse
     {
         $post = Post::query()->published()->where('slug', $slug)->firstOrFail();
 
-        return response()->json([
-            'data' => [
-                ...$this->postSummary($post),
-                'content' => $post->content,
-            ],
+        return ApiResponse::success([
+            ...$this->postSummary($post),
+            'content' => $post->content,
         ]);
     }
 
