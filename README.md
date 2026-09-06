@@ -1,14 +1,13 @@
 # LBB Backend
 
-Independent Laravel + Filament backend for the LBB apparel commerce platform.
+Independent Laravel 12 + Filament backend for the LBB apparel commerce platform.
 
-## Safety boundary
+## Current state
 
-- `sajadkhavas/cooci` is read-only reference material.
-- `sajadkhavas/winimi-bakery-backend` is read-only reference material.
-- All LBB backend changes must happen in this repository.
-- No production secrets, customer data, orders, payments, media, or environment files may be copied from Cooci/Winimi.
+- F14-BE-A imported the audited backend baseline without changing Cooci.
+- F14-BE-B is removing inherited legacy and food-specific behavior.
+- Checkout, payment, SMS and production launch remain disabled until the LBB API contract is frozen.
 
-## Current phase
+## Repository boundary
 
-F14-BE-A — independent backend foundation.
+All LBB backend development happens here. The Cooci repositories are read-only references and are not modified by this migration.
