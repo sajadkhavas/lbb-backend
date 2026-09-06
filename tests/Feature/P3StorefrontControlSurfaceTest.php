@@ -34,9 +34,28 @@ class P3StorefrontControlSurfaceTest extends TestCase
         $this->assertSame('2026-09-06-p3-storefront-v1', $payload['contractVersion']);
         $this->assertSame('LBB', $payload['settings']['brand']['brand.identity']['name']);
         $this->assertSame('از پینترست تا رگال LBB', $payload['settings']['brand']['brand.copy']['heroTitle']);
+        $this->assertSame('026-3256-0477', $payload['settings']['contact']['contact.public']['phone']);
+        $this->assertSame('lbb-signature-tee', $payload['settings']['home']['home.presentation']['heroProductSlug']);
         $this->assertIsArray($payload['settings']['navigation']['navigation.shop']);
         $this->assertStringNotContainsString('must-not-leak', $response->getContent());
         $this->assertStringNotContainsString('trust.secret_test', $response->getContent());
+    }
+
+    public function test_p3_migration_registers_only_verified_public_pages(): void
+    {
+        $this->getJson('/api/v1/storefront/pages/about')
+            ->assertOk()
+            ->assertJsonPath('meta.contractVersion', '2026-09-06-p3-storefront-v1')
+            ->assertJsonPath('data.title', 'درباره LBB');
+
+        $this->getJson('/api/v1/storefront/pages/contact')
+            ->assertOk()
+            ->assertJsonPath('data.title', 'تماس با LBB')
+            ->assertJsonFragment(['content' => '<p>فروشگاه حضوری LBB: کرج، پاساژ مهستان.</p><p>تلفن: 026-3256-0477</p><p>واتساپ: 0902-858-4879</p><p>اینستاگرام: @lbbclo</p>']);
+
+        $this->assertDatabaseMissing('content_pages', ['slug' => 'terms']);
+        $this->assertDatabaseMissing('content_pages', ['slug' => 'privacy']);
+        $this->assertDatabaseMissing('content_pages', ['slug' => 'shipping-returns']);
     }
 
     public function test_versioned_content_routes_publish_only_public_content(): void
