@@ -172,4 +172,6 @@ jobs:
         run: php artisan test tests/Feature/CommerceOperationsTest.php tests/Feature/CommerceFilamentTest.php tests/Feature/CustomerOtpAuthTest.php tests/Feature/WebPushSubscriptionTest.php
 
       - name: Real two-process oversell race
-        run: php tests/Support/commerce_race_harness.php
+        run: |
+          mkdir -p storage/framework/testing
+          php tests/Support/commerce_race_harness.php
