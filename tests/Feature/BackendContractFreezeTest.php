@@ -30,7 +30,7 @@ class BackendContractFreezeTest extends TestCase
             ->json();
 
         $this->assertSame('3.1.0', $document['openapi']);
-        $this->assertSame('2026-08-09-f14-be-f1', $document['info']['version']);
+        $this->assertSame('2026-09-06-p3-storefront-v1', $document['info']['version']);
 
         $requiredPaths = [
             '/api/system/openapi',
@@ -99,7 +99,7 @@ class BackendContractFreezeTest extends TestCase
                 ],
                 'meta' => ['apiVersion', 'contractVersion'],
             ])
-            ->assertJsonPath('meta.contractVersion', '2026-08-09-f14-be-f1');
+            ->assertJsonPath('meta.contractVersion', '2026-09-06-p3-storefront-v1');
     }
 
     public function test_versioned_auth_surface_establishes_session_without_using_legacy_routes(): void
@@ -131,7 +131,7 @@ class BackendContractFreezeTest extends TestCase
     {
         $this->getJson('/api/system/contracts')
             ->assertOk()
-            ->assertJsonPath('data.contractVersion', '2026-08-09-f14-be-f1')
+            ->assertJsonPath('data.contractVersion', '2026-09-06-p3-storefront-v1')
             ->assertJsonPath('data.contracts.domain_cleanup.status', 'ready')
             ->assertJsonPath('data.contracts.apparel_domain.status', 'ready')
             ->assertJsonPath('data.contracts.catalog.status', 'public-v1-ready')
