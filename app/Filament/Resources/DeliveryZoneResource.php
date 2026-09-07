@@ -13,11 +13,17 @@ use Filament\Tables\Table;
 class DeliveryZoneResource extends Resource
 {
     protected static ?string $model = DeliveryZone::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-truck';
+
     protected static ?string $navigationLabel = 'مناطق ارسال';
+
     protected static ?string $modelLabel = 'منطقه ارسال';
+
     protected static ?string $pluralModelLabel = 'مناطق ارسال';
+
     protected static ?string $navigationGroup = 'فروشگاه LBB';
+
     protected static ?int $navigationSort = 6;
 
     public static function form(Form $form): Form

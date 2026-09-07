@@ -77,6 +77,7 @@ final class DeliveryConfigurationService
                 }
 
                 $fallback = config("lbb.checkout.delivery_methods.{$method->value}", []);
+
                 return [
                     'method' => $method->value,
                     'label' => $method->label(),
@@ -133,6 +134,7 @@ final class DeliveryConfigurationService
     private function normalize(?string $value): ?string
     {
         $value = trim((string) $value);
+
         return $value === '' ? null : $value;
     }
 }
