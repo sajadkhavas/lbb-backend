@@ -194,7 +194,7 @@ class CustomerOtpAuthTest extends TestCase
             ->assertJsonPath('data.contracts.backend_freeze.status', 'ready')
             ->assertJsonPath('data.contracts.backend_freeze.contract_version', '2026-09-06-p3-storefront-v1')
             ->assertJsonPath('data.launch.backend_complete', true)
-            ->assertJsonPath('data.launch.frontend_integrated', false)
+            ->assertJsonPath('data.launch.frontend_integrated', true)
             ->assertJsonPath('data.launch.production_deployed', false);
     }
 
