@@ -10,7 +10,7 @@ class BackendFinalAcceptanceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_backend_is_accepted_on_the_p3_amended_contract_without_claiming_frontend_or_deployment(): void
+    public function test_backend_is_accepted_on_the_p3_amended_contract_with_frontend_integrated_and_without_deployment(): void
     {
         $this->getJson('/api/system/contracts')
             ->assertOk()
@@ -29,7 +29,7 @@ class BackendFinalAcceptanceTest extends TestCase
             ->assertJsonPath('data.contracts.backend_freeze.source', 'f14-be-f1')
             ->assertJsonPath('data.contracts.backend_freeze.contract_version', '2026-09-06-p3-storefront-v1')
             ->assertJsonPath('data.launch.backend_complete', true)
-            ->assertJsonPath('data.launch.frontend_integrated', false)
+            ->assertJsonPath('data.launch.frontend_integrated', true)
             ->assertJsonPath('data.launch.production_deployed', false);
 
         $this->assertSame(0, Artisan::call('backend:readiness', ['--json' => true]));

@@ -127,7 +127,7 @@ class BackendContractFreezeTest extends TestCase
         $this->stateful()->getJson('/api/v1/auth/me')->assertUnauthorized();
     }
 
-    public function test_backend_contract_stays_frozen_after_auth_amendment_without_claiming_frontend_or_deployment(): void
+    public function test_backend_contract_stays_frozen_while_launch_metadata_records_p3_frontend_integration(): void
     {
         $this->getJson('/api/system/contracts')
             ->assertOk()
@@ -141,7 +141,7 @@ class BackendContractFreezeTest extends TestCase
             ->assertJsonPath('data.contracts.backend_freeze.status', 'ready')
             ->assertJsonPath('data.contracts.backend_freeze.source', 'f14-be-f1')
             ->assertJsonPath('data.launch.backend_complete', true)
-            ->assertJsonPath('data.launch.frontend_integrated', false)
+            ->assertJsonPath('data.launch.frontend_integrated', true)
             ->assertJsonPath('data.launch.production_deployed', false);
 
         $this->assertSame(0, Artisan::call('backend:readiness', ['--json' => true]));

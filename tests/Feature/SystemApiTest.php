@@ -18,7 +18,7 @@ class SystemApiTest extends TestCase
             ->assertJsonPath('meta.contractVersion', '2026-09-06-p3-storefront-v1');
     }
 
-    public function test_meta_reports_accepted_backend_without_claiming_frontend_or_deployment(): void
+    public function test_meta_reports_accepted_backend_without_claiming_deployment(): void
     {
         $this->getJson('/api/system/meta')
             ->assertOk()
@@ -47,7 +47,7 @@ class SystemApiTest extends TestCase
             ->assertJsonPath('data.contracts.backend_freeze.source', 'f14-be-f1')
             ->assertJsonPath('data.contracts.backend_freeze.contract_version', '2026-09-06-p3-storefront-v1')
             ->assertJsonPath('data.launch.backend_complete', true)
-            ->assertJsonPath('data.launch.frontend_integrated', false)
+            ->assertJsonPath('data.launch.frontend_integrated', true)
             ->assertJsonPath('data.launch.production_deployed', false);
     }
 

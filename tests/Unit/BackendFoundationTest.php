@@ -16,7 +16,7 @@ class BackendFoundationTest extends TestCase
         $this->assertTrue((bool) config('cors.supports_credentials'));
     }
 
-    public function test_p3_preserves_backend_acceptance_and_external_boundaries(): void
+    public function test_p4_preserves_backend_acceptance_and_external_boundaries_after_p3_frontend_integration(): void
     {
         $contracts = config('lbb.contracts');
 
@@ -32,11 +32,13 @@ class BackendFoundationTest extends TestCase
         $this->assertSame('commerce-operations-ready', $contracts['store_operations']['status']);
         $this->assertSame('public-v1-ready', $contracts['storefront_content']['status']);
         $this->assertSame('p3-storefront-v1', $contracts['storefront_content']['source']);
+        $this->assertSame('preactivation-candidate', $contracts['commerce_go_live']['status']);
+        $this->assertSame(30, $contracts['commerce_go_live']['reservation_minutes']);
         $this->assertSame('ready', $contracts['backend_freeze']['status']);
         $this->assertSame('f14-be-f1', $contracts['backend_freeze']['source']);
         $this->assertSame('2026-09-06-p3-storefront-v1', $contracts['backend_freeze']['contract_version']);
         $this->assertTrue((bool) config('lbb.launch.backend_complete'));
-        $this->assertFalse((bool) config('lbb.launch.frontend_integrated'));
+        $this->assertTrue((bool) config('lbb.launch.frontend_integrated'));
         $this->assertFalse((bool) config('lbb.launch.production_deployed'));
     }
 }

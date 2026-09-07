@@ -22,10 +22,15 @@ return [
         'kavenegar' => ['api_key' => env('KAVENEGAR_API_KEY'), 'template' => env('KAVENEGAR_TEMPLATE'), 'base_url' => env('KAVENEGAR_BASE_URL', 'https://api.kavenegar.com/v1')],
     ],
     'checkout' => [
-        'enabled' => $boolean('CHECKOUT_ENABLED'), 'reservation_minutes' => (int) env('INVENTORY_RESERVATION_MINUTES', 20),
+        'enabled' => $boolean('CHECKOUT_ENABLED'), 'reservation_minutes' => (int) env('INVENTORY_RESERVATION_MINUTES', 30),
         'max_quantity_per_line' => (int) env('CHECKOUT_MAX_QUANTITY_PER_LINE', 20), 'max_total_units' => (int) env('CHECKOUT_MAX_TOTAL_UNITS', 50),
         'packaging_fee_toman' => 0,
         'delivery_methods' => [
+            'immediate_courier' => ['enabled' => $boolean('DELIVERY_IMMEDIATE_COURIER_ENABLED'), 'fee_toman' => (int) env('DELIVERY_IMMEDIATE_COURIER_FEE_TOMAN', 0)],
+            'tipax' => ['enabled' => $boolean('DELIVERY_TIPAX_ENABLED'), 'fee_toman' => (int) env('DELIVERY_TIPAX_FEE_TOMAN', 0)],
+            'decapost' => ['enabled' => $boolean('DELIVERY_DECAPOST_ENABLED'), 'fee_toman' => (int) env('DELIVERY_DECAPOST_FEE_TOMAN', 0)],
+            'express_post' => ['enabled' => $boolean('DELIVERY_EXPRESS_POST_ENABLED'), 'fee_toman' => (int) env('DELIVERY_EXPRESS_POST_FEE_TOMAN', 0)],
+            // Deprecated compatibility only. Do not enable for P4 production activation.
             'standard' => ['enabled' => $boolean('DELIVERY_STANDARD_ENABLED'), 'fee_toman' => (int) env('DELIVERY_STANDARD_FEE_TOMAN', 0)],
             'pickup' => ['enabled' => $boolean('DELIVERY_PICKUP_ENABLED'), 'fee_toman' => (int) env('DELIVERY_PICKUP_FEE_TOMAN', 0)],
         ],
@@ -75,7 +80,8 @@ return [
         'payments' => ['status' => 'provider-ready-fail-closed'], 'store_operations' => ['status' => 'commerce-operations-ready'],
         'web_push' => ['status' => 'additive-post-freeze', 'source' => 'web-push-notifications'],
         'storefront_content' => ['status' => 'public-v1-ready', 'source' => 'p3-storefront-v1', 'contract_version' => '2026-09-06-p3-storefront-v1'],
+        'commerce_go_live' => ['status' => 'preactivation-candidate', 'source' => 'p4-commerce-go-live', 'shipping_methods' => ['immediate_courier', 'tipax', 'decapost', 'express_post'], 'reservation_minutes' => 30],
         'backend_freeze' => ['status' => 'ready', 'source' => 'f14-be-f1', 'contract_version' => '2026-09-06-p3-storefront-v1'],
     ],
-    'launch' => ['strategy' => 'p3-storefront-contract-ready-awaiting-frontend-integration-and-deployment', 'backend_complete' => true, 'frontend_integrated' => false, 'production_deployed' => false],
+    'launch' => ['strategy' => 'p4-commerce-go-live-preactivation', 'backend_complete' => true, 'frontend_integrated' => true, 'production_deployed' => false],
 ];

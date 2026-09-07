@@ -57,7 +57,7 @@ class EndToEndAcceptanceTest extends TestCase
             ->assertJsonPath('data.contracts.storefront_content.status', 'public-v1-ready')
             ->assertJsonPath('data.contracts.backend_freeze.status', 'ready')
             ->assertJsonPath('data.launch.backend_complete', true)
-            ->assertJsonPath('data.launch.frontend_integrated', false)
+            ->assertJsonPath('data.launch.frontend_integrated', true)
             ->assertJsonPath('data.launch.production_deployed', false);
 
         $payload = [

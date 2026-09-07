@@ -64,24 +64,29 @@ final class DeliveryConfigurationService
     {
         $zone = $this->resolve($province, $city);
 
-        return collect(DeliveryMethod::cases())->map(function (DeliveryMethod $method) use ($zone, $subtotalToman): array {
-            if ($zone) {
+        return collect(DeliveryMethod::cases())
+            ->filter(static fn (DeliveryMethod $method): bool => $method->isOfficialP4Method())
+            ->map(function (DeliveryMethod $method) use ($zone, $subtotalToman): array {
+                if ($zone) {
+                    return [
+                        'method' => $method->value,
+                        'label' => $method->label(),
+                        'enabled' => $zone->methodEnabled($method),
+                        'feeToman' => $zone->feeFor($method, $subtotalToman),
+                    ];
+                }
+
+                $fallback = config("lbb.checkout.delivery_methods.{$method->value}", []);
+
                 return [
                     'method' => $method->value,
                     'label' => $method->label(),
-                    'enabled' => $zone->methodEnabled($method),
-                    'feeToman' => $zone->feeFor($method, $subtotalToman),
+                    'enabled' => (bool) ($fallback['enabled'] ?? false),
+                    'feeToman' => (int) ($fallback['fee_toman'] ?? 0),
                 ];
-            }
-
-            $fallback = config("lbb.checkout.delivery_methods.{$method->value}", []);
-            return [
-                'method' => $method->value,
-                'label' => $method->label(),
-                'enabled' => (bool) ($fallback['enabled'] ?? false),
-                'feeToman' => (int) ($fallback['fee_toman'] ?? 0),
-            ];
-        })->values()->all();
+            })
+            ->values()
+            ->all();
     }
 
     public function resolve(?string $province, ?string $city): ?DeliveryZone
@@ -129,6 +134,7 @@ final class DeliveryConfigurationService
     private function normalize(?string $value): ?string
     {
         $value = trim((string) $value);
+
         return $value === '' ? null : $value;
     }
 }
