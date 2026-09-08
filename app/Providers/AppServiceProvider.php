@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Support\IranianMobile;
+use App\Support\PublicCatalogRateLimit;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -22,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        RateLimiter::for('public-catalog', static fn (Request $request): array => [Limit::perMinute(120)->by('public-catalog-ip:'.($request->ip() ?? 'unknown'))]);
+        RateLimiter::for('public-catalog', static fn (Request $request): array => PublicCatalogRateLimit::limits($request));
         RateLimiter::for('public-search', static fn (Request $request): array => [Limit::perMinute(60)->by('public-search-ip:'.($request->ip() ?? 'unknown'))]);
         RateLimiter::for('commerce-cart', static fn (Request $request): array => [
             Limit::perMinute(60)->by('commerce-cart-customer:'.($request->user('customer')?->getKey() ?? $request->ip() ?? 'unknown')),
