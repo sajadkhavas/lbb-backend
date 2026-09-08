@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Widgets\LbbCommerceOverview;
 use Awcodes\Curator\CuratorPlugin;
 use Awcodes\Curator\Resources\MediaResource;
 use BezhanSalleh\FilamentLanguageSwitch\LanguageSwitch;
@@ -47,8 +48,8 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([Pages\Dashboard::class])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
+                LbbCommerceOverview::class,
                 Widgets\AccountWidget::class,
             ])
             ->middleware([
