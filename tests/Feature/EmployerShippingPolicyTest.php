@@ -32,20 +32,30 @@ class EmployerShippingPolicyTest extends TestCase
             'enabled' => true,
             'fee_toman' => 65000,
         ]);
+        config()->set('lbb.checkout.delivery_methods.standard', [
+            'enabled' => true,
+            'fee_toman' => 30000,
+        ]);
     }
 
-    public function test_public_options_expose_only_employer_approved_freight_collect_methods(): void
+    public function test_public_options_retain_p4_contract_but_offer_only_employer_approved_methods(): void
     {
         $methods = collect(app(DeliveryConfigurationService::class)->options('تهران', 'تهران', 900000));
 
         $this->assertSame(
-            ['immediate_courier', 'tipax', 'decapost'],
+            ['immediate_courier', 'tipax', 'decapost', 'express_post'],
             $methods->pluck('method')->all(),
         );
-        $this->assertTrue($methods->every(fn (array $method): bool => $method['paymentMode'] === 'freight_collect'));
-        $this->assertTrue($methods->every(fn (array $method): bool => $method['feeToman'] === 0));
-        $this->assertTrue($methods->every(fn (array $method): bool => $method['isFree'] === false));
-        $this->assertTrue($methods->every(fn (array $method): bool => str_contains($method['feeNotice'], 'پس‌کرایه')));
+
+        $approved = $methods->where('policyEligible', true)->values();
+        $this->assertSame(
+            ['immediate_courier', 'tipax', 'decapost'],
+            $approved->pluck('method')->all(),
+        );
+        $this->assertTrue($approved->every(fn (array $method): bool => $method['paymentMode'] === 'freight_collect'));
+        $this->assertTrue($approved->every(fn (array $method): bool => $method['feeToman'] === 0));
+        $this->assertTrue($approved->every(fn (array $method): bool => $method['isFree'] === false));
+        $this->assertTrue($approved->every(fn (array $method): bool => str_contains((string) $method['feeNotice'], 'پس‌کرایه')));
 
         $immediate = $methods->firstWhere('method', 'immediate_courier');
         $this->assertTrue($immediate['enabled']);
@@ -56,6 +66,11 @@ class EmployerShippingPolicyTest extends TestCase
         $tipax = $methods->firstWhere('method', 'tipax');
         $this->assertSame('تمام نقاط ایران', $tipax['coverage']['label']);
         $this->assertSame(['label' => '۳ تا ۷ روز', 'minDays' => 3, 'maxDays' => 7], $tipax['eta']);
+
+        $express = $methods->firstWhere('method', 'express_post');
+        $this->assertFalse($express['policyEligible']);
+        $this->assertFalse($express['enabled']);
+        $this->assertSame('unavailable', $express['paymentMode']);
     }
 
     public function test_immediate_delivery_is_disabled_outside_tehran_and_karaj(): void
@@ -71,12 +86,11 @@ class EmployerShippingPolicyTest extends TestCase
     {
         $service = app(DeliveryConfigurationService::class);
 
-        foreach (['تهران', 'کرج', 'Tehran', 'Karaj', 'كـرج'] as $city) {
-            $normalizedCity = $city === 'كـرج' ? 'كرج' : $city;
-            $methods = collect($service->options(null, $normalizedCity, 900000));
+        foreach (['تهران', 'کرج', 'Tehran', 'Karaj', 'كرج'] as $city) {
+            $methods = collect($service->options(null, $city, 900000));
             $this->assertTrue(
                 $methods->firstWhere('method', 'immediate_courier')['enabled'],
-                "Immediate delivery should be enabled for {$normalizedCity}",
+                "Immediate delivery should be enabled for {$city}",
             );
         }
     }
@@ -105,15 +119,15 @@ class EmployerShippingPolicyTest extends TestCase
         );
     }
 
-    public function test_quote_rejects_express_post_even_if_legacy_config_is_enabled(): void
+    public function test_legacy_standard_quote_semantics_remain_available_for_frozen_internal_contracts(): void
     {
-        $this->expectException(ValidationException::class);
-
-        app(DeliveryConfigurationService::class)->quote(
-            DeliveryMethod::ExpressPost,
+        $quote = app(DeliveryConfigurationService::class)->quote(
+            DeliveryMethod::Standard,
             'تهران',
             'تهران',
             900000,
         );
+
+        $this->assertSame(30000, $quote['fee_toman']);
     }
 }
