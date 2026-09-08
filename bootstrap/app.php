@@ -4,7 +4,6 @@ use App\Http\Middleware\AttachApiContext;
 use App\Http\Middleware\CheckIpBlacklist;
 use App\Http\Middleware\CheckMaintenanceMode;
 use App\Http\Middleware\EnsureActiveCustomer;
-use App\Http\Middleware\HandleRedirects;
 use App\Support\ApiExceptionRenderer;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -23,7 +22,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
         $middleware->api(prepend: [HandleCors::class, AttachApiContext::class]);
         $middleware->web(prepend: [
-            HandleRedirects::class,
             CheckMaintenanceMode::class,
             CheckIpBlacklist::class,
         ]);
