@@ -13,6 +13,10 @@ return [
         'version' => '1', 'contract_version' => '2026-09-06-p3-storefront-v1', 'request_id_header' => 'X-Request-ID',
         'openapi_path' => base_path('docs/openapi.json'),
     ],
+    'ssr' => [
+        'rate_limit_token' => env('LBB_SSR_RATE_LIMIT_TOKEN'),
+        'catalog_rate_limit_per_minute' => (int) env('LBB_SSR_CATALOG_RATE_LIMIT_PER_MINUTE', 600),
+    ],
     'frontend_origins' => $frontendOrigins,
     'stateful_domains' => env('SANCTUM_STATEFUL_DOMAINS', 'lbb.ir,www.lbb.ir'),
     'otp' => [
