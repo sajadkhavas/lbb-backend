@@ -11,6 +11,8 @@ use Illuminate\Validation\ValidationException;
 
 final class DeliveryConfigurationService
 {
+    private const FREIGHT_COLLECT_NOTICE = 'هزینه ارسال خارج از پرداخت آنلاین فروشگاه و به‌صورت پس‌کرایه دریافت می‌شود.';
+
     /** @return array{zone: ?DeliveryZone, fee_toman: int, packaging_fee_toman: int, preparation_min_days: int, preparation_max_days: int} */
     public function quote(
         DeliveryMethod $method,
@@ -18,6 +20,8 @@ final class DeliveryConfigurationService
         ?string $city,
         int $subtotalToman,
     ): array {
+        $this->assertEmployerPolicy($method, $city);
+
         if (! StoreSetting::value('orders.accepting_orders', true)) {
             throw ValidationException::withMessages(['checkout' => ['پذیرش سفارش جدید موقتاً متوقف شده است.']]);
         }
@@ -52,37 +56,55 @@ final class DeliveryConfigurationService
 
         return [
             'zone' => $zone,
-            'fee_toman' => $zone->feeFor($method, $subtotalToman),
+            'fee_toman' => 0,
             'packaging_fee_toman' => (int) $zone->packaging_fee_toman,
             'preparation_min_days' => (int) $zone->preparation_min_days,
             'preparation_max_days' => max((int) $zone->preparation_min_days, (int) $zone->preparation_max_days),
         ];
     }
 
-    /** @return array<int, array{method: string, label: string, enabled: bool, feeToman: int}> */
+    /**
+     * @return array<int, array{
+     *     method: string,
+     *     label: string,
+     *     enabled: bool,
+     *     feeToman: int,
+     *     paymentMode: string,
+     *     isFree: bool,
+     *     feeNotice: string,
+     *     carrier: array{label: string},
+     *     coverage: array{label: string},
+     *     eta: array{label: string, minDays: ?int, maxDays: ?int}
+     * }>
+     */
     public function options(?string $province, ?string $city, int $subtotalToman): array
     {
         $zone = $this->resolve($province, $city);
 
         return collect(DeliveryMethod::cases())
-            ->filter(static fn (DeliveryMethod $method): bool => $method->isOfficialP4Method())
-            ->map(function (DeliveryMethod $method) use ($zone, $subtotalToman): array {
-                if ($zone) {
-                    return [
-                        'method' => $method->value,
-                        'label' => $method->label(),
-                        'enabled' => $zone->methodEnabled($method),
-                        'feeToman' => $zone->feeFor($method, $subtotalToman),
-                    ];
-                }
-
-                $fallback = config("lbb.checkout.delivery_methods.{$method->value}", []);
+            ->filter(static fn (DeliveryMethod $method): bool => $method->isEmployerApprovedMethod())
+            ->map(function (DeliveryMethod $method) use ($zone, $city): array {
+                $configured = $zone
+                    ? $zone->methodEnabled($method)
+                    : (bool) (config("lbb.checkout.delivery_methods.{$method->value}.enabled", false));
+                $eligible = $method !== DeliveryMethod::ImmediateCourier || $this->isImmediateCity($city);
+                $etaDays = $method->etaDays();
 
                 return [
                     'method' => $method->value,
                     'label' => $method->label(),
-                    'enabled' => (bool) ($fallback['enabled'] ?? false),
-                    'feeToman' => (int) ($fallback['fee_toman'] ?? 0),
+                    'enabled' => $configured && $eligible,
+                    'feeToman' => 0,
+                    'paymentMode' => 'freight_collect',
+                    'isFree' => false,
+                    'feeNotice' => self::FREIGHT_COLLECT_NOTICE,
+                    'carrier' => ['label' => (string) $method->carrierLabel()],
+                    'coverage' => ['label' => (string) $method->coverageLabel()],
+                    'eta' => [
+                        'label' => (string) $method->etaLabel(),
+                        'minDays' => $etaDays['minDays'],
+                        'maxDays' => $etaDays['maxDays'],
+                    ],
                 ];
             })
             ->values()
@@ -124,11 +146,46 @@ final class DeliveryConfigurationService
 
         return [
             'zone' => null,
-            'fee_toman' => (int) ($delivery['fee_toman'] ?? 0),
+            'fee_toman' => 0,
             'packaging_fee_toman' => (int) config('lbb.checkout.packaging_fee_toman', 0),
             'preparation_min_days' => 0,
             'preparation_max_days' => 0,
         ];
+    }
+
+    private function assertEmployerPolicy(DeliveryMethod $method, ?string $city): void
+    {
+        if (! $method->isEmployerApprovedMethod()) {
+            throw ValidationException::withMessages([
+                'deliveryMethod' => ['روش ارسال انتخاب‌شده در سیاست فعلی فروشگاه فعال نیست.'],
+            ]);
+        }
+
+        if ($method === DeliveryMethod::ImmediateCourier && ! $this->isImmediateCity($city)) {
+            throw ValidationException::withMessages([
+                'deliveryMethod' => ['ارسال فوری فقط برای مقصد تهران یا کرج در دسترس است.'],
+            ]);
+        }
+    }
+
+    private function isImmediateCity(?string $city): bool
+    {
+        $city = $this->normalizeCity($city);
+
+        return in_array($city, ['تهران', 'کرج', 'tehran', 'karaj'], true);
+    }
+
+    private function normalizeCity(?string $value): ?string
+    {
+        $value = $this->normalize($value);
+        if ($value === null) {
+            return null;
+        }
+
+        $value = str_replace(['ي', 'ك'], ['ی', 'ک'], $value);
+        $value = preg_replace('/\s+/u', ' ', $value) ?? $value;
+
+        return strtolower($value);
     }
 
     private function normalize(?string $value): ?string
