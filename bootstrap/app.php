@@ -1,8 +1,6 @@
 <?php
 
 use App\Http\Middleware\AttachApiContext;
-use App\Http\Middleware\CheckIpBlacklist;
-use App\Http\Middleware\CheckMaintenanceMode;
 use App\Http\Middleware\EnsureActiveCustomer;
 use App\Support\ApiExceptionRenderer;
 use Illuminate\Foundation\Application;
@@ -21,10 +19,6 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->statefulApi();
         $middleware->api(prepend: [HandleCors::class, AttachApiContext::class]);
-        $middleware->web(prepend: [
-            CheckMaintenanceMode::class,
-            CheckIpBlacklist::class,
-        ]);
         $middleware->alias([
             'api.context' => AttachApiContext::class,
             'customer.active' => EnsureActiveCustomer::class,
