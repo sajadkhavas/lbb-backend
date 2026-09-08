@@ -14,7 +14,7 @@ class AdminDashboardAvailabilityTest extends TestCase
 
     public function test_super_admin_dashboard_renders_without_legacy_widget_dependencies(): void
     {
-        $user = new User();
+        $user = new User;
         $user->name = 'Admin Dashboard Test';
         $user->email = 'admin-dashboard@example.test';
         $user->password = Hash::make('temporary-test-password');
