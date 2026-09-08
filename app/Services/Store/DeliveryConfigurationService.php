@@ -20,7 +20,7 @@ final class DeliveryConfigurationService
         ?string $city,
         int $subtotalToman,
     ): array {
-        $this->assertEmployerPolicy($method, $city);
+        $this->assertEmployerGeography($method, $city);
 
         if (! StoreSetting::value('orders.accepting_orders', true)) {
             throw ValidationException::withMessages(['checkout' => ['پذیرش سفارش جدید موقتاً متوقف شده است.']]);
@@ -56,7 +56,7 @@ final class DeliveryConfigurationService
 
         return [
             'zone' => $zone,
-            'fee_toman' => 0,
+            'fee_toman' => $method->isFreightCollect() ? 0 : $zone->feeFor($method, $subtotalToman),
             'packaging_fee_toman' => (int) $zone->packaging_fee_toman,
             'preparation_min_days' => (int) $zone->preparation_min_days,
             'preparation_max_days' => max((int) $zone->preparation_min_days, (int) $zone->preparation_max_days),
@@ -64,17 +64,22 @@ final class DeliveryConfigurationService
     }
 
     /**
+     * Public delivery options retain the frozen four-method P4 contract for compatibility.
+     * Only the employer-approved three methods can be enabled by the active production policy;
+     * express_post remains present as a disabled compatibility record and is never offered by the storefront.
+     *
      * @return array<int, array{
      *     method: string,
      *     label: string,
      *     enabled: bool,
+     *     policyEligible: bool,
      *     feeToman: int,
      *     paymentMode: string,
      *     isFree: bool,
-     *     feeNotice: string,
-     *     carrier: array{label: string},
-     *     coverage: array{label: string},
-     *     eta: array{label: string, minDays: ?int, maxDays: ?int}
+     *     feeNotice: string|null,
+     *     carrier: array{label: string|null},
+     *     coverage: array{label: string|null},
+     *     eta: array{label: string|null, minDays: ?int, maxDays: ?int}
      * }>
      */
     public function options(?string $province, ?string $city, int $subtotalToman): array
@@ -82,26 +87,35 @@ final class DeliveryConfigurationService
         $zone = $this->resolve($province, $city);
 
         return collect(DeliveryMethod::cases())
-            ->filter(static fn (DeliveryMethod $method): bool => $method->isEmployerApprovedMethod())
-            ->map(function (DeliveryMethod $method) use ($zone, $city): array {
+            ->filter(static fn (DeliveryMethod $method): bool => $method->isOfficialP4Method())
+            ->map(function (DeliveryMethod $method) use ($zone, $city, $subtotalToman): array {
+                $policyEligible = $method->isEmployerApprovedMethod();
                 $configured = $zone
                     ? $zone->methodEnabled($method)
                     : (bool) (config("lbb.checkout.delivery_methods.{$method->value}.enabled", false));
-                $eligible = $method !== DeliveryMethod::ImmediateCourier || $this->isImmediateCity($city);
+                $eligibleByGeography = $method !== DeliveryMethod::ImmediateCourier || $this->isImmediateCity($city);
                 $etaDays = $method->etaDays();
+
+                $feeToman = 0;
+                if (! $policyEligible) {
+                    $feeToman = $zone
+                        ? $zone->feeFor($method, $subtotalToman)
+                        : (int) config("lbb.checkout.delivery_methods.{$method->value}.fee_toman", 0);
+                }
 
                 return [
                     'method' => $method->value,
                     'label' => $method->label(),
-                    'enabled' => $configured && $eligible,
-                    'feeToman' => 0,
-                    'paymentMode' => 'freight_collect',
+                    'enabled' => $policyEligible && $configured && $eligibleByGeography,
+                    'policyEligible' => $policyEligible,
+                    'feeToman' => $feeToman,
+                    'paymentMode' => $policyEligible ? 'freight_collect' : 'unavailable',
                     'isFree' => false,
-                    'feeNotice' => self::FREIGHT_COLLECT_NOTICE,
-                    'carrier' => ['label' => (string) $method->carrierLabel()],
-                    'coverage' => ['label' => (string) $method->coverageLabel()],
+                    'feeNotice' => $policyEligible ? self::FREIGHT_COLLECT_NOTICE : null,
+                    'carrier' => ['label' => $method->carrierLabel()],
+                    'coverage' => ['label' => $method->coverageLabel()],
                     'eta' => [
-                        'label' => (string) $method->etaLabel(),
+                        'label' => $method->etaLabel(),
                         'minDays' => $etaDays['minDays'],
                         'maxDays' => $etaDays['maxDays'],
                     ],
@@ -146,21 +160,15 @@ final class DeliveryConfigurationService
 
         return [
             'zone' => null,
-            'fee_toman' => 0,
+            'fee_toman' => $method->isFreightCollect() ? 0 : (int) ($delivery['fee_toman'] ?? 0),
             'packaging_fee_toman' => (int) config('lbb.checkout.packaging_fee_toman', 0),
             'preparation_min_days' => 0,
             'preparation_max_days' => 0,
         ];
     }
 
-    private function assertEmployerPolicy(DeliveryMethod $method, ?string $city): void
+    private function assertEmployerGeography(DeliveryMethod $method, ?string $city): void
     {
-        if (! $method->isEmployerApprovedMethod()) {
-            throw ValidationException::withMessages([
-                'deliveryMethod' => ['روش ارسال انتخاب‌شده در سیاست فعلی فروشگاه فعال نیست.'],
-            ]);
-        }
-
         if ($method === DeliveryMethod::ImmediateCourier && ! $this->isImmediateCity($city)) {
             throw ValidationException::withMessages([
                 'deliveryMethod' => ['ارسال فوری فقط برای مقصد تهران یا کرج در دسترس است.'],
