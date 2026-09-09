@@ -145,6 +145,7 @@ final class PublicCatalogQuery
             'collections' => fn ($collections) => $collections->published(),
             'drops' => fn ($drops) => $drops->published(),
             'evidences',
+            'media' => fn ($media) => $media->where('collection_name', 'mannequin-front'),
             'mediaAssets' => fn ($media) => $media
                 ->where('verification_state', EvidenceState::Verified->value)
                 ->with(['media', 'color', 'variant']),
