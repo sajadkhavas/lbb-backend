@@ -9,27 +9,42 @@ use App\Models\GalleryItem;
 use App\Models\Post;
 use App\Models\StoreSetting;
 use App\Support\ApiResponse;
+use App\Support\StorefrontPresentationDefaults;
 use Illuminate\Http\JsonResponse;
 
 class StorefrontContentController extends Controller
 {
-    public const CONTRACT_VERSION = '2026-09-06-p3-storefront-v1';
+    public const CONTRACT_VERSION = '2026-09-09-final-admin-storefront-v2';
 
     public function bootstrap(): JsonResponse
     {
-        $settings = StoreSetting::query()
+        $settings = [];
+
+        StoreSetting::query()
             ->public()
             ->orderBy('group')
             ->orderBy('key')
             ->get()
-            ->groupBy('group')
-            ->map(fn ($items) => $items->mapWithKeys(
-                fn (StoreSetting $setting): array => [$setting->key => $setting->typedValue()]
-            ));
+            ->each(function (StoreSetting $setting) use (&$settings): void {
+                $settings[$setting->group][$setting->key] = $setting->typedValue();
+            });
+
+        $settings = StorefrontPresentationDefaults::merge($settings);
+        $paymentProvider = trim((string) config('lbb.payment.provider', 'disabled'));
+        $paymentEnabled = (bool) config('lbb.payment.enabled', false)
+            && $paymentProvider !== ''
+            && $paymentProvider !== 'disabled';
 
         return ApiResponse::success([
             'contractVersion' => self::CONTRACT_VERSION,
             'settings' => $settings,
+            'runtime' => [
+                'checkoutEnabled' => (bool) config('lbb.checkout.enabled', false),
+                'payment' => [
+                    'enabled' => $paymentEnabled,
+                    'provider' => $paymentEnabled ? $paymentProvider : 'disabled',
+                ],
+            ],
         ]);
     }
 
