@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AccountAddressController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AccountOrderController;
+use App\Http\Controllers\Api\AccountStorefrontStateController;
 use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\CommerceCartController;
@@ -134,6 +135,10 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::post('/orders/track', PublicOrderTrackingController::class)->middleware('throttle:10,1')->name('orders.track');
 
     Route::middleware(['auth:customer', 'customer.active'])->group(function (): void {
+        Route::get('/account/storefront-state', [AccountStorefrontStateController::class, 'show'])->middleware('throttle:60,1')->name('storefront-state.show');
+        Route::put('/account/wishlist', [AccountStorefrontStateController::class, 'replaceWishlist'])->middleware('throttle:30,1')->name('wishlist.replace');
+        Route::put('/account/cart', [AccountStorefrontStateController::class, 'replaceCart'])->middleware('throttle:30,1')->name('cart.replace');
+
         Route::post('/cart/validate', [CommerceCartController::class, 'validateCart'])->middleware('throttle:commerce-cart')->name('cart.validate');
         Route::post('/checkout/quote', [CommerceCheckoutController::class, 'quote'])->middleware('throttle:commerce-checkout')->name('checkout.quote');
         Route::post('/checkout/commit', [CommerceCheckoutController::class, 'commit'])->middleware('throttle:commerce-checkout')->name('checkout.commit');
