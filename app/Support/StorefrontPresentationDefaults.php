@@ -165,7 +165,7 @@ final class StorefrontPresentationDefaults
     }
 
     /**
-     * @param array<string, array<string, mixed>> $settings
+     * @param  array<string, array<string, mixed>>  $settings
      * @return array<string, array<string, mixed>>
      */
     public static function merge(array $settings): array
