@@ -151,7 +151,9 @@ final class StorefrontPresentationDefaults
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     public static function contactDefaults(): array
     {
         return [
