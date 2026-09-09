@@ -30,6 +30,28 @@ class CategoryResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
+            Forms\Components\Section::make('ساختار و نمایش')->schema([
+                Forms\Components\Select::make('parent_id')
+                    ->label('دسته والد')
+                    ->relationship('parent', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->nullable()
+                    ->helperText('حداکثر سه سطح پشتیبانی می‌شود؛ مثال: شلوار ← جین ← بگ.'),
+                Forms\Components\Toggle::make('show_in_header')
+                    ->label('نمایش در هدر')
+                    ->default(false),
+                Forms\Components\Toggle::make('show_on_home')
+                    ->label('نمایش در صفحه اصلی')
+                    ->default(false),
+                Forms\Components\FileUpload::make('icon_path')
+                    ->label('آیکن دسته')
+                    ->image()
+                    ->imageEditor()
+                    ->directory('catalog/category-icons')
+                    ->helperText('آیکن ساده و مربعی برای Navigation/Home.')
+                    ->columnSpanFull(),
+            ])->columns(2),
             Forms\Components\Section::make('اطلاعات دسته')->schema([
                 Forms\Components\TextInput::make('name')->label('نام دسته')->required()->maxLength(120),
                 Forms\Components\TextInput::make('slug')->label('Slug')->maxLength(140),
@@ -56,12 +78,16 @@ class CategoryResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('icon_path')->label('آیکن')->square(),
                 Tables\Columns\ImageColumn::make('image_path')->label('تصویر')->square(),
                 Tables\Columns\TextColumn::make('name')->label('نام')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('parent.name')->label('والد')->placeholder('ریشه')->sortable(),
                 Tables\Columns\TextColumn::make('slug')->label('Slug')->searchable()->toggleable(),
                 Tables\Columns\TextColumn::make('publication_status')->label('انتشار')->badge(),
                 Tables\Columns\TextColumn::make('products_count')->label('محصولات')->counts('products')->sortable(),
                 Tables\Columns\IconColumn::make('is_active')->label('API فعال')->boolean(),
+                Tables\Columns\IconColumn::make('show_in_header')->label('هدر')->boolean(),
+                Tables\Columns\IconColumn::make('show_on_home')->label('خانه')->boolean(),
                 Tables\Columns\TextColumn::make('sort_order')->label('ترتیب')->sortable(),
             ])
             ->filters([
@@ -71,6 +97,8 @@ class CategoryResource extends Resource
                     )->all(),
                 ),
                 Tables\Filters\TernaryFilter::make('is_active')->label('API فعال'),
+                Tables\Filters\TernaryFilter::make('show_in_header')->label('نمایش در هدر'),
+                Tables\Filters\TernaryFilter::make('show_on_home')->label('نمایش در خانه'),
             ])
             ->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()])
             ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])])

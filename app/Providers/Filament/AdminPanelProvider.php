@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Widgets\LbbCommerceOverview;
+use App\Http\Middleware\BlockUnsafeAdminToolsInProduction;
 use Awcodes\Curator\CuratorPlugin;
 use Awcodes\Curator\Resources\MediaResource;
 use BezhanSalleh\FilamentLanguageSwitch\LanguageSwitch;
@@ -62,6 +63,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                BlockUnsafeAdminToolsInProduction::class,
             ])
             ->plugins([
                 FilamentShieldPlugin::make(),
