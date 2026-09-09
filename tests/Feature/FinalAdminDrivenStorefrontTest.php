@@ -20,16 +20,20 @@ class FinalAdminDrivenStorefrontTest extends TestCase
             ->assertJsonPath('data.runtime.payment.enabled', false)
             ->assertJsonPath('data.runtime.payment.provider', 'disabled');
 
-        $this->assertIsArray($response->json('data.settings.home.home.ticker'));
-        $this->assertIsArray($response->json('data.settings.home.home.trust'));
-        $this->assertIsArray($response->json('data.settings.home.home.section_copy'));
-        $this->assertIsArray($response->json('data.settings.home.home.decision_support'));
-        $this->assertIsArray($response->json('data.settings.home.home.local_store'));
-        $this->assertIsArray($response->json('data.settings.home.home.featured_story'));
-        $this->assertIsArray($response->json('data.settings.policy.policy.returns'));
-        $this->assertIsArray($response->json('data.settings.trust.trust.enamad'));
+        $settings = $response->json('data.settings');
+        $this->assertIsArray($settings);
 
-        $contact = $response->json('data.settings.contact.contact.public');
+        $this->assertIsArray($settings['home']['home.ticker'] ?? null);
+        $this->assertIsArray($settings['home']['home.trust'] ?? null);
+        $this->assertIsArray($settings['home']['home.section_copy'] ?? null);
+        $this->assertIsArray($settings['home']['home.decision_support'] ?? null);
+        $this->assertIsArray($settings['home']['home.local_store'] ?? null);
+        $this->assertIsArray($settings['home']['home.featured_story'] ?? null);
+        $this->assertIsArray($settings['policy']['policy.returns'] ?? null);
+        $this->assertIsArray($settings['trust']['trust.enamad'] ?? null);
+
+        $contact = $settings['contact']['contact.public'] ?? null;
+        $this->assertIsArray($contact);
         $this->assertArrayHasKey('email', $contact);
         $this->assertArrayHasKey('addressLine', $contact);
         $this->assertArrayHasKey('mapUrl', $contact);
@@ -49,9 +53,10 @@ class FinalAdminDrivenStorefrontTest extends TestCase
             ],
         );
 
-        $this->getJson('/api/v1/storefront/bootstrap')
-            ->assertOk()
-            ->assertJsonPath('data.settings.home.home.ticker.0', 'ADMIN OVERRIDE');
+        $response = $this->getJson('/api/v1/storefront/bootstrap')->assertOk();
+        $settings = $response->json('data.settings');
+
+        $this->assertSame(['ADMIN OVERRIDE'], $settings['home']['home.ticker'] ?? null);
     }
 
     public function test_private_settings_never_leak_through_final_bootstrap(): void
