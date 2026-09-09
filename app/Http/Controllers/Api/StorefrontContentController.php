@@ -14,7 +14,7 @@ use Illuminate\Http\JsonResponse;
 
 class StorefrontContentController extends Controller
 {
-    public const CONTRACT_VERSION = '2026-09-09-final-admin-storefront-v2';
+    public const CONTRACT_VERSION = '2026-09-06-p3-storefront-v1';
 
     public function bootstrap(): JsonResponse
     {
