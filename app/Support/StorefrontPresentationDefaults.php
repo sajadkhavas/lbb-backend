@@ -170,7 +170,7 @@ final class StorefrontPresentationDefaults
     {
         foreach (self::settings() as $group => $items) {
             foreach ($items as $key => $default) {
-                if (! array_key_exists($key, $settings[$group] ?? [])) {
+                if (!array_key_exists($key, $settings[$group] ?? [])) {
                     $settings[$group][$key] = $default;
                 }
             }
