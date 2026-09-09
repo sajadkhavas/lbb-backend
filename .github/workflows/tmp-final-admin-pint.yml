@@ -1,0 +1,49 @@
+name: Temporary Final Admin Pint
+
+on:
+  push:
+    branches:
+      - final/admin-driven-storefront-control
+
+permissions:
+  contents: write
+
+jobs:
+  pint:
+    if: ${{ !contains(github.event.head_commit.message, '[pint]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: final/admin-driven-storefront-control
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, curl, openssl, bcmath, fileinfo
+          coverage: none
+      - name: Install locked dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Format final Admin-driven PHP delta
+        run: |
+          vendor/bin/pint \
+            app/Filament/Pages/SiteSettings.php \
+            app/Http/Controllers/Api/StorefrontContentController.php \
+            app/Support/StorefrontPresentationDefaults.php \
+            tests/Feature/FinalAdminDrivenStorefrontTest.php
+      - name: Commit formatter output when needed
+        run: |
+          if git diff --quiet; then
+            echo 'PINT_CHANGES=NO'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            app/Filament/Pages/SiteSettings.php \
+            app/Http/Controllers/Api/StorefrontContentController.php \
+            app/Support/StorefrontPresentationDefaults.php \
+            tests/Feature/FinalAdminDrivenStorefrontTest.php
+          git commit -m '[pint] format final Admin-driven backend'
+          git push origin HEAD:final/admin-driven-storefront-control
