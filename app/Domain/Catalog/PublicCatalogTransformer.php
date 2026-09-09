@@ -39,6 +39,7 @@ final class PublicCatalogTransformer
             'sizes' => $variants->pluck('size')->filter()->unique('public_id')->values()
                 ->map(fn ($size): array => $this->size($size))->all(),
             'primaryImage' => $this->primaryImage($product),
+            'mannequin' => $this->mannequin($product),
             'seo' => $this->productSeo($product),
         ];
     }
@@ -250,6 +251,70 @@ final class PublicCatalogTransformer
                 ];
             })->values()->all(),
         ];
+    }
+
+    private function mannequin(Product $product): array
+    {
+        $slots = (array) config('mannequin.slots', []);
+        $presets = (array) config('mannequin.presets', []);
+        $slot = is_string($product->mannequin_slot) && array_key_exists($product->mannequin_slot, $slots)
+            ? $product->mannequin_slot
+            : null;
+
+        $slotPreset = $slot !== null ? ($slots[$slot]['preset'] ?? null) : null;
+        $requestedPreset = is_string($product->mannequin_preset) ? $product->mannequin_preset : null;
+        $preset = $requestedPreset !== null && array_key_exists($requestedPreset, $presets)
+            ? $requestedPreset
+            : (is_string($slotPreset) && array_key_exists($slotPreset, $presets) ? $slotPreset : null);
+        $profile = $preset !== null ? (array) $presets[$preset] : [];
+        $assetUrl = $product->getFirstMediaUrl('mannequin-front') ?: null;
+
+        return [
+            'enabled' => (bool) $product->mannequin_enabled && $slot !== null && $assetUrl !== null,
+            'assetUrl' => $assetUrl,
+            'slot' => $slot,
+            'offsetX' => $this->boundedFloat(
+                $product->mannequin_offset_x,
+                (float) ($profile['offset_x'] ?? 0.0),
+                'offset_x',
+            ),
+            'offsetY' => $this->boundedFloat(
+                $product->mannequin_offset_y,
+                (float) ($profile['offset_y'] ?? 0.0),
+                'offset_y',
+            ),
+            'scale' => $this->boundedFloat(
+                $product->mannequin_scale,
+                (float) ($profile['scale'] ?? 1.0),
+                'scale',
+            ),
+            'layer' => $this->boundedInt(
+                $product->mannequin_layer,
+                (int) ($profile['layer'] ?? 30),
+                'layer',
+            ),
+            'preset' => $preset,
+        ];
+    }
+
+    private function boundedFloat(mixed $value, float $fallback, string $key): float
+    {
+        $bounds = (array) config("mannequin.bounds.{$key}", []);
+        $min = isset($bounds[0]) ? (float) $bounds[0] : -100.0;
+        $max = isset($bounds[1]) ? (float) $bounds[1] : 100.0;
+        $resolved = is_numeric($value) ? (float) $value : $fallback;
+
+        return max($min, min($max, $resolved));
+    }
+
+    private function boundedInt(mixed $value, int $fallback, string $key): int
+    {
+        $bounds = (array) config("mannequin.bounds.{$key}", []);
+        $min = isset($bounds[0]) ? (int) $bounds[0] : 1;
+        $max = isset($bounds[1]) ? (int) $bounds[1] : 100;
+        $resolved = is_numeric($value) ? (int) $value : $fallback;
+
+        return max($min, min($max, $resolved));
     }
 
     private function productSeo(Product $product): array
