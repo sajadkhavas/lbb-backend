@@ -176,6 +176,56 @@ class ProductResource extends Resource
                             ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
                             ->columnSpanFull(),
                     ]),
+                Forms\Components\Tabs\Tab::make('مانکن 2D')
+                    ->icon('heroicon-o-user')
+                    ->schema([
+                        Forms\Components\Placeholder::make('mannequin_rule')
+                            ->label('قانون Asset')
+                            ->content('فقط برش روبه‌رو با پس‌زمینه شفاف PNG/WebP/AVIF استفاده شود. اگر Asset یا Slot معتبر نباشد API قابلیت را Fail-closed غیرفعال می‌کند.'),
+                        Forms\Components\Toggle::make('mannequin_enabled')
+                            ->label('فعال‌سازی نمایش روی مانکن')
+                            ->default(false),
+                        Forms\Components\Select::make('mannequin_slot')
+                            ->label('Slot لباس')
+                            ->options(self::mannequinSlotOptions())
+                            ->placeholder('انتخاب Slot'),
+                        Forms\Components\Select::make('mannequin_preset')
+                            ->label('Preset')
+                            ->options(self::mannequinPresetOptions())
+                            ->placeholder('Preset پیش‌فرض Slot')
+                            ->helperText('خالی بماند تا Preset استاندارد Slot اعمال شود.'),
+                        SpatieMediaLibraryFileUpload::make('mannequin_asset')
+                            ->label('Asset شفاف مانکن')
+                            ->collection('mannequin-front')
+                            ->image()
+                            ->acceptedFileTypes(['image/png', 'image/webp', 'image/avif'])
+                            ->maxFiles(1)
+                            ->columnSpanFull(),
+                        Forms\Components\TextInput::make('mannequin_offset_x')
+                            ->label('Offset X (%)')
+                            ->numeric()
+                            ->minValue(-50)
+                            ->maxValue(50)
+                            ->placeholder('Preset'),
+                        Forms\Components\TextInput::make('mannequin_offset_y')
+                            ->label('Offset Y (%)')
+                            ->numeric()
+                            ->minValue(-50)
+                            ->maxValue(50)
+                            ->placeholder('Preset'),
+                        Forms\Components\TextInput::make('mannequin_scale')
+                            ->label('Scale')
+                            ->numeric()
+                            ->minValue(0.5)
+                            ->maxValue(2)
+                            ->placeholder('Preset'),
+                        Forms\Components\TextInput::make('mannequin_layer')
+                            ->label('Layer / Z-order')
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(100)
+                            ->placeholder('Preset'),
+                    ])->columns(4),
                 Forms\Components\Tabs\Tab::make('SEO')
                     ->icon('heroicon-o-magnifying-glass')
                     ->schema([
@@ -198,12 +248,14 @@ class ProductResource extends Resource
                 Tables\Columns\TextColumn::make('variants_count')->label('Variant')->counts('variants'),
                 Tables\Columns\TextColumn::make('variants_sum_stock_quantity')->label('موجودی کل')->sum('variants', 'stock_quantity')->sortable(),
                 Tables\Columns\IconColumn::make('is_active')->label('API فعال')->boolean(),
+                Tables\Columns\IconColumn::make('mannequin_enabled')->label('مانکن 2D')->boolean(),
                 Tables\Columns\IconColumn::make('is_featured')->label('ویژه')->boolean(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('category_id')->label('دسته')->relationship('category', 'name'),
                 Tables\Filters\SelectFilter::make('publication_status')->label('انتشار')->options(self::publicationOptions()),
                 Tables\Filters\TernaryFilter::make('is_active')->label('API فعال'),
+                Tables\Filters\TernaryFilter::make('mannequin_enabled')->label('مانکن 2D'),
                 Tables\Filters\TernaryFilter::make('is_featured')->label('ویژه'),
             ])
             ->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()])
@@ -238,6 +290,20 @@ class ProductResource extends Resource
     {
         return collect(ProductFact::cases())
             ->mapWithKeys(fn (ProductFact $fact): array => [$fact->value => $fact->value])
+            ->all();
+    }
+
+    private static function mannequinSlotOptions(): array
+    {
+        return collect(config('mannequin.slots', []))
+            ->mapWithKeys(fn (array $slot, string $key): array => [$key => (string) ($slot['label'] ?? $key)])
+            ->all();
+    }
+
+    private static function mannequinPresetOptions(): array
+    {
+        return collect(config('mannequin.presets', []))
+            ->mapWithKeys(fn (array $preset, string $key): array => [$key => (string) ($preset['label'] ?? $key)])
             ->all();
     }
 }
