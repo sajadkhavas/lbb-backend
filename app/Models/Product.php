@@ -45,6 +45,13 @@ class Product extends Model implements HasMedia
         'sort_order',
         'meta_title',
         'meta_description',
+        'mannequin_enabled',
+        'mannequin_slot',
+        'mannequin_preset',
+        'mannequin_offset_x',
+        'mannequin_offset_y',
+        'mannequin_scale',
+        'mannequin_layer',
     ];
 
     protected $casts = [
@@ -55,6 +62,11 @@ class Product extends Model implements HasMedia
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
         'sort_order' => 'integer',
+        'mannequin_enabled' => 'boolean',
+        'mannequin_offset_x' => 'float',
+        'mannequin_offset_y' => 'float',
+        'mannequin_scale' => 'float',
+        'mannequin_layer' => 'integer',
     ];
 
     protected static function booted(): void
@@ -118,6 +130,13 @@ class Product extends Model implements HasMedia
                 'media_verified',
                 'is_active',
                 'is_featured',
+                'mannequin_enabled',
+                'mannequin_slot',
+                'mannequin_preset',
+                'mannequin_offset_x',
+                'mannequin_offset_y',
+                'mannequin_scale',
+                'mannequin_layer',
             ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
@@ -134,6 +153,12 @@ class Product extends Model implements HasMedia
 
         $this->addMediaCollection('catalog-gallery')
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
+
+        // FC1 uses a dedicated, front-facing transparent cutout. JPEG is intentionally
+        // excluded because the mannequin composition requires an alpha-capable asset.
+        $this->addMediaCollection('mannequin-front')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/png', 'image/webp', 'image/avif']);
     }
 
     public function category(): BelongsTo
