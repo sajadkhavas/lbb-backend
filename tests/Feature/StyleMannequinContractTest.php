@@ -45,7 +45,10 @@ class StyleMannequinContractTest extends TestCase
         $this->assertSame(30, $profile['layer']);
 
         $product->addMedia(
-            UploadedFile::fake()->create('mannequin-front.png', 8, 'image/png'),
+            UploadedFile::fake()->createWithContent(
+                'mannequin-front.png',
+                $this->validPngContents(),
+            ),
         )->toMediaCollection('mannequin-front');
 
         $product->update([
@@ -98,7 +101,10 @@ class StyleMannequinContractTest extends TestCase
         ]);
 
         $product->addMedia(
-            UploadedFile::fake()->create('mannequin-bounds.png', 8, 'image/png'),
+            UploadedFile::fake()->createWithContent(
+                'mannequin-bounds.png',
+                $this->validPngContents(),
+            ),
         )->toMediaCollection('mannequin-front');
 
         $profile = $this->profile($product);
@@ -123,5 +129,13 @@ class StyleMannequinContractTest extends TestCase
         ]);
 
         return app(PublicCatalogTransformer::class)->productSummary($product)['mannequin'];
+    }
+
+    private function validPngContents(): string
+    {
+        return base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+            true,
+        );
     }
 }
