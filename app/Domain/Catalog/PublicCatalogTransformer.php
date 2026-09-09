@@ -39,6 +39,7 @@ final class PublicCatalogTransformer
             'sizes' => $variants->pluck('size')->filter()->unique('public_id')->values()
                 ->map(fn ($size): array => $this->size($size))->all(),
             'primaryImage' => $this->primaryImage($product),
+            'previewImages' => $this->previewImages($product),
             'mannequin' => $this->mannequin($product),
             'seo' => $this->productSeo($product),
         ];
@@ -83,10 +84,15 @@ final class PublicCatalogTransformer
     {
         return array_filter([
             'publicId' => $category->public_id,
+            'parentPublicId' => $category->parent?->public_id,
+            'depth' => $category->depth,
             'name' => $category->name,
             'slug' => $category->slug,
             'description' => $category->description,
             'image' => $category->image_path ? asset('storage/'.ltrim($category->image_path, '/')) : null,
+            'icon' => $category->icon_path ? asset('storage/'.ltrim($category->icon_path, '/')) : null,
+            'showInHeader' => (bool) $category->show_in_header,
+            'showOnHome' => (bool) $category->show_on_home,
             'productCount' => $productCount,
             'seo' => [
                 'metaTitle' => $category->meta_title,
@@ -357,19 +363,24 @@ final class PublicCatalogTransformer
 
     private function primaryImage(Product $product): ?string
     {
+        return $this->previewImages($product)[0] ?? null;
+    }
+
+    /** @return list<string> */
+    private function previewImages(Product $product): array
+    {
         if (! $this->verified($product, ProductFact::Media)) {
-            return null;
+            return [];
         }
 
-        foreach ($product->mediaAssets as $asset) {
-            $media = $asset->getFirstMedia('asset');
-
-            if ($media !== null) {
-                return $media->getUrl();
-            }
-        }
-
-        return null;
+        return $product->mediaAssets
+            ->sortBy(fn (ProductMediaAsset $asset): array => [(int) $asset->sort_order, (int) $asset->getKey()])
+            ->map(fn (ProductMediaAsset $asset): ?string => $asset->getFirstMedia('asset')?->getUrl())
+            ->filter()
+            ->unique()
+            ->take(3)
+            ->values()
+            ->all();
     }
 
     private function verified(Product $product, ProductFact $fact): bool
