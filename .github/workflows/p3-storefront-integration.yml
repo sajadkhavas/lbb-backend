@@ -86,11 +86,14 @@ jobs:
       - name: Pint P3 PHP delta
         shell: bash
         run: |
-          mapfile -t changed_php < <(git diff --name-only "$P3_START_SHA" HEAD -- '*.php')
+          mapfile -t changed_php < <(
+            git diff --name-only --diff-filter=ACMRTUXB "$P3_START_SHA" HEAD -- '*.php'
+          )
           if [ "${#changed_php[@]}" -gt 0 ]; then
-            vendor/bin/pint --test "${changed_php[@]}"
+            vendor/bin/pint "${changed_php[@]}"
+            git diff --exit-code -- "${changed_php[@]}"
           else
-            echo 'No PHP delta in P3.'
+            echo 'No existing PHP delta in P3.'
           fi
 
       - name: Foundation legacy and secret safety
