@@ -90,14 +90,20 @@ final class MannequinModel3d
 
             $document = json_decode(rtrim($jsonBytes, "\0 \t\r\n"), true);
 
-            if (! is_array($document)) {
+            if (! is_array($document) || ($document['asset']['version'] ?? null) !== '2.0') {
                 return false;
             }
 
             // A production GLB must be self-contained. Reject child resources that could
             // make the browser fetch arbitrary third-party URLs after the trusted model loads.
             foreach (['buffers', 'images'] as $collection) {
-                foreach (($document[$collection] ?? []) as $entry) {
+                $entries = $document[$collection] ?? [];
+
+                if (! is_array($entries)) {
+                    return false;
+                }
+
+                foreach ($entries as $entry) {
                     if (! is_array($entry) || ! array_key_exists('uri', $entry)) {
                         continue;
                     }
