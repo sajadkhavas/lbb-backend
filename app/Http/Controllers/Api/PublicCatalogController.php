@@ -13,6 +13,7 @@ use App\Models\Color;
 use App\Models\Drop;
 use App\Models\Size;
 use App\Support\ApiResponse;
+use App\Support\PublicMediaUrl;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -77,7 +78,7 @@ final class PublicCatalogController extends Controller
             ->get();
 
         return ApiResponse::success(
-            $collections->map(fn (Collection $collection): array => $this->transformer->collection($collection))->all(),
+            $collections->map(fn (Collection $collection): array => $this->collectionPayload($collection))->all(),
         );
     }
 
@@ -87,7 +88,7 @@ final class PublicCatalogController extends Controller
 
         return ApiResponse::success(
             [
-                'collection' => $this->transformer->collection($collection, $products->total()),
+                'collection' => $this->collectionPayload($collection, $products->total()),
                 'products' => $products->getCollection()
                     ->map(fn ($product): array => $this->transformer->productSummary($product))
                     ->all(),
@@ -173,7 +174,7 @@ final class PublicCatalogController extends Controller
                 fn (Category $category): array => $this->transformer->category($category),
             )->all(),
             'collections' => $facets['collections']->map(
-                fn (Collection $collection): array => $this->transformer->collection($collection),
+                fn (Collection $collection): array => $this->collectionPayload($collection),
             )->all(),
             'colors' => $facets['colors']->map(
                 fn (Color $color): array => $this->transformer->color($color),
@@ -204,6 +205,19 @@ final class PublicCatalogController extends Controller
                 ->all(),
             meta: $this->paginationMeta($products),
         );
+    }
+
+    private function collectionPayload(Collection $collection, ?int $productCount = null): array
+    {
+        $payload = $this->transformer->collection($collection, $productCount);
+        $cover = PublicMediaUrl::fromPathOrUrl($collection->cover_image_path);
+
+        if ($cover !== null) {
+            $payload['coverImage'] = $cover;
+            $payload['seo']['primaryImage'] = $cover;
+        }
+
+        return $payload;
     }
 
     private function paginationMeta(LengthAwarePaginator $paginator): array

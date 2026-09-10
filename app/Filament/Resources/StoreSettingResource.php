@@ -16,19 +16,33 @@ class StoreSettingResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
 
-    protected static ?string $navigationLabel = 'تنظیمات فروشگاه';
+    protected static ?string $navigationLabel = 'تنظیمات خام توسعه‌دهنده';
 
-    protected static ?string $modelLabel = 'تنظیم';
+    protected static ?string $modelLabel = 'تنظیم خام';
 
-    protected static ?string $pluralModelLabel = 'تنظیمات فروشگاه';
+    protected static ?string $pluralModelLabel = 'تنظیمات خام توسعه‌دهنده';
 
-    protected static ?string $navigationGroup = 'تنظیمات';
+    protected static ?string $navigationGroup = 'سیستم';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 90;
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->hasRole('super_admin') ?? false;
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canViewAny();
+    }
 
     public static function form(Form $form): Form
     {
         return $form->schema([
+            Forms\Components\Placeholder::make('warning')
+                ->label('سطح توسعه‌دهنده')
+                ->content('این صفحه برای نگهداری فنی است. مدیریت عادی ویترین باید از «کنترل ویترین» و Resourceهای دامنه انجام شود.')
+                ->columnSpanFull(),
             Forms\Components\TextInput::make('group')
                 ->label('گروه')
                 ->required()
@@ -74,9 +88,9 @@ class StoreSettingResource extends Resource
                 Tables\Columns\TextColumn::make('updated_at')->label('آخرین تغییر')->dateTime('Y/m/d H:i')->sortable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('group')
-                    ->label('گروه')
-                    ->options(fn (): array => StoreSetting::query()->distinct()->orderBy('group')->pluck('group', 'group')->all()),
+                Tables\Filters\SelectFilter::make('group')->label('گروه')->options(
+                    fn (): array => StoreSetting::query()->distinct()->orderBy('group')->pluck('group', 'group')->all()
+                ),
                 Tables\Filters\TernaryFilter::make('is_public')->label('عمومی'),
             ])
             ->actions([Tables\Actions\EditAction::make()])

@@ -37,7 +37,23 @@ class PostResource extends Resource
                     Forms\Components\TagsInput::make('tags')->label('برچسب‌ها')->columnSpanFull(),
                     Forms\Components\Textarea::make('excerpt')->label('خلاصه')->rows(3)->columnSpanFull(),
                     Forms\Components\RichEditor::make('content')->label('محتوا')->required()->columnSpanFull(),
-                    Forms\Components\TextInput::make('cover_url')->label('آدرس تصویر شاخص')->url()->columnSpanFull(),
+                    Forms\Components\FileUpload::make('cover_image_path')
+                        ->label('تصویر شاخص')
+                        ->disk('public')
+                        ->directory('storefront/journal')
+                        ->visibility('public')
+                        ->image()
+                        ->imageEditor()
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
+                        ->maxSize(8192)
+                        ->helperText('روش پیشنهادی؛ فایل روی storage مشترک نگه‌داری می‌شود.')
+                        ->columnSpanFull(),
+                    Forms\Components\TextInput::make('cover_url')
+                        ->label('URL تصویر شاخص قدیمی/خارجی (اختیاری)')
+                        ->url()
+                        ->nullable()
+                        ->helperText('اگر فایل آپلود شده باشد، فایل آپلودی اولویت دارد.')
+                        ->columnSpanFull(),
                     Forms\Components\TextInput::make('author')->label('نویسنده')->maxLength(160),
                 ])->columns(2),
             Forms\Components\Section::make('انتشار')
@@ -49,6 +65,18 @@ class PostResource extends Resource
                         ->required(),
                     Forms\Components\DateTimePicker::make('published_at')->label('زمان انتشار'),
                 ])->columns(2),
+            Forms\Components\Section::make('SEO')
+                ->schema([
+                    Forms\Components\TextInput::make('meta_title')
+                        ->label('عنوان سئو')
+                        ->maxLength(220)
+                        ->helperText('خالی = عنوان مقاله در Frontend استفاده می‌شود.'),
+                    Forms\Components\Textarea::make('meta_description')
+                        ->label('توضیح سئو')
+                        ->rows(3)
+                        ->maxLength(500)
+                        ->helperText('خالی = خلاصه مقاله استفاده می‌شود.'),
+                ])->columns(2),
         ]);
     }
 
@@ -56,6 +84,7 @@ class PostResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('cover_image_path')->label('تصویر')->disk('public')->square(),
                 Tables\Columns\TextColumn::make('title')->label('عنوان')->searchable()->limit(60),
                 Tables\Columns\TextColumn::make('category')->label('دسته')->badge()->searchable(),
                 Tables\Columns\TextColumn::make('status')->label('وضعیت')->badge(),

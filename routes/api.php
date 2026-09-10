@@ -109,6 +109,7 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::middleware('throttle:public-catalog')->group(function (): void {
         Route::prefix('storefront')->name('storefront.')->group(function (): void {
             Route::get('/bootstrap', [StorefrontContentController::class, 'bootstrap'])->name('bootstrap');
+            Route::get('/home-products', [StorefrontContentController::class, 'homeProducts'])->name('home-products.index');
             Route::get('/pages/{slug}', [StorefrontContentController::class, 'page'])->name('pages.show');
             Route::get('/faqs', [StorefrontContentController::class, 'faqs'])->name('faqs.index');
             Route::get('/lookbook', [StorefrontContentController::class, 'lookbook'])->name('lookbook.index');

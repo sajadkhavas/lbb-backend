@@ -41,6 +41,17 @@ class CollectionResource extends Resource
                     ->required(),
                 Forms\Components\Toggle::make('is_featured')->label('ویژه'),
                 Forms\Components\TextInput::make('sort_order')->label('ترتیب')->numeric()->minValue(0)->default(0),
+                Forms\Components\FileUpload::make('cover_image_path')
+                    ->label('تصویر کاور / Hero کالکشن')
+                    ->disk('public')
+                    ->directory('storefront/collections')
+                    ->visibility('public')
+                    ->image()
+                    ->imageEditor()
+                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
+                    ->maxSize(8192)
+                    ->helperText('برای کارت کالکشن، Featured Story و تصویر SEO استفاده می‌شود.')
+                    ->columnSpanFull(),
                 Forms\Components\Select::make('products')
                     ->label('محصولات')
                     ->relationship('products', 'name')
@@ -60,6 +71,7 @@ class CollectionResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('cover_image_path')->label('کاور')->disk('public')->square(),
                 Tables\Columns\TextColumn::make('name')->label('نام')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('publication_status')->label('انتشار')->badge(),
                 Tables\Columns\TextColumn::make('products_count')->label('محصول')->counts('products'),

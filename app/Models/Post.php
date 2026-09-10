@@ -15,11 +15,14 @@ class Post extends Model
         'content',
         'category',
         'tags',
+        'cover_image_path',
         'cover_url',
         'author',
         'status',
         'published_at',
         'view_count',
+        'meta_title',
+        'meta_description',
     ];
 
     protected static function booted(): void

@@ -10,6 +10,7 @@ class GalleryItem extends Model
     protected $fillable = [
         'title',
         'caption',
+        'image_path',
         'image_url',
         'link_url',
         'sort_order',
