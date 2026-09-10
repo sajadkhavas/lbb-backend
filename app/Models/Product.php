@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Domain\Apparel\ApparelPublicationGuard;
+use App\Domain\Catalog\MannequinModel3d;
 use App\Enums\PublicationStatus;
 use Illuminate\Cache\TaggableStore;
 use Illuminate\Database\Eloquent\Builder;
@@ -159,6 +160,16 @@ class Product extends Model implements HasMedia
         $this->addMediaCollection('mannequin-front')
             ->singleFile()
             ->acceptsMimeTypes(['image/png', 'image/webp', 'image/avif']);
+
+        // Phase 2 keeps the 3D model as optional product media: no schema mutation is
+        // required and products without a validated model continue to use the 2D view.
+        $this->addMediaCollection(MannequinModel3d::COLLECTION)
+            ->singleFile()
+            ->acceptsMimeTypes((array) config('mannequin.model3d.mime_types', [
+                'model/gltf-binary',
+                'application/gltf-buffer',
+                'application/octet-stream',
+            ]));
     }
 
     public function category(): BelongsTo

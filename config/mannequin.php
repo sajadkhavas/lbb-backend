@@ -61,4 +61,14 @@ return [
         'scale' => [0.5, 2.0],
         'layer' => [1, 100],
     ],
+
+    'model3d' => [
+        'max_bytes' => 12 * 1024 * 1024,
+        'extensions' => ['glb'],
+        'mime_types' => [
+            'model/gltf-binary',
+            'application/gltf-buffer',
+            'application/octet-stream',
+        ],
+    ],
 ];
