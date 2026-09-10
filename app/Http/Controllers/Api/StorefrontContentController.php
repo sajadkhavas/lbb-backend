@@ -9,10 +9,12 @@ use App\Models\ContentPage;
 use App\Models\Faq;
 use App\Models\GalleryItem;
 use App\Models\Post;
+use App\Models\Product;
 use App\Models\StoreSetting;
 use App\Support\ApiResponse;
 use App\Support\PublicMediaUrl;
 use App\Support\StorefrontPresentationDefaults;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 
@@ -312,8 +314,8 @@ class StorefrontContentController extends Controller
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Product>  $query
-     * @return Collection<int, \App\Models\Product>
+     * @param  Builder<Product>  $query
+     * @return Collection<int, Product>
      */
     private function manualHomeProducts($query, array $slugs, int $count): Collection
     {
