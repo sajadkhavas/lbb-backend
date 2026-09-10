@@ -283,7 +283,7 @@ class StorefrontContentController extends Controller
     private function enabledRows(array $rows): array
     {
         return collect($rows)
-            ->filter('is_array')
+            ->filter(fn (mixed $row): bool => is_array($row))
             ->filter(fn (array $row): bool => ($row['enabled'] ?? true) !== false)
             ->map(function (array $row): array {
                 unset($row['enabled']);
@@ -302,7 +302,7 @@ class StorefrontContentController extends Controller
         }
 
         return collect($value)
-            ->filter('is_string')
+            ->filter(fn (mixed $item): bool => is_string($item))
             ->map(fn (string $item): string => trim($item))
             ->filter()
             ->unique()
