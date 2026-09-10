@@ -555,7 +555,7 @@ class StorefrontControlCenter extends Page implements HasForms
     private function arrayRows(mixed $value): array
     {
         return is_array($value)
-            ? collect($value)->filter('is_array')->values()->all()
+            ? collect($value)->filter(fn ($value): bool => is_array($value))->values()->all()
             : [];
     }
 
@@ -578,7 +578,7 @@ class StorefrontControlCenter extends Page implements HasForms
     private function faqRows(array $presentation): array
     {
         return collect($presentation)
-            ->filter('is_array')
+            ->filter(fn ($value): bool => is_array($value))
             ->map(fn (array $item, string $key): array => [
                 'key' => $key,
                 'label' => (string) ($item['label'] ?? strtoupper($key)),
@@ -592,7 +592,7 @@ class StorefrontControlCenter extends Page implements HasForms
     private function rowStrings(array $rows, string $key): array
     {
         return collect($rows)
-            ->filter('is_array')
+            ->filter(fn ($value): bool => is_array($value))
             ->map(fn (array $row): string => trim((string) ($row[$key] ?? '')))
             ->filter()
             ->unique()
@@ -612,7 +612,7 @@ class StorefrontControlCenter extends Page implements HasForms
     private function navigationRows(array $rows): array
     {
         return collect($rows)
-            ->filter('is_array')
+            ->filter(fn ($value): bool => is_array($value))
             ->map(fn (array $row): array => [
                 'label' => trim((string) ($row['label'] ?? '')),
                 'latin' => trim((string) ($row['latin'] ?? '')),
@@ -629,7 +629,7 @@ class StorefrontControlCenter extends Page implements HasForms
     private function linkRows(array $rows, bool $requireText): array
     {
         return collect($rows)
-            ->filter('is_array')
+            ->filter(fn ($value): bool => is_array($value))
             ->map(function (array $row) use ($requireText): array {
                 $labelKey = $requireText ? 'text' : 'label';
 

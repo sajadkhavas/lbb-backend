@@ -113,7 +113,7 @@ class SiteSettings extends Page implements HasForms
             'instagram_lookbook_cta' => $instagramCopy['lookbookCta'] ?? '',
             'ticker_items' => collect($ticker)->filter(fn ($item): bool => is_string($item) && trim($item) !== '')
                 ->map(fn (string $item): array => ['text' => $item])->values()->all(),
-            'trust_items' => collect($trust)->filter('is_array')->values()->all(),
+            'trust_items' => collect($trust)->filter(fn ($value): bool => is_array($value))->values()->all(),
             'decision_enabled' => (bool) ($decision['enabled'] ?? true),
             'decision_label' => $decision['label'] ?? '',
             'decision_title' => $decision['title'] ?? '',
@@ -121,7 +121,7 @@ class SiteSettings extends Page implements HasForms
             'decision_check_label' => $decision['checkLabel'] ?? '',
             'decision_checks' => collect($decision['checks'] ?? [])->filter(fn ($item): bool => is_string($item) && trim($item) !== '')
                 ->map(fn (string $item): array => ['text' => $item])->values()->all(),
-            'decision_links' => collect($decision['links'] ?? [])->filter('is_array')->values()->all(),
+            'decision_links' => collect($decision['links'] ?? [])->filter(fn ($value): bool => is_array($value))->values()->all(),
             'local_store_enabled' => (bool) ($localStore['enabled'] ?? true),
             'local_store_eyebrow' => $localStore['eyebrow'] ?? '',
             'local_store_title' => $localStore['title'] ?? '',
@@ -490,7 +490,7 @@ class SiteSettings extends Page implements HasForms
     private function repeaterStrings(array $items): array
     {
         return collect($items)
-            ->filter('is_array')
+            ->filter(fn ($value): bool => is_array($value))
             ->map(fn (array $item): string => trim((string) ($item['text'] ?? '')))
             ->filter()
             ->values()
@@ -500,7 +500,7 @@ class SiteSettings extends Page implements HasForms
     /** @param array<mixed> $items */
     private function rows(array $items): array
     {
-        return collect($items)->filter('is_array')->values()->all();
+        return collect($items)->filter(fn ($value): bool => is_array($value))->values()->all();
     }
 
     private function jsonSetting(string $group, string $key, array $default = []): array
