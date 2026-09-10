@@ -19,71 +19,83 @@ class AdminControlCompletionTest extends TestCase
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.runtime.checkoutEnabled', false)
             ->assertJsonPath('data.runtime.payment.enabled', false)
-            ->assertJsonPath('data.runtime.payment.provider', 'disabled')
-            ->assertJsonPath('data.settings.home.home.presentation.heroEnabled', true)
-            ->assertJsonPath('data.settings.home.home.presentation.productCuration.mode', 'newest')
-            ->assertJsonPath('data.settings.home.home.presentation.productCuration.count', 4)
-            ->assertJsonPath('data.settings.shell.shell.copy.shopMenuLabel', 'فروشگاه');
+            ->assertJsonPath('data.runtime.payment.provider', 'disabled');
 
-        $this->assertIsArray($response->json('data.settings.page.page.presentation'));
-        $this->assertIsArray($response->json('data.settings.faq.faq.presentation'));
-        $this->assertIsArray($response->json('data.settings.announcement.announcement.messages'));
-        $this->assertIsArray($response->json('data.settings.navigation.navigation.shop'));
+        $home = $response->json('data.settings.home');
+        $shell = $response->json('data.settings.shell');
+        $page = $response->json('data.settings.page');
+        $faq = $response->json('data.settings.faq');
+        $announcement = $response->json('data.settings.announcement');
+        $navigation = $response->json('data.settings.navigation');
+
+        $this->assertIsArray($home);
+        $this->assertIsArray($shell);
+        $this->assertIsArray($page);
+        $this->assertIsArray($faq);
+        $this->assertIsArray($announcement);
+        $this->assertIsArray($navigation);
+
+        $this->assertTrue($home['home.presentation']['heroEnabled']);
+        $this->assertSame('newest', $home['home.presentation']['productCuration']['mode']);
+        $this->assertSame(4, $home['home.presentation']['productCuration']['count']);
+        $this->assertSame('فروشگاه', $shell['shell.copy']['shopMenuLabel']);
+        $this->assertIsArray($page['page.presentation']);
+        $this->assertIsArray($faq['faq.presentation']);
+        $this->assertIsArray($announcement['announcement.messages']);
+        $this->assertIsArray($navigation['navigation.shop']);
     }
 
     public function test_disabled_announcement_and_navigation_rows_are_not_exposed_publicly(): void
     {
-        StoreSetting::query()->create([
-            'group' => 'announcement',
-            'key' => 'announcement.messages',
-            'label' => 'Announcements',
-            'type' => 'json',
-            'value' => json_encode([
-                ['text' => 'VISIBLE', 'href' => '/shop', 'enabled' => true],
-                ['text' => 'HIDDEN', 'href' => '/contact', 'enabled' => false],
-            ], JSON_THROW_ON_ERROR),
-            'is_public' => true,
-        ]);
-        StoreSetting::query()->create([
-            'group' => 'navigation',
-            'key' => 'navigation.shop',
-            'label' => 'Shop nav',
-            'type' => 'json',
-            'value' => json_encode([
-                ['label' => 'Visible', 'latin' => 'VISIBLE', 'href' => '/shop', 'enabled' => true],
-                ['label' => 'Hidden', 'latin' => 'HIDDEN', 'href' => '/hidden', 'enabled' => false],
-            ], JSON_THROW_ON_ERROR),
-            'is_public' => true,
-        ]);
+        StoreSetting::query()
+            ->where('key', 'announcement.messages')
+            ->firstOrFail()
+            ->update([
+                'value' => json_encode([
+                    ['text' => 'VISIBLE', 'href' => '/shop', 'enabled' => true],
+                    ['text' => 'HIDDEN', 'href' => '/contact', 'enabled' => false],
+                ], JSON_THROW_ON_ERROR),
+            ]);
+
+        StoreSetting::query()
+            ->where('key', 'navigation.shop')
+            ->firstOrFail()
+            ->update([
+                'value' => json_encode([
+                    ['label' => 'Visible', 'latin' => 'VISIBLE', 'href' => '/shop', 'enabled' => true],
+                    ['label' => 'Hidden', 'latin' => 'HIDDEN', 'href' => '/hidden', 'enabled' => false],
+                ], JSON_THROW_ON_ERROR),
+            ]);
 
         $response = $this->getJson('/api/v1/storefront/bootstrap')->assertOk();
+        $announcement = $response->json('data.settings.announcement');
+        $navigation = $response->json('data.settings.navigation');
 
         $this->assertSame(
             [['text' => 'VISIBLE', 'href' => '/shop']],
-            $response->json('data.settings.announcement.announcement.messages'),
+            $announcement['announcement.messages'],
         );
         $this->assertSame(
             [['label' => 'Visible', 'latin' => 'VISIBLE', 'href' => '/shop']],
-            $response->json('data.settings.navigation.navigation.shop'),
+            $navigation['navigation.shop'],
         );
     }
 
     public function test_media_paths_are_hydrated_but_http_media_is_rejected(): void
     {
-        StoreSetting::query()->create([
-            'group' => 'home',
-            'key' => 'home.presentation',
-            'label' => 'Home',
-            'type' => 'json',
-            'value' => json_encode([
-                'heroImagePath' => 'storefront/hero/hero.webp',
-                'heroImageUrl' => 'http://unsafe.example/hero.jpg',
-            ], JSON_THROW_ON_ERROR),
-            'is_public' => true,
-        ]);
+        StoreSetting::query()
+            ->where('key', 'home.presentation')
+            ->firstOrFail()
+            ->update([
+                'value' => json_encode([
+                    'heroImagePath' => 'storefront/hero/hero.webp',
+                    'heroImageUrl' => 'http://unsafe.example/hero.jpg',
+                ], JSON_THROW_ON_ERROR),
+            ]);
 
         $response = $this->getJson('/api/v1/storefront/bootstrap')->assertOk();
-        $url = (string) $response->json('data.settings.home.home.presentation.heroImageUrl');
+        $home = $response->json('data.settings.home');
+        $url = (string) $home['home.presentation']['heroImageUrl'];
 
         $this->assertStringContainsString('/storage/storefront/hero/hero.webp', $url);
         $this->assertStringNotContainsString('http://unsafe.example', $url);
@@ -108,11 +120,11 @@ class AdminControlCompletionTest extends TestCase
 
     public function test_legacy_site_settings_shape_cannot_erase_new_home_extension_keys(): void
     {
-        $setting = StoreSetting::query()->create([
-            'group' => 'home',
-            'key' => 'home.presentation',
-            'label' => 'Home',
-            'type' => 'json',
+        $setting = StoreSetting::query()
+            ->where('key', 'home.presentation')
+            ->firstOrFail();
+
+        $setting->update([
             'value' => json_encode([
                 'heroEnabled' => false,
                 'heroImagePath' => 'storefront/hero/merchant.webp',
@@ -125,7 +137,6 @@ class AdminControlCompletionTest extends TestCase
                     'manualProductSlugs' => [],
                 ],
             ], JSON_THROW_ON_ERROR),
-            'is_public' => true,
         ]);
 
         $setting->update([
