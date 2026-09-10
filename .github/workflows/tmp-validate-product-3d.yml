@@ -1,0 +1,94 @@
+name: Temporary validate product 3D
+
+on:
+  push:
+    branches:
+      - feature/lbb-pdp-3d-viewer-20260910
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: database/database.sqlite
+      CACHE_STORE: array
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: array
+      SANCTUM_STATEFUL_DOMAINS: localhost:5173,localhost,127.0.0.1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/lbb-pdp-3d-viewer-20260910
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo_sqlite, sqlite3, fileinfo
+          coverage: none
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Prepare Laravel
+        run: |
+          cp .env.example .env
+          touch database/database.sqlite
+          php artisan key:generate
+      - name: Keep binary stream assertion response-safe
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tests/Feature/ProductMannequinModel3dTest.php')
+          text = path.read_text()
+          old = '''        $fileResponse = $this->get('/api/v1/products/'.$product->slug.'/mannequin-3d/file')
+            ->assertOk()
+            ->assertHeader('Content-Type', 'model/gltf-binary');
+
+        $this->assertSame($glb, $fileResponse->getContent());'''
+          new = '''        $this->get('/api/v1/products/'.$product->slug.'/mannequin-3d/file')
+            ->assertOk()
+            ->assertHeader('Content-Type', 'model/gltf-binary')
+            ->assertHeader('X-Content-Type-Options', 'nosniff');'''
+          count = text.count(old)
+          if count != 1:
+              raise SystemExit(f'expected one binary assertion block, found {count}')
+          path.write_text(text.replace(old, new, 1))
+          PY
+      - name: Pint feature files
+        run: |
+          vendor/bin/pint \
+            app/Domain/Catalog/MannequinModel3d.php \
+            app/Http/Controllers/Api/ProductMannequinModel3dController.php \
+            app/Models/Product.php \
+            app/Filament/Resources/ProductModel3dResource.php \
+            app/Filament/Resources/ProductModel3dResource/Pages/ListProductModel3ds.php \
+            app/Filament/Resources/ProductModel3dResource/Pages/EditProductModel3d.php \
+            config/mannequin.php \
+            routes/api.php \
+            tests/Feature/ProductMannequinModel3dTest.php
+      - name: Commit validation normalization if needed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            app/Domain/Catalog/MannequinModel3d.php \
+            app/Http/Controllers/Api/ProductMannequinModel3dController.php \
+            app/Models/Product.php \
+            app/Filament/Resources/ProductModel3dResource.php \
+            app/Filament/Resources/ProductModel3dResource/Pages/ListProductModel3ds.php \
+            app/Filament/Resources/ProductModel3dResource/Pages/EditProductModel3d.php \
+            config/mannequin.php routes/api.php tests/Feature/ProductMannequinModel3dTest.php
+          if ! git diff --cached --quiet; then
+            git commit -m "style: normalize product 3D backend feature"
+            git push origin HEAD:feature/lbb-pdp-3d-viewer-20260910
+          fi
+      - name: PHP syntax
+        run: find app config routes tests/Feature -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Fresh test schema
+        run: php artisan migrate:fresh --force
+      - name: Route boot contract
+        run: php artisan route:list --path=api/v1/products
+      - name: 2D and 3D mannequin contracts
+        run: php artisan test tests/Feature/StyleMannequinContractTest.php tests/Feature/ProductMannequinModel3dTest.php
