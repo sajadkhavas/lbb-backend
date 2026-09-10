@@ -22,6 +22,7 @@ class Collection extends Model
         'publication_status',
         'is_featured',
         'sort_order',
+        'cover_image_path',
         'meta_title',
         'meta_description',
     ];

@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\GalleryItemResource\Pages;
 use App\Models\GalleryItem;
+use App\Rules\PublicStorefrontHref;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -32,8 +33,29 @@ class GalleryItemResource extends Resource
             Forms\Components\TextInput::make('title')->label('عنوان')->required()->maxLength(220),
             Forms\Components\TextInput::make('sort_order')->label('ترتیب')->numeric()->default(0)->required(),
             Forms\Components\Toggle::make('is_active')->label('فعال')->default(true),
-            Forms\Components\TextInput::make('image_url')->label('آدرس تصویر')->url()->required()->columnSpanFull(),
-            Forms\Components\TextInput::make('link_url')->label('لینک مقصد')->url()->nullable()->columnSpanFull(),
+            Forms\Components\FileUpload::make('image_path')
+                ->label('آپلود تصویر')
+                ->disk('public')
+                ->directory('storefront/lookbook')
+                ->visibility('public')
+                ->image()
+                ->imageEditor()
+                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
+                ->maxSize(8192)
+                ->helperText('روش پیشنهادی. فایل در storage مشترک نگه‌داری می‌شود و به release وابسته نیست.')
+                ->columnSpanFull(),
+            Forms\Components\TextInput::make('image_url')
+                ->label('URL تصویر قدیمی/خارجی (اختیاری)')
+                ->url()
+                ->helperText('اگر فایل آپلود شده باشد، همان فایل اولویت دارد.')
+                ->nullable()
+                ->columnSpanFull(),
+            Forms\Components\TextInput::make('link_url')
+                ->label('لینک مقصد')
+                ->rules([new PublicStorefrontHref])
+                ->helperText('مسیر داخلی مثل /collections/... یا URL امن HTTPS')
+                ->nullable()
+                ->columnSpanFull(),
             Forms\Components\Textarea::make('caption')->label('توضیح')->rows(3)->columnSpanFull(),
         ])->columns(3);
     }
@@ -42,7 +64,7 @@ class GalleryItemResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('image_url')->label('تصویر')->square(),
+                Tables\Columns\ImageColumn::make('image_path')->label('تصویر')->disk('public')->square(),
                 Tables\Columns\TextColumn::make('title')->label('عنوان')->searchable(),
                 Tables\Columns\TextColumn::make('sort_order')->label('ترتیب')->sortable(),
                 Tables\Columns\IconColumn::make('is_active')->label('فعال')->boolean(),
