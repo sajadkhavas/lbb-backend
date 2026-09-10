@@ -43,3 +43,5 @@ jobs:
           git add docs/openapi.json
           git commit -m 'docs: register curated Home products endpoint'
           git push origin HEAD:docs/admin-control-home-products-openapi
+
+      # This workflow is one-shot and is removed before the PR is merged.
