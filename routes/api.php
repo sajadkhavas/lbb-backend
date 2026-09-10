@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\InquiryController;
 use App\Http\Controllers\Api\OtpAuthController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\ProductMannequinModel3dController;
 use App\Http\Controllers\Api\PublicCatalogController;
 use App\Http\Controllers\Api\PublicOrderTrackingController;
 use App\Http\Controllers\Api\PushSubscriptionController;
@@ -120,6 +121,7 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::get('/categories', [PublicCatalogController::class, 'categories'])->name('categories.index');
         Route::get('/categories/{slug}', [PublicCatalogController::class, 'category'])->name('categories.show');
         Route::get('/products', [PublicCatalogController::class, 'products'])->name('products.index');
+        Route::get('/products/{slug}/mannequin-3d', ProductMannequinModel3dController::class)->name('products.mannequin-3d');
         Route::get('/products/{slug}', [PublicCatalogController::class, 'product'])->name('products.show');
         Route::get('/collections', [PublicCatalogController::class, 'collections'])->name('collections.index');
         Route::get('/collections/{slug}', [PublicCatalogController::class, 'collection'])->name('collections.show');
