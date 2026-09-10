@@ -121,7 +121,8 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::get('/categories', [PublicCatalogController::class, 'categories'])->name('categories.index');
         Route::get('/categories/{slug}', [PublicCatalogController::class, 'category'])->name('categories.show');
         Route::get('/products', [PublicCatalogController::class, 'products'])->name('products.index');
-        Route::get('/products/{slug}/mannequin-3d', ProductMannequinModel3dController::class)->name('products.mannequin-3d');
+        Route::get('/products/{slug}/mannequin-3d/file', [ProductMannequinModel3dController::class, 'file'])->name('products.mannequin-3d.file');
+        Route::get('/products/{slug}/mannequin-3d', [ProductMannequinModel3dController::class, 'show'])->name('products.mannequin-3d');
         Route::get('/products/{slug}', [PublicCatalogController::class, 'product'])->name('products.show');
         Route::get('/collections', [PublicCatalogController::class, 'collections'])->name('collections.index');
         Route::get('/collections/{slug}', [PublicCatalogController::class, 'collection'])->name('collections.show');
