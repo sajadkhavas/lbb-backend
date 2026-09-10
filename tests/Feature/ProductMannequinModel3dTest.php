@@ -27,9 +27,10 @@ class ProductMannequinModel3dTest extends TestCase
         Storage::fake((string) config('media-library.disk_name', 'public'));
 
         $product = $this->publishedProduct('valid-model');
+        $glb = $this->glb();
 
         $product->addMedia(
-            UploadedFile::fake()->createWithContent('product.glb', $this->glb()),
+            UploadedFile::fake()->createWithContent('product.glb', $glb),
         )->toMediaCollection(MannequinModel3d::COLLECTION);
 
         $this->getJson('/api/v1/products/'.$product->slug.'/mannequin-3d')->assertNotFound();
@@ -42,8 +43,17 @@ class ProductMannequinModel3dTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.format', 'glb');
 
-        $this->assertStringEndsWith('product.glb', (string) $response->json('data.url'));
-        $this->assertSame(strlen($this->glb()), $response->json('data.bytes'));
+        $this->assertStringContainsString(
+            '/api/v1/products/'.$product->slug.'/mannequin-3d/file',
+            (string) $response->json('data.url'),
+        );
+        $this->assertSame(strlen($glb), $response->json('data.bytes'));
+
+        $fileResponse = $this->get('/api/v1/products/'.$product->slug.'/mannequin-3d/file')
+            ->assertOk()
+            ->assertHeader('Content-Type', 'model/gltf-binary');
+
+        $this->assertSame($glb, $fileResponse->getContent());
     }
 
     public function test_external_child_resource_glb_fails_closed(): void
@@ -67,6 +77,7 @@ class ProductMannequinModel3dTest extends TestCase
         $this->assertNotNull($media);
         $this->assertFalse(MannequinModel3d::isValid($media));
         $this->getJson('/api/v1/products/'.$product->slug.'/mannequin-3d')->assertNotFound();
+        $this->get('/api/v1/products/'.$product->slug.'/mannequin-3d/file')->assertNotFound();
     }
 
     public function test_invalid_glb_header_version_and_size_are_rejected(): void
