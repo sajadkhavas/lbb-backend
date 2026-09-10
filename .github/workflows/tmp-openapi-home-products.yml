@@ -1,0 +1,45 @@
+name: Temporary Home Products OpenAPI Patch
+
+on:
+  push:
+    branches:
+      - docs/admin-control-home-products-openapi
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: docs/admin-control-home-products-openapi
+          fetch-depth: 0
+
+      - name: Add exact Home products path without reformatting the document
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          path = Path('docs/openapi.json')
+          source = path.read_text()
+          needle = '"/api/v1/storefront/pages/{slug}":'
+          addition = '"/api/v1/storefront/home-products":{"get":{"summary":"Backend-curated published Home products","responses":{"200":{"description":"Success"}},"x-rate-limit-policy":"120/min/IP"}},'
+          if '"/api/v1/storefront/home-products":' in source:
+              raise SystemExit('HOME_PRODUCTS_OPENAPI_ALREADY_PRESENT')
+          if needle not in source:
+              raise SystemExit('OPENAPI_INSERTION_ANCHOR_MISSING')
+          path.write_text(source.replace(needle, addition + needle, 1))
+          PY
+
+      - name: Validate and commit only the OpenAPI document
+        run: |
+          php -r '$d=json_decode(file_get_contents("docs/openapi.json"), true, 512, JSON_THROW_ON_ERROR); if (!isset($d["paths"]["/api/v1/storefront/home-products"]["get"])) { exit(1); }'
+          git diff --check -- docs/openapi.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/openapi.json
+          git commit -m 'docs: register curated Home products endpoint'
+          git push origin HEAD:docs/admin-control-home-products-openapi
