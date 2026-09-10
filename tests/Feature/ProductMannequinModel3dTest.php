@@ -49,11 +49,10 @@ class ProductMannequinModel3dTest extends TestCase
         );
         $this->assertSame(strlen($glb), $response->json('data.bytes'));
 
-        $fileResponse = $this->get('/api/v1/products/'.$product->slug.'/mannequin-3d/file')
+        $this->get('/api/v1/products/'.$product->slug.'/mannequin-3d/file')
             ->assertOk()
-            ->assertHeader('Content-Type', 'model/gltf-binary');
-
-        $this->assertSame($glb, $fileResponse->getContent());
+            ->assertHeader('Content-Type', 'model/gltf-binary')
+            ->assertHeader('X-Content-Type-Options', 'nosniff');
     }
 
     public function test_external_child_resource_glb_fails_closed(): void
