@@ -2,11 +2,10 @@
 
 namespace App\Filament\Resources;
 
-use App\Support\StorefrontMediaOptions;
-
 use App\Filament\Resources\GalleryItemResource\Pages;
 use App\Models\GalleryItem;
 use App\Rules\PublicStorefrontHref;
+use App\Support\StorefrontMediaOptions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -36,7 +35,7 @@ class GalleryItemResource extends Resource
             Forms\Components\TextInput::make('sort_order')->label('ترتیب')->numeric()->default(0)->required(),
             Forms\Components\Toggle::make('is_active')->label('فعال')->default(true),
             Forms\Components\Select::make('image_path')->label('تصویر از کتابخانه')
-                ->options(fn (?\App\Models\GalleryItem $record): array => StorefrontMediaOptions::paths($record?->image_path))
+                ->options(fn (?GalleryItem $record): array => StorefrontMediaOptions::paths($record?->image_path))
                 ->searchable()
                 ->rules(['required_without:image_url'])
                 ->validationMessages(['required_without' => 'یک تصویر از کتابخانه انتخاب کنید یا نشانی تصویر را وارد کنید.'])

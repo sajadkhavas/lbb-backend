@@ -9,6 +9,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use FilamentTiptapEditor\TiptapEditor;
 
 class ContentPageResource extends Resource
 {
@@ -55,7 +56,7 @@ class ContentPageResource extends Resource
                         ->label('خلاصه')
                         ->rows(3)
                         ->columnSpanFull(),
-                    \FilamentTiptapEditor\TiptapEditor::make('content')
+                    TiptapEditor::make('content')
                         ->tools(['heading', 'bullet-list', 'ordered-list', '|', 'bold', 'italic', 'link', 'media'])
                         ->label('متن')
                         ->columnSpanFull(),

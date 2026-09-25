@@ -2,11 +2,10 @@
 
 namespace App\Filament\Resources;
 
-use App\Support\StorefrontMediaOptions;
-
 use App\Enums\PublicationStatus;
 use App\Filament\Resources\CategoryResource\Pages;
 use App\Models\Category;
+use App\Support\StorefrontMediaOptions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -47,7 +46,7 @@ class CategoryResource extends Resource
                     ->label('نمایش در صفحه اصلی')
                     ->default(false),
                 Forms\Components\Select::make('icon_path')->label('آیکن دسته از کتابخانه')
-                    ->options(fn (?\App\Models\Category $record): array => StorefrontMediaOptions::paths($record?->icon_path))
+                    ->options(fn (?Category $record): array => StorefrontMediaOptions::paths($record?->icon_path))
                     ->searchable()->columnSpanFull(),
             ])->columns(2),
             Forms\Components\Section::make('اطلاعات دسته')->schema([
@@ -55,7 +54,7 @@ class CategoryResource extends Resource
                 Forms\Components\TextInput::make('slug')->label('Slug')->maxLength(140),
                 Forms\Components\Textarea::make('description')->label('توضیح دسته')->rows(4)->columnSpanFull(),
                 Forms\Components\Select::make('image_path')->label('تصویر دسته از کتابخانه')
-                    ->options(fn (?\App\Models\Category $record): array => StorefrontMediaOptions::paths($record?->image_path))
+                    ->options(fn (?Category $record): array => StorefrontMediaOptions::paths($record?->image_path))
                     ->searchable()->columnSpanFull(),
                 Forms\Components\Select::make('publication_status')
                     ->label('Publication')

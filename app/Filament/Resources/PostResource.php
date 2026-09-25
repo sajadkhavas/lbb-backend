@@ -2,15 +2,15 @@
 
 namespace App\Filament\Resources;
 
-use App\Support\StorefrontMediaOptions;
-
 use App\Filament\Resources\PostResource\Pages;
 use App\Models\Post;
+use App\Support\StorefrontMediaOptions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use FilamentTiptapEditor\TiptapEditor;
 
 class PostResource extends Resource
 {
@@ -38,12 +38,12 @@ class PostResource extends Resource
                     Forms\Components\TextInput::make('category')->label('دسته')->maxLength(120),
                     Forms\Components\TagsInput::make('tags')->label('برچسب‌ها')->columnSpanFull(),
                     Forms\Components\Textarea::make('excerpt')->label('خلاصه')->rows(3)->columnSpanFull(),
-                    \FilamentTiptapEditor\TiptapEditor::make('content')->label('محتوا')
+                    TiptapEditor::make('content')->label('محتوا')
                         ->tools(['heading', 'bullet-list', 'ordered-list', '|', 'bold', 'italic', 'link', 'media'])
                         ->required()->columnSpanFull(),
                     Forms\Components\Select::make('cover_image_path')
                         ->label('تصویر شاخص از کتابخانه')
-                        ->options(fn (?\App\Models\Post $record): array => StorefrontMediaOptions::paths($record?->cover_image_path))
+                        ->options(fn (?Post $record): array => StorefrontMediaOptions::paths($record?->cover_image_path))
                         ->searchable()->columnSpanFull(),
                     Forms\Components\TextInput::make('cover_url')
                         ->label('URL تصویر شاخص قدیمی/خارجی (اختیاری)')

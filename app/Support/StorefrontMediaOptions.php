@@ -37,7 +37,9 @@ final class StorefrontMediaOptions
             ->each(function (StorefrontMediaAsset $asset) use (&$options, $method): void {
                 try {
                     $value = $asset->{$method}();
-                    if ($value) $options[$value] = $asset->title.' — #'.$asset->getKey();
+                    if ($value) {
+                        $options[$value] = $asset->title.' — #'.$asset->getKey();
+                    }
                 } catch (\Throwable) {
                     // Damaged media cannot be offered for publication.
                 }

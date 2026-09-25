@@ -48,8 +48,12 @@ class StorefrontMediaAsset extends Model implements HasMedia
     public function isReady(): bool
     {
         $media = $this->sourceMedia();
-        if (! $media || ! $media->hasGeneratedConversion('preview')) return false;
-        if (($media->conversions_disk ?: $media->disk) !== 'public') return false;
+        if (! $media || ! $media->hasGeneratedConversion('preview')) {
+            return false;
+        }
+        if (($media->conversions_disk ?: $media->disk) !== 'public') {
+            return false;
+        }
         $path = $media->getPath('preview');
 
         return is_file($path) && filesize($path) <= self::MAX_PUBLIC_BYTES;

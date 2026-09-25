@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -20,7 +20,7 @@ return new class extends Migration
     public function down(): void
     {
         if (DB::table('push_subscriptions')->whereNull('customer_id')->exists()) {
-            throw new \RuntimeException('ابتدا اشتراک‌های مهمان را به‌صورت امن منتقل یا حذف کنید؛ بازگردانی ستون اجباری بدون آن ممکن نیست.');
+            throw new RuntimeException('ابتدا اشتراک‌های مهمان را به‌صورت امن منتقل یا حذف کنید؛ بازگردانی ستون اجباری بدون آن ممکن نیست.');
         }
 
         Schema::table('push_subscriptions', function (Blueprint $table): void {

@@ -2,11 +2,11 @@
 
 namespace App\Filament\Resources;
 
-use App\Support\StorefrontMediaOptions;
-
 use App\Enums\PublicationStatus;
 use App\Filament\Resources\CollectionResource\Pages;
+use App\Models\Collection;
 use App\Models\Collection as ApparelCollection;
+use App\Support\StorefrontMediaOptions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -45,7 +45,7 @@ class CollectionResource extends Resource
                 Forms\Components\TextInput::make('sort_order')->label('ترتیب')->numeric()->minValue(0)->default(0),
                 Forms\Components\Select::make('cover_image_path')
                     ->label('کاور کالکشن از کتابخانه')
-                    ->options(fn (?\App\Models\Collection $record): array => StorefrontMediaOptions::paths($record?->cover_image_path))
+                    ->options(fn (?Collection $record): array => StorefrontMediaOptions::paths($record?->cover_image_path))
                     ->searchable()->columnSpanFull(),
                 Forms\Components\Select::make('products')
                     ->label('محصولات')

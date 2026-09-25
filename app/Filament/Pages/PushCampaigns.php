@@ -16,8 +16,11 @@ use Illuminate\Support\Str;
 class PushCampaigns extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-bell';
+
     protected static ?string $navigationLabel = 'اعلان‌های فروشگاه';
+
     protected static ?string $navigationGroup = 'محتوا';
+
     protected static string $view = 'filament.pages.push-campaigns';
 
     public static function canAccess(): bool
@@ -44,6 +47,7 @@ class PushCampaigns extends Page
             ->action(function (array $data, WebPushService $webPush): void {
                 if (! $webPush->ready()) {
                     Notification::make()->danger()->title('سرویس اعلان روی سرور فعال نیست.')->send();
+
                     return;
                 }
 
