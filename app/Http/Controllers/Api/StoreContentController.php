@@ -10,6 +10,7 @@ use App\Models\Post;
 use App\Models\StoreSetting;
 use App\Support\ApiResponse;
 use App\Support\Pagination;
+use App\Support\PublicMediaUrl;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -101,7 +102,8 @@ class StoreContentController extends Controller
                 'id' => $item->getKey(),
                 'title' => $item->title,
                 'caption' => $item->caption,
-                'imageUrl' => $item->image_url,
+                'imageUrl' => PublicMediaUrl::fromPathOrUrl($item->image_path)
+                    ?? PublicMediaUrl::fromPathOrUrl($item->image_url),
                 'linkUrl' => $item->link_url,
             ])->all();
 

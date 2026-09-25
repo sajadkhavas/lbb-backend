@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\GalleryItemResource\Pages;
 use App\Models\GalleryItem;
 use App\Rules\PublicStorefrontHref;
+use App\Support\StorefrontMediaOptions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -33,20 +34,16 @@ class GalleryItemResource extends Resource
             Forms\Components\TextInput::make('title')->label('عنوان')->required()->maxLength(220),
             Forms\Components\TextInput::make('sort_order')->label('ترتیب')->numeric()->default(0)->required(),
             Forms\Components\Toggle::make('is_active')->label('فعال')->default(true),
-            Forms\Components\FileUpload::make('image_path')
-                ->label('آپلود تصویر')
-                ->disk('public')
-                ->directory('storefront/lookbook')
-                ->visibility('public')
-                ->image()
-                ->imageEditor()
-                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
-                ->maxSize(8192)
-                ->helperText('روش پیشنهادی. فایل در storage مشترک نگه‌داری می‌شود و به release وابسته نیست.')
+            Forms\Components\Select::make('image_path')->label('تصویر از کتابخانه')
+                ->options(fn (?GalleryItem $record): array => StorefrontMediaOptions::paths($record?->image_path))
+                ->searchable()
+                ->rules(['required_without:image_url'])
+                ->validationMessages(['required_without' => 'یک تصویر از کتابخانه انتخاب کنید یا نشانی تصویر را وارد کنید.'])
                 ->columnSpanFull(),
             Forms\Components\TextInput::make('image_url')
                 ->label('URL تصویر قدیمی/خارجی (اختیاری)')
                 ->url()
+                ->rules(['required_without:image_path'])
                 ->helperText('اگر فایل آپلود شده باشد، همان فایل اولویت دارد.')
                 ->nullable()
                 ->columnSpanFull(),

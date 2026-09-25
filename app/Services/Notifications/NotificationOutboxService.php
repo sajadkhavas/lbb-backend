@@ -177,9 +177,19 @@ final class NotificationOutboxService
             return false;
         }
 
+        if ($notification->template_key === 'campaign' &&
+            (! $subscription->marketing_enabled ||
+             ! in_array($notification->payload['topic'] ?? '', $subscription->preferences ?? [], true))) {
+            $this->recordTerminalFailure($notification, 'push_consent_withdrawn');
+
+            return false;
+        }
+
         $result = $this->webPush->sendSubscription(
             $subscription,
-            $this->webPush->orderPayload($notification->template_key, $notification->payload ?? []),
+            $notification->template_key === 'campaign'
+                ? $this->webPush->campaignPayload($notification->payload ?? [])
+                : $this->webPush->orderPayload($notification->template_key, $notification->payload ?? []),
         );
         if ($result === null) {
             $this->recordTerminalFailure($notification, 'push_subscription_expired');

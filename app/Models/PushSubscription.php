@@ -11,6 +11,9 @@ class PushSubscription extends Model
 {
     protected $fillable = [
         'customer_id',
+        'guest_token_hash',
+        'marketing_enabled',
+        'preferences',
         'endpoint_hash',
         'endpoint',
         'p256dh',
@@ -24,6 +27,7 @@ class PushSubscription extends Model
     protected $hidden = [
         'id',
         'customer_id',
+        'guest_token_hash',
         'endpoint',
         'p256dh',
         'auth_token',
@@ -43,6 +47,8 @@ class PushSubscription extends Model
             'p256dh' => 'encrypted',
             'auth_token' => 'encrypted',
             'last_seen_at' => 'datetime',
+            'marketing_enabled' => 'boolean',
+            'preferences' => 'array',
             'revoked_at' => 'datetime',
         ];
     }
