@@ -55,7 +55,8 @@ class ContentPageResource extends Resource
                         ->label('خلاصه')
                         ->rows(3)
                         ->columnSpanFull(),
-                    Forms\Components\RichEditor::make('content')
+                    \FilamentTiptapEditor\TiptapEditor::make('content')
+                        ->tools(['heading', 'bullet-list', 'ordered-list', '|', 'bold', 'italic', 'link', 'media'])
                         ->label('متن')
                         ->columnSpanFull(),
                 ])->columns(2),

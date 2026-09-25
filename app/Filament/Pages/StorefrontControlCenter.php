@@ -7,8 +7,8 @@ use App\Models\Collection as ApparelCollection;
 use App\Models\Product;
 use App\Models\StoreSetting;
 use App\Support\StorefrontPresentationDefaults;
+use App\Support\StorefrontMediaOptions;
 use Filament\Actions\Action;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Tabs;
@@ -124,15 +124,10 @@ class StorefrontControlCenter extends Page implements HasForms
                             ->preload()
                             ->placeholder('بدون محصول منتخب')
                             ->helperText('فقط محصول واقعی منتشرشده را انتخاب کنید؛ نیازی به واردکردن Slug نیست.'),
-                        FileUpload::make('hero_image_path')
-                            ->label('تصویر مستقل Hero')
-                            ->disk('public')
-                            ->directory('storefront/hero')
-                            ->visibility('public')
-                            ->image()
-                            ->imageEditor()
-                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
-                            ->maxSize(8192)
+                        Select::make('hero_image_path')
+                            ->label('تصویر مستقل Hero از کتابخانه')
+                            ->options(fn (): array => StorefrontMediaOptions::paths($this->data['hero_image_path'] ?? null))
+                            ->searchable()
                             ->helperText('اگر خالی باشد، تصویر محصول Hero به‌عنوان fallback استفاده می‌شود.')
                             ->columnSpanFull(),
                         TextInput::make('hero_image_alt')->label('Alt تصویر Hero')->maxLength(220)->columnSpanFull(),
@@ -218,15 +213,10 @@ class StorefrontControlCenter extends Page implements HasForms
                     ]),
 
                     Tabs\Tab::make('رسانه و Story')->schema([
-                        FileUpload::make('local_store_image_path')
-                            ->label('تصویر فروشگاه حضوری')
-                            ->disk('public')
-                            ->directory('storefront/local-store')
-                            ->visibility('public')
-                            ->image()
-                            ->imageEditor()
-                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
-                            ->maxSize(8192)
+                        Select::make('local_store_image_path')
+                            ->label('تصویر فروشگاه حضوری از کتابخانه')
+                            ->options(fn (): array => StorefrontMediaOptions::paths($this->data['local_store_image_path'] ?? null))
+                            ->searchable()
                             ->columnSpanFull(),
                         TextInput::make('local_store_contact_href')->label('مقصد CTA تماس فروشگاه')->maxLength(500),
                         TextInput::make('local_store_instagram_href')->label('مقصد CTA اینستاگرام (اختیاری)')->helperText('خالی = Instagram عمومی برند')->maxLength(500),
@@ -289,14 +279,10 @@ class StorefrontControlCenter extends Page implements HasForms
                                 TextInput::make('primaryCtaHref')->label('مقصد CTA اصلی')->maxLength(500),
                                 TextInput::make('secondaryCtaLabel')->label('CTA دوم')->maxLength(120),
                                 TextInput::make('secondaryCtaHref')->label('مقصد CTA دوم')->maxLength(500),
-                                FileUpload::make('socialImagePath')
-                                    ->label('تصویر Social/OG صفحه')
-                                    ->disk('public')
-                                    ->directory('storefront/pages')
-                                    ->visibility('public')
-                                    ->image()
-                                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
-                                    ->maxSize(8192)
+                                Select::make('socialImagePath')
+                                    ->label('تصویر Social/OG از کتابخانه')
+                                    ->options(fn (): array => StorefrontMediaOptions::paths())
+                                    ->searchable()
                                     ->columnSpanFull(),
                             ])
                             ->columns(2)

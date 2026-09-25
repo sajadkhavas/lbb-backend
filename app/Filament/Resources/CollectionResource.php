@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use App\Support\StorefrontMediaOptions;
+
 use App\Enums\PublicationStatus;
 use App\Filament\Resources\CollectionResource\Pages;
 use App\Models\Collection as ApparelCollection;
@@ -41,17 +43,10 @@ class CollectionResource extends Resource
                     ->required(),
                 Forms\Components\Toggle::make('is_featured')->label('ویژه'),
                 Forms\Components\TextInput::make('sort_order')->label('ترتیب')->numeric()->minValue(0)->default(0),
-                Forms\Components\FileUpload::make('cover_image_path')
-                    ->label('تصویر کاور / Hero کالکشن')
-                    ->disk('public')
-                    ->directory('storefront/collections')
-                    ->visibility('public')
-                    ->image()
-                    ->imageEditor()
-                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
-                    ->maxSize(8192)
-                    ->helperText('برای کارت کالکشن، Featured Story و تصویر SEO استفاده می‌شود.')
-                    ->columnSpanFull(),
+                Forms\Components\Select::make('cover_image_path')
+                    ->label('کاور کالکشن از کتابخانه')
+                    ->options(fn (?\App\Models\Collection $record): array => StorefrontMediaOptions::paths($record?->cover_image_path))
+                    ->searchable()->columnSpanFull(),
                 Forms\Components\Select::make('products')
                     ->label('محصولات')
                     ->relationship('products', 'name')

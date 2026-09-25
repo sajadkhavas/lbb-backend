@@ -43,7 +43,9 @@ class ProductResource extends Resource
                             Forms\Components\TextInput::make('slug')->label('Slug')->maxLength(200),
                             Forms\Components\Select::make('category_id')->label('دسته‌بندی')->relationship('category', 'name')->searchable()->preload()->required(),
                             Forms\Components\Textarea::make('short_description')->label('توضیح کوتاه')->rows(3)->maxLength(320)->columnSpanFull(),
-                            Forms\Components\RichEditor::make('description')->label('توضیح کامل')->columnSpanFull(),
+                            \FilamentTiptapEditor\TiptapEditor::make('description')->label('توضیح کامل')
+                                ->tools(['heading', 'bullet-list', 'ordered-list', '|', 'bold', 'italic', 'link', 'media'])
+                                ->columnSpanFull(),
                         ])->columns(2),
                         Forms\Components\Section::make('انتشار')->schema([
                             Forms\Components\Select::make('publication_status')

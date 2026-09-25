@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'direction' => 'ltr',
+    'direction' => 'rtl',
     'max_content_width' => '5xl',
     'disable_stylesheet' => false,
     'disable_link_as_button' => false,
@@ -33,9 +33,9 @@ return [
     |--------------------------------------------------------------------------
     |
     */
-    'media_action' => FilamentTiptapEditor\Actions\MediaAction::class,
+    'media_action' => App\Filament\Actions\LbbTiptapMediaAction::class,
     //    'media_action' => Awcodes\Curator\Actions\MediaAction::class,
-    'edit_media_action' => FilamentTiptapEditor\Actions\EditMediaAction::class,
+    'edit_media_action' => App\Filament\Actions\LbbTiptapEditMediaAction::class,
     'link_action' => FilamentTiptapEditor\Actions\LinkAction::class,
     'grid_builder_action' => FilamentTiptapEditor\Actions\GridBuilderAction::class,
     'oembed_action' => FilamentTiptapEditor\Actions\OEmbedAction::class,
