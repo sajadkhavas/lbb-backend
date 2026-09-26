@@ -4,12 +4,28 @@ namespace Tests\Feature;
 
 use App\Models\StorefrontMediaAsset;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class StorefrontMediaAutoReadyTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_real_upload_attaches_original_and_approves_optimized_image(): void
+    {
+        Storage::fake('public');
+
+        $asset = StorefrontMediaAsset::createFromUpload(
+            UploadedFile::fake()->image('store.jpg', 1200, 900),
+            ['title' => 'فروشگاه', 'usage' => 'hero'],
+        );
+
+        $this->assertNotNull($asset->fresh()->sourceMedia());
+        $this->assertSame('ready', $asset->fresh()->status);
+        $this->assertSame('ready', $asset->conversionState());
+        $this->assertNotNull($asset->optimizedUrl());
+    }
 
     public function test_generated_public_webp_is_approved_automatically(): void
     {

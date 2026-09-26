@@ -40,15 +40,13 @@ class ManageStorefrontMediaAssets extends ManageRecords
                     if (! $file instanceof TemporaryUploadedFile) continue;
                     $title = Str::of(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME))
                         ->replace(['_', '-'], ' ')->squish()->limit(220, '')->toString();
-                    $asset = StorefrontMediaAsset::query()->create([
-                        'title' => $title ?: 'تصویر LBB', 'usage' => $data['usage'],
-                        'status' => 'pending', 'notes' => $data['notes'] ?? null,
-                    ]);
                     try {
-                        $asset->addMedia($file)->usingName($asset->title)->toMediaCollection('source');
-                        $asset->markReadyAfterUpload() ? $ready++ : $pending++;
+                        $asset = StorefrontMediaAsset::createFromUpload($file, [
+                            'title' => $title ?: 'تصویر LBB', 'usage' => $data['usage'],
+                            'notes' => $data['notes'] ?? null,
+                        ]);
+                        $asset->status === 'ready' ? $ready++ : $pending++;
                     } catch (Throwable $exception) {
-                        $asset->delete();
                         report($exception);
                         $pending++;
                     }
@@ -56,14 +54,47 @@ class ManageStorefrontMediaAssets extends ManageRecords
                 Notification::make()->title("{$ready} تصویر آماده؛ {$pending} تصویر نیازمند بررسی")
                     ->body('تصاویر آماده بدون تأیید دستی قابل استفاده‌اند.')->send();
             }),
-            Actions\CreateAction::make()->label('بارگذاری تصویر')
-            ->mutateFormDataUsing(function (array $data): array {
-                $data['status'] = 'pending';
+            Actions\Action::make('uploadImage')->label('بارگذاری تصویر')
+            ->icon('heroicon-o-photo')->form([
+                Forms\Components\FileUpload::make('source_image')
+                    ->label('فایل اصلی')->image()->imageEditor()->storeFiles(false)
+                    ->acceptedFileTypes(AdminImageUpload::acceptedMimeTypes())
+                    ->maxSize(AdminImageUpload::maxKilobytes())
+                    ->rules(AdminImageUpload::dimensionRules())->required(),
+                Forms\Components\TextInput::make('title')->label('عنوان داخلی')
+                    ->required()->maxLength(220),
+                Forms\Components\TextInput::make('alt_text')->label('متن جایگزین')->maxLength(500),
+                Forms\Components\Select::make('usage')->label('کاربرد')
+                    ->options(['unassigned' => 'تخصیص‌نیافته', 'product' => 'محصول',
+                        'category' => 'دسته', 'article' => 'مقاله', 'gallery' => 'گالری',
+                        'page' => 'صفحه', 'hero' => 'بنر', 'brand' => 'برند'])
+                    ->default('unassigned')->required(),
+                Forms\Components\Textarea::make('notes')->label('یادداشت'),
+            ])
+            ->action(function (array $data): void {
+                $file = $data['source_image'] ?? null;
+                if (! $file instanceof TemporaryUploadedFile) {
+                    Notification::make()->danger()->title('فایل تصویر دریافت نشد.')->send();
 
-                return $data;
-            })
-            ->after(function (StorefrontMediaAsset $record): void {
-                if ($record->markReadyAfterUpload()) {
+                    return;
+                }
+
+                try {
+                    $record = StorefrontMediaAsset::createFromUpload($file, [
+                        'title' => $data['title'],
+                        'alt_text' => $data['alt_text'] ?? null,
+                        'usage' => $data['usage'],
+                        'notes' => $data['notes'] ?? null,
+                    ]);
+                } catch (Throwable $exception) {
+                    report($exception);
+                    Notification::make()->danger()->title('بارگذاری تصویر انجام نشد.')
+                        ->body('فایل اصلی به کتابخانه متصل نشد؛ دوباره تلاش کنید.')->send();
+
+                    return;
+                }
+
+                if ($record->status === 'ready') {
                     Notification::make()->success()->title('نسخه WebP آماده شد؛ تصویر خودکار تأیید شد.')->send();
                 } else {
                     Notification::make()->warning()->title('تصویر ذخیره شد، اما نسخه بهینه هنوز آماده نیست.')

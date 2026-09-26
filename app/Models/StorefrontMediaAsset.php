@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Http\UploadedFile;
 use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -44,6 +45,30 @@ class StorefrontMediaAsset extends Model implements HasMedia
     public function sourceMedia(): ?Media
     {
         return $this->getFirstMedia('source');
+    }
+
+    public static function createFromUpload(UploadedFile $file, array $attributes): self
+    {
+        $asset = self::query()->create(array_merge($attributes, ['status' => 'pending']));
+
+        try {
+            $asset->addMedia($file)
+                ->usingName($asset->title)
+                ->toMediaCollection('source', 'public');
+
+            $asset->unsetRelation('media');
+            if ($asset->sourceMedia() === null) {
+                throw new \RuntimeException('فایل اصلی به رکورد تصویر وصل نشد.');
+            }
+
+            $asset->markReadyAfterUpload();
+
+            return $asset;
+        } catch (Throwable $exception) {
+            $asset->forceDelete();
+
+            throw $exception;
+        }
     }
 
     public function isReady(): bool

@@ -4,9 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\StorefrontMediaAssetResource\Pages;
 use App\Models\StorefrontMediaAsset;
-use App\Support\AdminImageUpload;
 use Filament\Forms;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -30,14 +28,9 @@ class StorefrontMediaAssetResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            SpatieMediaLibraryFileUpload::make('source_image')
-                ->label('فایل اصلی')->collection('source')->image()->imageEditor()
-                ->acceptedFileTypes(AdminImageUpload::acceptedMimeTypes())
-                ->maxSize(AdminImageUpload::maxKilobytes())
-                ->rules(AdminImageUpload::dimensionRules())
-                ->required(fn (?StorefrontMediaAsset $record): bool => $record === null)
-                ->disabled(fn (?StorefrontMediaAsset $record): bool => $record !== null)
-                ->helperText('JPEG، PNG یا WebP تا '.AdminImageUpload::maxMegabytesLabel().' و حداکثر ۶۰۰۰×۶۰۰۰ پیکسل. فایل اصلی حفظ می‌شود؛ Preview و Thumbnail به WebP تبدیل می‌شوند. برای جایگزینی، رسانه جدید بسازید.')
+            Forms\Components\Placeholder::make('original_image')
+                ->label('فایل اصلی')
+                ->content(fn (?StorefrontMediaAsset $record): string => $record?->originalUrl() ?? 'فایل ندارد؛ برای ثبت تصویر، از «بارگذاری تصویر» استفاده کنید.')
                 ->columnSpanFull(),
             Forms\Components\TextInput::make('title')->label('عنوان داخلی')->required()->maxLength(220),
             Forms\Components\TextInput::make('alt_text')->label('متن جایگزین')->maxLength(500),
