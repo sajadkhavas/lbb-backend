@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Http\UploadedFile;
 use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Throwable;
 
 class StorefrontMediaAsset extends Model implements HasMedia
 {
@@ -45,18 +47,128 @@ class StorefrontMediaAsset extends Model implements HasMedia
         return $this->getFirstMedia('source');
     }
 
+    public static function createFromUpload(UploadedFile $file, array $attributes): self
+    {
+        $asset = self::query()->create(array_merge($attributes, ['status' => 'pending']));
+
+        try {
+            $asset->addMedia($file)
+                ->usingName($asset->title)
+                ->toMediaCollection('source', 'public');
+
+            $asset->unsetRelation('media');
+            if ($asset->sourceMedia() === null) {
+                throw new \RuntimeException('فایل اصلی به رکورد تصویر وصل نشد.');
+            }
+
+            $asset->markReadyAfterUpload();
+
+            return $asset;
+        } catch (Throwable $exception) {
+            $asset->forceDelete();
+
+            throw $exception;
+        }
+    }
+
     public function isReady(): bool
     {
-        $media = $this->sourceMedia();
-        if (! $media || ! $media->hasGeneratedConversion('preview')) {
-            return false;
-        }
-        if (($media->conversions_disk ?: $media->disk) !== 'public') {
-            return false;
-        }
-        $path = $media->getPath('preview');
+        try {
+            $media = $this->sourceMedia();
+            if (! $media || ! $media->hasGeneratedConversion('preview') || ! $media->hasGeneratedConversion('thumb')) {
+                return false;
+            }
+            if (($media->conversions_disk ?: $media->disk) !== 'public') {
+                return false;
+            }
+            $path = $media->getPath('preview');
 
-        return is_file($path) && filesize($path) <= self::MAX_PUBLIC_BYTES;
+            return is_file($path) && filesize($path) <= self::MAX_PUBLIC_BYTES;
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
+    public function conversionState(): string
+    {
+        try {
+            $media = $this->sourceMedia();
+            if ($media === null) return 'missing';
+            if (! $media->hasGeneratedConversion('preview') || ! $media->hasGeneratedConversion('thumb')) return 'pending';
+            if (! is_file($media->getPath('preview'))) return 'broken';
+
+            return $this->isReady() ? 'ready' : 'oversized';
+        } catch (Throwable) {
+            return 'broken';
+        }
+    }
+
+    public function originalUrl(): ?string
+    {
+        try { return $this->sourceMedia()?->getFullUrl(); } catch (Throwable) { return null; }
+    }
+
+    public function optimizedUrl(): ?string
+    {
+        try {
+            $media = $this->sourceMedia();
+            return $media?->hasGeneratedConversion('preview') ? $media->getFullUrl('preview') : null;
+        } catch (Throwable) { return null; }
+    }
+
+    public function originalSizeLabel(): string
+    {
+        try { return self::humanBytes($this->sourceMedia()?->size); } catch (Throwable) { return '—'; }
+    }
+
+    public function optimizedSizeLabel(): string
+    {
+        try {
+            $media = $this->sourceMedia();
+            if (! $media?->hasGeneratedConversion('preview')) return '—';
+            $path = $media->getPath('preview');
+            return is_file($path) ? self::humanBytes(filesize($path)) : '—';
+        } catch (Throwable) { return '—'; }
+    }
+
+    public function dimensionsLabel(): string
+    {
+        try {
+            $path = $this->sourceMedia()?->getPath();
+            if (! $path || ! is_file($path)) return '—';
+            $dimensions = @getimagesize($path);
+            return $dimensions ? $dimensions[0].'×'.$dimensions[1].' px' : 'نامشخص';
+        } catch (Throwable) { return 'نامشخص'; }
+    }
+
+    public function formatLabel(): string
+    {
+        try { return $this->sourceMedia()?->mime_type ?? '—'; } catch (Throwable) { return '—'; }
+    }
+
+    private static function humanBytes(?int $bytes): string
+    {
+        if ($bytes === null) return '—';
+        if ($bytes < 1024) return $bytes.' B';
+        if ($bytes < 1048576) return number_format($bytes / 1024, 1).' KB';
+        return number_format($bytes / 1048576, 2).' MB';
+    }
+
+    public function markReadyAfterUpload(): bool
+    {
+        if ($this->status !== 'pending') {
+            return $this->status === 'ready' && $this->isReady();
+        }
+
+        // Filament saves the media relationship after creating the asset record.
+        $this->unsetRelation('media');
+        if (! $this->isReady()) {
+            return false;
+        }
+
+        $this->forceFill(['status' => 'ready'])->save();
+
+        return true;
     }
 
     public function previewUrl(): ?string
