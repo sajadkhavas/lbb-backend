@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\StorefrontMediaAssetResource\Pages;
 use App\Models\StorefrontMediaAsset;
+use App\Support\AdminImageUpload;
 use Filament\Forms;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Form;
@@ -31,12 +32,12 @@ class StorefrontMediaAssetResource extends Resource
         return $form->schema([
             SpatieMediaLibraryFileUpload::make('source_image')
                 ->label('فایل اصلی')->collection('source')->image()->imageEditor()
-                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
-                ->maxSize(10240)
-                ->rules(['dimensions:max_width=6000,max_height=6000'])
+                ->acceptedFileTypes(AdminImageUpload::acceptedMimeTypes())
+                ->maxSize(AdminImageUpload::maxKilobytes())
+                ->rules(AdminImageUpload::dimensionRules())
                 ->required(fn (?StorefrontMediaAsset $record): bool => $record === null)
                 ->disabled(fn (?StorefrontMediaAsset $record): bool => $record !== null)
-                ->helperText('فایل اصلی حفظ می‌شود؛ پیش‌نمایش و تصویر کوچک WebP ساخته می‌شوند. برای جایگزینی، رسانه جدید بسازید.')
+                ->helperText('JPEG، PNG یا WebP تا '.AdminImageUpload::maxMegabytesLabel().' و حداکثر ۶۰۰۰×۶۰۰۰ پیکسل. فایل اصلی حفظ می‌شود؛ Preview و Thumbnail به WebP تبدیل می‌شوند. برای جایگزینی، رسانه جدید بسازید.')
                 ->columnSpanFull(),
             Forms\Components\TextInput::make('title')->label('عنوان داخلی')->required()->maxLength(220),
             Forms\Components\TextInput::make('alt_text')->label('متن جایگزین')->maxLength(500),
@@ -59,6 +60,28 @@ class StorefrontMediaAssetResource extends Resource
             Tables\Columns\ImageColumn::make('preview')->label('تصویر')
                 ->getStateUsing(fn (StorefrontMediaAsset $record): ?string => $record->previewUrl())->square(),
             Tables\Columns\TextColumn::make('title')->label('عنوان')->searchable(),
+            Tables\Columns\TextColumn::make('conversion_state')->label('نسخه مصرفی')
+                ->state(fn (StorefrontMediaAsset $record): string => $record->conversionState())
+                ->formatStateUsing(fn (string $state): string => match ($state) {
+                    'ready' => 'WebP آماده ≤ 1MB', 'oversized' => 'بیشتر از 1MB',
+                    'missing' => 'فایل اصلی ندارد', 'broken' => 'فایل/Storage ناسالم',
+                    default => 'در انتظار پردازش',
+                })
+                ->color(fn (string $state): string => match ($state) {
+                    'ready' => 'success', 'pending' => 'warning', default => 'danger',
+                })->badge(),
+            Tables\Columns\TextColumn::make('original_size')->label('حجم Original')
+                ->state(fn (StorefrontMediaAsset $record): string => $record->originalSizeLabel()),
+            Tables\Columns\TextColumn::make('dimensions')->label('ابعاد Original')
+                ->state(fn (StorefrontMediaAsset $record): string => $record->dimensionsLabel())->toggleable(),
+            Tables\Columns\TextColumn::make('format')->label('فرمت Original')
+                ->state(fn (StorefrontMediaAsset $record): string => $record->formatLabel())->toggleable(),
+            Tables\Columns\TextColumn::make('original_url')->label('URL اصلی')
+                ->state(fn (StorefrontMediaAsset $record): ?string => $record->originalUrl())
+                ->copyable()->limit(18)->placeholder('—'),
+            Tables\Columns\TextColumn::make('optimized_url')->label('URL بهینه')
+                ->state(fn (StorefrontMediaAsset $record): ?string => $record->optimizedUrl())
+                ->copyable()->limit(18)->placeholder('در انتظار پردازش'),
             Tables\Columns\TextColumn::make('usage')->label('کاربرد')->badge(),
             Tables\Columns\TextColumn::make('status')->label('وضعیت')->badge(),
             Tables\Columns\TextColumn::make('preview_size')->label('حجم نسخه بهینه')
@@ -79,7 +102,10 @@ class StorefrontMediaAssetResource extends Resource
             Tables\Actions\EditAction::make(),
             Tables\Actions\Action::make('retryPreview')
                 ->label('بازسازی تصویر بهینه')
-                ->visible(fn (StorefrontMediaAsset $record): bool => $record->status === 'pending' && $record->sourceMedia() !== null)
+                ->icon('heroicon-o-arrow-path')->color('warning')
+                ->visible(fn (StorefrontMediaAsset $record): bool => $record->sourceMedia() !== null && ! $record->isReady())
+                ->requiresConfirmation()
+                ->modalDescription('فقط نسخه‌های thumb و preview بازسازی می‌شوند؛ فایل اصلی حفظ می‌شود.')
                 ->action(function (StorefrontMediaAsset $record): void {
                     $media = $record->sourceMedia();
                     if (! $media) return;

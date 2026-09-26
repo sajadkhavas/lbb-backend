@@ -64,6 +64,71 @@ class StorefrontMediaAsset extends Model implements HasMedia
         }
     }
 
+    public function conversionState(): string
+    {
+        try {
+            $media = $this->sourceMedia();
+            if ($media === null) return 'missing';
+            if (! $media->hasGeneratedConversion('preview') || ! $media->hasGeneratedConversion('thumb')) return 'pending';
+            if (! is_file($media->getPath('preview'))) return 'broken';
+
+            return $this->isReady() ? 'ready' : 'oversized';
+        } catch (Throwable) {
+            return 'broken';
+        }
+    }
+
+    public function originalUrl(): ?string
+    {
+        try { return $this->sourceMedia()?->getFullUrl(); } catch (Throwable) { return null; }
+    }
+
+    public function optimizedUrl(): ?string
+    {
+        try {
+            $media = $this->sourceMedia();
+            return $media?->hasGeneratedConversion('preview') ? $media->getFullUrl('preview') : null;
+        } catch (Throwable) { return null; }
+    }
+
+    public function originalSizeLabel(): string
+    {
+        try { return self::humanBytes($this->sourceMedia()?->size); } catch (Throwable) { return '—'; }
+    }
+
+    public function optimizedSizeLabel(): string
+    {
+        try {
+            $media = $this->sourceMedia();
+            if (! $media?->hasGeneratedConversion('preview')) return '—';
+            $path = $media->getPath('preview');
+            return is_file($path) ? self::humanBytes(filesize($path)) : '—';
+        } catch (Throwable) { return '—'; }
+    }
+
+    public function dimensionsLabel(): string
+    {
+        try {
+            $path = $this->sourceMedia()?->getPath();
+            if (! $path || ! is_file($path)) return '—';
+            $dimensions = @getimagesize($path);
+            return $dimensions ? $dimensions[0].'×'.$dimensions[1].' px' : 'نامشخص';
+        } catch (Throwable) { return 'نامشخص'; }
+    }
+
+    public function formatLabel(): string
+    {
+        try { return $this->sourceMedia()?->mime_type ?? '—'; } catch (Throwable) { return '—'; }
+    }
+
+    private static function humanBytes(?int $bytes): string
+    {
+        if ($bytes === null) return '—';
+        if ($bytes < 1024) return $bytes.' B';
+        if ($bytes < 1048576) return number_format($bytes / 1024, 1).' KB';
+        return number_format($bytes / 1048576, 2).' MB';
+    }
+
     public function markReadyAfterUpload(): bool
     {
         if ($this->status !== 'pending') {
