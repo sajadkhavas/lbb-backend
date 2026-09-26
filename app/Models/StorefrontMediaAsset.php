@@ -8,6 +8,7 @@ use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Throwable;
 
 class StorefrontMediaAsset extends Model implements HasMedia
 {
@@ -47,16 +48,37 @@ class StorefrontMediaAsset extends Model implements HasMedia
 
     public function isReady(): bool
     {
-        $media = $this->sourceMedia();
-        if (! $media || ! $media->hasGeneratedConversion('preview')) {
-            return false;
-        }
-        if (($media->conversions_disk ?: $media->disk) !== 'public') {
-            return false;
-        }
-        $path = $media->getPath('preview');
+        try {
+            $media = $this->sourceMedia();
+            if (! $media || ! $media->hasGeneratedConversion('preview') || ! $media->hasGeneratedConversion('thumb')) {
+                return false;
+            }
+            if (($media->conversions_disk ?: $media->disk) !== 'public') {
+                return false;
+            }
+            $path = $media->getPath('preview');
 
-        return is_file($path) && filesize($path) <= self::MAX_PUBLIC_BYTES;
+            return is_file($path) && filesize($path) <= self::MAX_PUBLIC_BYTES;
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
+    public function markReadyAfterUpload(): bool
+    {
+        if ($this->status !== 'pending') {
+            return $this->status === 'ready' && $this->isReady();
+        }
+
+        // Filament saves the media relationship after creating the asset record.
+        $this->unsetRelation('media');
+        if (! $this->isReady()) {
+            return false;
+        }
+
+        $this->forceFill(['status' => 'ready'])->save();
+
+        return true;
     }
 
     public function previewUrl(): ?string

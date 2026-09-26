@@ -47,6 +47,7 @@ class AdminPanelProvider extends PanelProvider
             ->favicon(asset('favicon.png').'?v=lbb-20260923')
             ->colors(['primary' => Color::Emerald])
             ->font('Vazirmatn')
+            ->renderHook('panels::body.end', fn () => view('filament.media-upload-optimizer'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([Pages\Dashboard::class])
