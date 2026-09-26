@@ -33,9 +33,6 @@ class PushCampaigns extends Page
         return [Action::make('sendCampaign')
             ->label('آماده‌سازی و صف‌بندی اعلان')
             ->form([
-                Forms\Components\Select::make('topic')->label('موضوع رضایت مخاطب')
-                    ->options(['product_updates' => 'محصولات', 'editorial' => 'محتوای فروشگاه'])
-                    ->required(),
                 Forms\Components\TextInput::make('title')->label('عنوان')->required()->maxLength(100),
                 Forms\Components\Textarea::make('body')->label('متن پیام')->required()->maxLength(300),
                 Forms\Components\TextInput::make('url')->label('مسیر داخلی سایت')
@@ -43,7 +40,7 @@ class PushCampaigns extends Page
                     ->rule('regex:/^\/(?!\/)[^\s]*$/'),
             ])
             ->requiresConfirmation()
-            ->modalDescription('اعلان فقط برای دستگاه‌هایی در صف قرار می‌گیرد که این موضوع را فعال کرده‌اند. ارسال توسط پردازشگر اعلان انجام می‌شود.')
+            ->modalDescription('اعلان برای همهٔ دستگاه‌های سایت و وب‌اپ، شامل مهمان‌ها، که دریافت اعلان فروشگاه را فعال کرده‌اند در صف قرار می‌گیرد. ارسال توسط پردازشگر اعلان انجام می‌شود.')
             ->action(function (array $data, WebPushService $webPush): void {
                 if (! $webPush->ready()) {
                     Notification::make()->danger()->title('سرویس اعلان روی سرور فعال نیست.')->send();
@@ -54,7 +51,6 @@ class PushCampaigns extends Page
                 $campaignId = (string) Str::ulid();
                 $count = 0;
                 PushSubscription::query()->active()->where('marketing_enabled', true)
-                    ->whereJsonContains('preferences', $data['topic'])
                     ->orderBy('id')->chunkById(100, function ($subscriptions) use ($data, $campaignId, &$count): void {
                         foreach ($subscriptions as $subscription) {
                             NotificationOutbox::query()->create([
@@ -65,7 +61,7 @@ class PushCampaigns extends Page
                                 'template_key' => 'campaign',
                                 'payload' => [
                                     'campaign_id' => $campaignId,
-                                    'topic' => $data['topic'],
+                                    'topic' => 'broadcast',
                                     'title' => $data['title'],
                                     'body' => $data['body'],
                                     'url' => $data['url'],
