@@ -186,22 +186,7 @@ final class PublicCatalogQuery
         }
 
         $colors = $this->csv($filters['color'] ?? null);
-        if ($colors !== []) {
-            $query->whereHas('activeVariants', fn (Builder $variants): Builder => $variants
-                ->sellable()
-                ->whereHas('color', fn (Builder $color): Builder => $color
-                    ->active()
-                    ->whereIn('slug', $colors)));
-        }
-
         $sizes = $this->csv($filters['size'] ?? null);
-        if ($sizes !== []) {
-            $query->whereHas('activeVariants', fn (Builder $variants): Builder => $variants
-                ->sellable()
-                ->whereHas('size', fn (Builder $size): Builder => $size
-                    ->active()
-                    ->whereIn('code', $sizes)));
-        }
 
         if (filled($filters['q'] ?? null)) {
             $needle = trim((string) $filters['q']);
@@ -215,14 +200,34 @@ final class PublicCatalogQuery
         $minPrice = $filters['min_price'] ?? null;
         $maxPrice = $filters['max_price'] ?? null;
 
-        if ($minPrice !== null || $maxPrice !== null) {
-            $query->whereHas('activeVariants', function (Builder $variants) use ($minPrice, $maxPrice): void {
-                $this->whereCurrentPrice($variants, $minPrice, $maxPrice);
-            });
-        }
+        if (
+            $colors !== [] || $sizes !== [] || $minPrice !== null || $maxPrice !== null
+            || ($filters['availability'] ?? null) === 'in_stock'
+        ) {
+            // All choices must match the same purchasable variant.
+            $query->whereHas('activeVariants', function (Builder $variants) use ($colors, $sizes, $minPrice, $maxPrice, $filters): void {
+                $variants->sellable();
 
-        if (($filters['availability'] ?? null) === 'in_stock') {
-            $query->whereHas('activeVariants', fn (Builder $variants): Builder => $this->whereAvailable($variants, true));
+                if ($colors !== []) {
+                    $variants->whereHas('color', fn (Builder $color): Builder => $color
+                        ->active()
+                        ->whereIn('slug', $colors));
+                }
+
+                if ($sizes !== []) {
+                    $variants->whereHas('size', fn (Builder $size): Builder => $size
+                        ->active()
+                        ->whereIn('code', $sizes));
+                }
+
+                if ($minPrice !== null || $maxPrice !== null) {
+                    $this->whereCurrentPrice($variants, $minPrice, $maxPrice);
+                }
+
+                if (($filters['availability'] ?? null) === 'in_stock') {
+                    $this->whereAvailable($variants, true);
+                }
+            });
         }
 
         if (($filters['availability'] ?? null) === 'out_of_stock') {
