@@ -34,6 +34,6 @@ jobs:
           cp .env.example .env
           touch database/database.sqlite
           php artisan key:generate
-      - run: php -l app/Domain/Catalog/PublicCatalogQuery.php && php -l tests/Feature/PublicCommerceApiTest.php
-      - run: vendor/bin/pint --test app/Domain/Catalog/PublicCatalogQuery.php tests/Feature/PublicCommerceApiTest.php
+      - run: php -l app/Domain/Catalog/PublicCatalogQuery.php && php -l app/Http/Requests/Api/V1/CatalogIndexRequest.php && php -l tests/Feature/PublicCommerceApiTest.php
+      - run: vendor/bin/pint --test app/Domain/Catalog/PublicCatalogQuery.php app/Http/Requests/Api/V1/CatalogIndexRequest.php tests/Feature/PublicCommerceApiTest.php
       - run: php artisan test tests/Feature/PublicCommerceApiTest.php tests/Feature/PublicCommerceDiscoveryContractTest.php

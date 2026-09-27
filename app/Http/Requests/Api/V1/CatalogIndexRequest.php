@@ -25,7 +25,7 @@ class CatalogIndexRequest extends FormRequest
             'size' => ['nullable', 'string', 'max:200', 'regex:/^[\pL\pN_. ,-]+$/u'],
             'availability' => ['nullable', Rule::in(PublicCatalogQuery::AVAILABILITY)],
             'min_price' => ['nullable', 'integer', 'min:0'],
-            'max_price' => ['nullable', 'integer', 'min:0', 'gte:min_price'],
+            'max_price' => ['nullable', 'integer', 'min:0', Rule::when($this->filled('min_price'), 'gte:min_price')],
             'sort' => ['nullable', Rule::in(PublicCatalogQuery::SORTS)],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:'.$max],
