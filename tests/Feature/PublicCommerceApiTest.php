@@ -232,6 +232,14 @@ class PublicCommerceApiTest extends TestCase
         $this->getJson('/api/v1/products?color=other-color&size=XL&max_price=250000')
             ->assertOk()
             ->assertJsonPath('meta.pagination.total', 1);
+
+        $this->getJson('/api/v1/products?max_price=100000')
+            ->assertOk()
+            ->assertJsonPath('meta.pagination.total', 1);
+
+        $this->getJson('/api/v1/products?min_price=200000&max_price=100000')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('max_price');
     }
 
     public function test_availability_filter_is_server_authoritative_and_exact_quantity_remains_private(): void
