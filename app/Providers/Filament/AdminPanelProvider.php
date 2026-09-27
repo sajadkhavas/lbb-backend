@@ -44,7 +44,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->brandName(config('lbb.brand.name', 'LBB'))
-            ->favicon(asset('favicon.png').'?v=lbb-20260923')
+            ->favicon(asset('favicon.png').'?v=lbb-20260926')
             ->colors(['primary' => Color::Emerald])
             ->font('Vazirmatn')
             ->renderHook('panels::body.end', fn () => view('filament.media-upload-optimizer'))

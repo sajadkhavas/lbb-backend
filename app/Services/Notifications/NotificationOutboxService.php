@@ -179,6 +179,7 @@ final class NotificationOutboxService
 
         if ($notification->template_key === 'campaign' &&
             (! $subscription->marketing_enabled ||
+             ($notification->payload['topic'] ?? '') !== 'broadcast' &&
              ! in_array($notification->payload['topic'] ?? '', $subscription->preferences ?? [], true))) {
             $this->recordTerminalFailure($notification, 'push_consent_withdrawn');
 
