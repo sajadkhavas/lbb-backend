@@ -248,6 +248,8 @@ final class PublicCatalogTransformer
             'publicId' => $guide->public_id,
             'name' => $guide->name,
             'description' => $guide->description,
+            'imageUrl' => \App\Support\PublicMediaUrl::fromPathOrUrl($guide->image_path),
+            'imageAlt' => $guide->image_alt,
             'unit' => $guide->unit,
             'definitions' => $measurements->pluck('definition')->unique('public_id')->values()
                 ->map(fn ($definition): array => [
