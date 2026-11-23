@@ -1,0 +1,16 @@
+{
+  "snapshot_date": "2026-11-23",
+  "branch": "production/iran-20261123",
+  "component": "backend",
+  "source_archive_sha256": "be321c2674d5099240fc985f3938d6af8d022d60bc506c5f1762dd713664f946",
+  "runtime_release": "size-guide-image-AuggafOs",
+  "validation": {
+    "source_hashes_verified": true,
+    "fresh_build": "not applicable",
+    "server_runtime_tests": "passed per migration outputs; not rerun by this checkout",
+    "typecheck": "not applicable",
+    "autoplay_tests": "not applicable",
+    "php_syntax": "496 files parsed successfully with php-parser (not PHP runtime lint)",
+    "laravel_runtime_suite": "not run; PHP/composer unavailable in audit environment"
+  }
+}
