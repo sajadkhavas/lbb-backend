@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Widgets\LbbCommerceOverview;
 use App\Http\Middleware\BlockUnsafeAdminToolsInProduction;
+use App\Http\Middleware\PreventAdminIndexing;
 use Awcodes\Curator\CuratorPlugin;
 use Awcodes\Curator\Resources\MediaResource;
 use BezhanSalleh\FilamentLanguageSwitch\LanguageSwitch;
@@ -43,9 +44,10 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->brandName(config('lbb.brand.name', 'LBB'))
-            ->favicon(asset('favicon.ico'))
+            ->favicon(asset('favicon.png').'?v=lbb-20260926')
             ->colors(['primary' => Color::Emerald])
             ->font('Vazirmatn')
+            ->renderHook('panels::body.end', fn () => view('filament.media-upload-optimizer'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([Pages\Dashboard::class])
@@ -54,6 +56,7 @@ class AdminPanelProvider extends PanelProvider
                 Widgets\AccountWidget::class,
             ])
             ->middleware([
+                \App\Http\Middleware\PrivatePanelResponse::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
@@ -63,6 +66,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                PreventAdminIndexing::class,
                 BlockUnsafeAdminToolsInProduction::class,
             ])
             ->plugins([

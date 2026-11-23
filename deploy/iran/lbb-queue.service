@@ -1,0 +1,19 @@
+[Unit]
+Description=LBB Laravel Queue Worker
+After=network.target mysql.service
+Requires=mysql.service
+
+[Service]
+User=lbbapi
+Group=lbbapi
+WorkingDirectory=/var/www/lbb/backend/current
+ExecStart=/usr/bin/php artisan queue:work database --sleep=3 --tries=3 --timeout=60 --max-time=3600
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=90
+UMask=0027
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

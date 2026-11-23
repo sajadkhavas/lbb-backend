@@ -128,4 +128,22 @@ final class WebPushService
             ],
         ];
     }
+
+    public function campaignPayload(array $payload): array
+    {
+        $url = (string) ($payload['url'] ?? '/');
+        if (! str_starts_with($url, '/') || str_starts_with($url, '//')) {
+            throw new RuntimeException('مسیر اعلان باید داخلی باشد.');
+        }
+
+        return [
+            'title' => (string) ($payload['title'] ?? ''),
+            'body' => (string) ($payload['body'] ?? ''),
+            'icon' => '/icons/icon-192.png',
+            'badge' => '/icons/icon-192.png',
+            'url' => $url,
+            'tag' => 'lbb-campaign-'.(string) ($payload['campaign_id'] ?? ''),
+            'data' => ['kind' => 'campaign', 'topic' => $payload['topic'] ?? null],
+        ];
+    }
 }

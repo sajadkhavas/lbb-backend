@@ -4,11 +4,13 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PostResource\Pages;
 use App\Models\Post;
+use App\Support\StorefrontMediaOptions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use FilamentTiptapEditor\TiptapEditor;
 
 class PostResource extends Resource
 {
@@ -36,18 +38,13 @@ class PostResource extends Resource
                     Forms\Components\TextInput::make('category')->label('دسته')->maxLength(120),
                     Forms\Components\TagsInput::make('tags')->label('برچسب‌ها')->columnSpanFull(),
                     Forms\Components\Textarea::make('excerpt')->label('خلاصه')->rows(3)->columnSpanFull(),
-                    Forms\Components\RichEditor::make('content')->label('محتوا')->required()->columnSpanFull(),
-                    Forms\Components\FileUpload::make('cover_image_path')
-                        ->label('تصویر شاخص')
-                        ->disk('public')
-                        ->directory('storefront/journal')
-                        ->visibility('public')
-                        ->image()
-                        ->imageEditor()
-                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
-                        ->maxSize(8192)
-                        ->helperText('روش پیشنهادی؛ فایل روی storage مشترک نگه‌داری می‌شود.')
-                        ->columnSpanFull(),
+                    TiptapEditor::make('content')->label('محتوا')
+                        ->tools(['heading', 'bullet-list', 'ordered-list', '|', 'bold', 'italic', 'link', 'media'])
+                        ->required()->columnSpanFull(),
+                    Forms\Components\Select::make('cover_image_path')
+                        ->label('تصویر شاخص از کتابخانه')
+                        ->options(fn (?Post $record): array => StorefrontMediaOptions::paths($record?->cover_image_path))
+                        ->searchable()->columnSpanFull(),
                     Forms\Components\TextInput::make('cover_url')
                         ->label('URL تصویر شاخص قدیمی/خارجی (اختیاری)')
                         ->url()

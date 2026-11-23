@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Enums\PublicationStatus;
 use App\Filament\Resources\CategoryResource\Pages;
 use App\Models\Category;
+use App\Support\StorefrontMediaOptions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -44,19 +45,17 @@ class CategoryResource extends Resource
                 Forms\Components\Toggle::make('show_on_home')
                     ->label('نمایش در صفحه اصلی')
                     ->default(false),
-                Forms\Components\FileUpload::make('icon_path')
-                    ->label('آیکن دسته')
-                    ->image()
-                    ->imageEditor()
-                    ->directory('catalog/category-icons')
-                    ->helperText('آیکن ساده و مربعی برای Navigation/Home.')
-                    ->columnSpanFull(),
+                Forms\Components\Select::make('icon_path')->label('آیکن دسته از کتابخانه')
+                    ->options(fn (?Category $record): array => StorefrontMediaOptions::paths($record?->icon_path))
+                    ->searchable()->columnSpanFull(),
             ])->columns(2),
             Forms\Components\Section::make('اطلاعات دسته')->schema([
                 Forms\Components\TextInput::make('name')->label('نام دسته')->required()->maxLength(120),
                 Forms\Components\TextInput::make('slug')->label('Slug')->maxLength(140),
                 Forms\Components\Textarea::make('description')->label('توضیح دسته')->rows(4)->columnSpanFull(),
-                Forms\Components\FileUpload::make('image_path')->label('تصویر دسته')->image()->imageEditor()->directory('catalog/categories')->columnSpanFull(),
+                Forms\Components\Select::make('image_path')->label('تصویر دسته از کتابخانه')
+                    ->options(fn (?Category $record): array => StorefrontMediaOptions::paths($record?->image_path))
+                    ->searchable()->columnSpanFull(),
                 Forms\Components\Select::make('publication_status')
                     ->label('Publication')
                     ->options(collect(PublicationStatus::cases())->mapWithKeys(

@@ -13,6 +13,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use FilamentTiptapEditor\TiptapEditor;
 
 class ProductResource extends Resource
 {
@@ -43,7 +44,9 @@ class ProductResource extends Resource
                             Forms\Components\TextInput::make('slug')->label('Slug')->maxLength(200),
                             Forms\Components\Select::make('category_id')->label('دسته‌بندی')->relationship('category', 'name')->searchable()->preload()->required(),
                             Forms\Components\Textarea::make('short_description')->label('توضیح کوتاه')->rows(3)->maxLength(320)->columnSpanFull(),
-                            Forms\Components\RichEditor::make('description')->label('توضیح کامل')->columnSpanFull(),
+                            TiptapEditor::make('description')->label('توضیح کامل')
+                                ->tools(['heading', 'bullet-list', 'ordered-list', '|', 'bold', 'italic', 'link', 'media'])
+                                ->columnSpanFull(),
                         ])->columns(2),
                         Forms\Components\Section::make('انتشار')->schema([
                             Forms\Components\Select::make('publication_status')
@@ -87,6 +90,26 @@ class ProductResource extends Resource
                             ->preload()
                             ->columnSpanFull(),
                     ])->columns(2),
+                Forms\Components\Tabs\Tab::make('سؤال‌های متداول')
+                    ->schema([
+                        Forms\Components\Repeater::make('faqs')
+                            ->label('سؤال و جواب‌های این محصول')
+                            ->schema([
+                                Forms\Components\TextInput::make('question')
+                                    ->label('سؤال')->required()->maxLength(180),
+                                Forms\Components\Textarea::make('answer')
+                                    ->label('پاسخ')->required()->maxLength(1500)->rows(3),
+                                Forms\Components\Toggle::make('is_active')
+                                    ->label('نمایش در فروشگاه')->default(true),
+                            ])
+                            ->itemLabel(fn (array $state): ?string => $state['question'] ?? null)
+                            ->addActionLabel('افزودن سؤال')
+                            ->defaultItems(0)
+                            ->maxItems(12)
+                            ->reorderable()
+                            ->collapsible()
+                            ->columnSpanFull(),
+                    ]),
                 Forms\Components\Tabs\Tab::make('Variantها')
                     ->icon('heroicon-o-squares-plus')
                     ->schema([

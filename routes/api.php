@@ -62,6 +62,13 @@ Route::prefix('web-push')->name('web-push.')->group(function (): void {
         ->middleware('throttle:60,1')
         ->name('config');
 
+    Route::post('/guest/subscriptions', [PushSubscriptionController::class, 'storeGuest'])
+        ->middleware('throttle:5,1')
+        ->name('guest.store');
+    Route::delete('/guest/subscriptions', [PushSubscriptionController::class, 'destroyGuest'])
+        ->middleware('throttle:10,1')
+        ->name('guest.destroy');
+
     Route::middleware(['auth:customer', 'customer.active'])->group(function (): void {
         Route::get('/subscriptions', [PushSubscriptionController::class, 'index'])
             ->middleware('throttle:60,1')

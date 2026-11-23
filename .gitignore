@@ -42,3 +42,9 @@ toolmaster_fix.sql
 
 /storage/app/private/*
 /storage/app/*.mmdb
+# Production secrets and patch leftovers
+.env
+.env.*
+!.env.example
+*.orig
+*.rej

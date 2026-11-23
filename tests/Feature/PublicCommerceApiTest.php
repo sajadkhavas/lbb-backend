@@ -191,6 +191,57 @@ class PublicCommerceApiTest extends TestCase
             ->assertJsonPath('data.price.max.amount', 170000);
     }
 
+    public function test_combined_catalog_filters_match_one_buyable_variant(): void
+    {
+        $fixture = $this->publishedProduct('variant-pair', price: 100000);
+
+        $otherColor = Color::create([
+            'name' => 'Other color',
+            'slug' => 'other-color',
+            'code' => 'OTHER-COLOR',
+            'is_active' => true,
+        ]);
+        $otherSize = Size::create([
+            'name' => 'Other size',
+            'code' => 'XL',
+            'is_active' => true,
+        ]);
+        ProductVariant::create([
+            'product_id' => $fixture['product']->id,
+            'color_id' => $otherColor->id,
+            'size_id' => $otherSize->id,
+            'name' => 'Other combination',
+            'sku' => 'SKU-OTHER-COMBINATION',
+            'regular_price_toman' => 200000,
+            'stock_quantity' => 0,
+            'is_active' => true,
+        ]);
+
+        $this->getJson('/api/v1/products?color='.$fixture['color']->slug.'&size=XL')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+
+        $this->getJson('/api/v1/products?color=other-color&size=XL&availability=in_stock')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+
+        $this->getJson('/api/v1/products?color=other-color&size=XL&max_price=150000')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+
+        $this->getJson('/api/v1/products?color=other-color&size=XL&max_price=250000')
+            ->assertOk()
+            ->assertJsonPath('meta.pagination.total', 1);
+
+        $this->getJson('/api/v1/products?max_price=100000')
+            ->assertOk()
+            ->assertJsonPath('meta.pagination.total', 1);
+
+        $this->getJson('/api/v1/products?min_price=200000&max_price=100000')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('max_price');
+    }
+
     public function test_availability_filter_is_server_authoritative_and_exact_quantity_remains_private(): void
     {
         $fixture = $this->publishedProduct('availability', stock: 0);
