@@ -1,0 +1,9 @@
+[Unit]
+Description=Update LBB responsive images every five minutes
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+AccuracySec=30s
+Unit=lbb-responsive-images.service
+[Install]
+WantedBy=timers.target
