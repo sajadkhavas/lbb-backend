@@ -1,0 +1,15 @@
+[Unit]
+Description=LBB published product responsive image generation
+After=mysql.service
+[Service]
+Type=oneshot
+User=lbbapi
+Group=lbbapi
+UMask=0022
+WorkingDirectory=/var/www/lbb/backend/current
+ExecStart=/usr/bin/php -d memory_limit=256M /opt/lbb-image-optimizer/generate.php
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=10min
+NoNewPrivileges=true
+PrivateTmp=true
