@@ -40,6 +40,7 @@ final class PublicCatalogTransformer
                 ->map(fn ($size): array => $this->size($size))->all(),
             'primaryImage' => $this->primaryImage($product),
             'previewImages' => $this->previewImages($product),
+            'responsiveImages' => $this->responsiveCardImages($product, $this->previewImages($product)),
             'mannequin' => $this->mannequin($product),
             'seo' => $this->productSeo($product),
         ];
@@ -395,6 +396,37 @@ final class PublicCatalogTransformer
             ->take(3)
             ->values()
             ->all();
+    }
+
+    /** Live, optional srcsets. Originals remain authoritative when no valid manifest exists. */
+    private function responsiveCardImages(Product $product, array $previews): object
+    {
+        $result = [];
+        foreach ($product->mediaAssets as $asset) {
+            try {
+                $media = $asset->getFirstMedia('asset');
+                if (!$media || $media->disk !== 'public') continue;
+                $url = $media->getUrl();
+                if (!in_array($url, $previews, true)) continue;
+                if (!preg_match('~^https://api\.lbbclo\.com/storage/'.(int)$media->id.'/[^/?#]+$~D', $url)) continue;
+                $source = $media->getPath();
+                $manifest = storage_path('app/lbb-responsive-manifests/'.(int)$media->id.'.json');
+                if (!is_file($manifest) || !is_file($source) || filesize($manifest)>16384) continue;
+                $data = json_decode(file_get_contents($manifest), true);
+                clearstatcache(true, $source);
+                $stat = stat($source);
+                if (!$stat || !is_array($data) || ($data['version']??null)!==1 || ($data['url']??null)!==$url || ($data['fingerprint']??null)!==[$stat['ino'],$stat['size'],$stat['mtime'],$stat['ctime']]) continue;
+                $originalWidth = (int)($data['width']??0);
+                $set=[];
+                foreach ($data['variants']??[] as $variant) {
+                    $width=(int)($variant['width']??0); $file=$variant['file']??'';
+                    if (!in_array($width,[320,640,960,1200],true) || $width >= $originalWidth || !is_string($file) || !preg_match('~^lbb-responsive-v1-[0-9a-f]{16}-w'.$width.'\.webp$~D',$file) || !is_file(dirname($source).'/'.$file)) continue;
+                    $set[$width]='https://api.lbbclo.com/storage/'.(int)$media->id.'/'.$file.' '.$width.'w';
+                }
+                if ($set) { $set[$originalWidth]=$url.' '.$originalWidth.'w'; ksort($set); $result[$url]=implode(', ',$set); }
+            } catch (\Throwable) { /* A missing derivative must never break the catalog. */ }
+        }
+        return (object)$result;
     }
 
     private function verified(Product $product, ProductFact $fact): bool
